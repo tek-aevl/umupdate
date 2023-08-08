@@ -1,0 +1,65 @@
+#!/bin/bash
+bash <(curl -s https://git.aevl.net/tek/umupdate/raw/branch/main/supdate)
+echo 'bye';
+echo "ending"
+exit;
+
+# Function to copy SSH key to a remote host
+function copy_ssh_key() {
+    read -p "Do you want to copy your SSH key to the remote host $IP ? (yes/no) [no]: " answer
+    answer=${answer:-no}  # Set the default value to 'no' if the user doesn't provide any input
+
+    if [[ $answer == "yes" ]]; then
+        #read -p "Enter the IP address or hostname of the remote host: " ip
+         echo "Current client $IP"
+        ssh-copy-id "$ip"
+
+        # If you want to display the results after the SSH key copy, you can use the following command
+        # ssh "$ip" 'ls -l ~/.ssh'  # Replace 'ls -l ~/.ssh' with any command you want to execute on the remote host.
+    elif [[ $answer == "no" ]]; then
+        echo "SSH key copy to the remote host skipped."
+    else
+        echo "Invalid input. Please enter 'yes' or 'no'."
+    fi
+}
+
+
+
+# Function to check if Pi-hole is installed and running on a host
+function check_pihole {
+  # Check if the Pi-hole service is running
+  if ssh -q -o ConnectTimeout=1 $1 "systemctl is-active pihole-FTL.service &> /dev/null"; then
+    # Check if the Pi-hole web interface is accessible
+    if curl -s -I -H "Host: pi.hole" http://$1/admin/ &> /dev/null; then
+      return 0  # Pi-hole is installed and running
+    fi
+  fi
+  return 1  # Pi-hole is not installed or not running
+}
+
+# Retrieve IP addresses from ARP table
+arp_ip_list=$(arp -a | awk '{print $2}' | sed 's/[()]//g')
+
+# Retrieve Tailscale client IP addresses from 'tailscale status' command
+#tailscale_ip_list=$(tailscale status | grep -oE '10\.[0-9]+\.[0-9]+\.[0-9]+')
+
+# Retrieve active clients in the 'virbr0' bridge
+bridge_clients=$(brctl showmacs virbr0 | awk '{if (NR > 1) print $2}')
+
+# Combine the IP lists
+ip_list="$bridge_clients"$'\n'"$tailscale_ip_list"$'\n'"$arp_ip_list"
+
+# Iterate over each IP address and perform SSH connection
+for ip in $ip_list; do
+    # Perform SSH connection to the device
+    echo "Connecting to $ip"
+  # Call ssh-copy-id function
+      copy_ssh_key
+   if check_pihole $ip; then
+      echo "Pi-hole detected on $ip"
+     ssh -ty -X $ip "bash <(curl -s https://git.aevl.net/tek/umupdate/raw/branch/main/rpi-update)"
+    else
+        echo "Connecting to "$ip
+     ssh -ty -X $ip "bash <(curl -s https://git.aevl.net/tek/umupdate/raw/branch/main/debupdate)"
+    fi
+done
