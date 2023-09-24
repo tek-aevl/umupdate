@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "#v0.75## To use this in cli use"
+echo "#v0.76## To use this in cli use"
 echo "sudo nano /bin/usr/update
 # copy the next 3 lines into it with, and chmod it to 755  
 #!/bin/bash
@@ -138,8 +138,7 @@ if [[ $days -ge 3 ]]; then
     echo -e "${YELLOW}System uptime: $days days, $hours hours, $minutes minutes ${NC}" 
 fi
 
-if dpkg -s pihole &> /dev/null; then
-
+if pihole -v &> /dev/null; then 
 echo -e "${GREEN}Pihole Updates!${NC}"
 
     # Pi-hole is installed, run the commands
