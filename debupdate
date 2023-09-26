@@ -70,10 +70,10 @@ sleep 2
 fi
 
 # Programs needed in order to use ths script.
-programs=("dialog" "bc" "inxi" "neofetch" "speedtest" "htop" "cron" "nano" "qemu-guest-agent")
+programs=("dialog" "bc" "inxi" "neofetch" "speedtest" "htop" "cron" "nano" "qemu-guest-agent" "fail2ban")
 
 # Define the corresponding package names for each program
-package_names=("dialog" "bc" "inxi" "neofetch" "speedtest-cli" "htop" "cron" "nano" "qemu-guest-agent")
+package_names=("dialog" "bc" "inxi" "neofetch" "speedtest-cli" "htop" "cron" "nano" "qemu-guest-agent" "fail2ban")
 
 # Loop through the programs
 for ((i=0; i<${#programs[@]}; i++)); do
