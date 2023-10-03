@@ -1,10 +1,10 @@
 #!/bin/bash
-echo "#v0.82## To use this in cli do the following"
+echo "#v0.83## To use this in cli do the following"
 echo "sudo nano /bin/usr/update
 # copy the next 3 lines into it with, and chmod it to 755  
 #!/bin/bash
 echo -e "Hello $USER this script will use sudo to function." 
-bash <(curl -s https://git.aevl.net/tek/umupdate/raw/branch/main/debupdate)
+bash <(curl -s https://git.aevl.net/tek/umupdate/raw/branch/pve/debupdate)
 echo 'bye'
 #To use run
 bash update
