@@ -9,7 +9,7 @@ sleep 4
 if [ -f "/bin/update" ]; then
     cat /bin/update
 ###head -l 2 
-echo "bash <(curl -s https://git.aevl.net/tek/umupdate/raw/branch/main/update)"
+echo "bash <(curl -s https://github.com/tek-aevl/umupdate/raw/main/update)"
  echo "The file /bin/update already exist."
     read -p "Do you update to new version? (y/n): " choice
     if [ "$choice" == "y" ]; then
@@ -17,7 +17,7 @@ echo "bash <(curl -s https://git.aevl.net/tek/umupdate/raw/branch/main/update)"
     sudo rm /bin/update
     sudo cat /bin/update
     echo "Running new bash"
-bash <(curl -s https://git.aevl.net/tek/umupdate/raw/branch/main/update)
+bash <(curl -s https://github.com/tek-aevl/umupdate/raw/main/update)
     exit
     else
         echo "Cancelled."
@@ -26,7 +26,7 @@ else
     echo "The file /bin/update does not exist."
     read -p "Do you want to install it? (y/n): " choice
     if [ "$choice" == "y" ]; then
-       echo -e '#!/bin/bash \n echo "'$version'" \n echo "Assistance at https://git.aevl.net/tek/umupdate" #To use run \n echo "bash update" \n bash <(curl -s https://git.aevl.net/tek/umupdate/raw/branch/main/update) \n echo "bye!"' | sudo tee /bin/update > /dev/null
+       echo -e '#!/bin/bash \n echo "'$version'" \n echo "Assistance at https://git.aevl.net/tek/umupdate" #To use run \n echo "bash update" \n bash <(curl -s https://github.com/tek-aevl/umupdate/raw/main/update) \n echo "bye!"' | sudo tee /bin/update > /dev/null
         sudo chmod 644 /bin/update
         sudo chmod +x /bin/update
         echo "Cat contents"
