@@ -17,7 +17,7 @@ echo "bash <(curl -s https://github.com/tek-aevl/umupdate/raw/main/update)"
     sudo rm /bin/update
     sudo cat /bin/update
     echo "Running new bash"
-bash <(curl -s https://github.com/tek-aevl/umupdate/raw/main/update)
+bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/main/update)
     exit
     else
         echo "Cancelled."
