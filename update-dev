@@ -1,7 +1,7 @@
 #!/bin/bash
 version="v1.57"
 echo "Hello! "$USER"@"$HOSTNAME
-echo "#$version # Assistance at https://git.aevl.net/tek/umupdate #To use run # bash update or bash <(curl -s https://git.aevl.net/tek/umupdate/raw/branch/main/update)
+echo "#$version # Assistance at https://github.com/tek-aevl/umupdate/raw/main/update-dev #To use run # bash update or bash <(curl -s https://github.com/tek-aevl/umupdate/raw/main/update-dev)
 echo 'Bye! XD'"
 if [ -f "/bin/update" ]; then
    installed_version=$(grep -oP '(?<=#)\S+(?=#)' /bin/update)
@@ -22,7 +22,7 @@ if [ "$choice" == "y" ]; then
     echo $USER"@"$HOSTNAME
     sleep 3
     echo "Running new bash"
-    bash <(curl -s https://git.aevl.net/tek/umupdate/raw/branch/main/update)
+    bash <(curl -s https://github.com/tek-aevl/umupdate/raw/main/update-dev)
     exit;
     echo 'Bye! $USER"@"$HOSTNAME'
     else
@@ -33,7 +33,7 @@ else
     echo "The file /bin/update does not exist."
     read -p "Do you want to install it? (y/n): " choice
     if [ "$choice" == "y" ]; then
-       echo -e '#!/bin/bash \n echo "#'$version'#" \n echo "Hello! "$USER"@"$HOSTNAME \n echo "Assistance at https://git.aevl.net/tek/umupdate" #To use run \n echo "bash update" \n bash <(curl -s https://git.aevl.net/tek/umupdate/raw/branch/main/update) \n echo $USER" bye! XD "' | sudo tee /bin/update > /dev/null
+       echo -e '#!/bin/bash \n echo "#'$version'#" \n echo "Hello! "$USER"@"$HOSTNAME \n echo "Assistance at https://github.com/tek-aevl/umupdate/" #To use run \n echo "bash update" \n bash <(curl -s https://github.com/tek-aevl/umupdate/raw/main/update-dev) \n echo $USER" bye! XD "' | sudo tee /bin/update > /dev/null
         sudo chmod 644 /bin/update
         sudo chmod +x /bin/update
         echo "Creating contents"
