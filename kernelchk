@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "#c.64# To use this in cli use"
+echo "#c.65# To use this in cli use"
 echo "sudo nano /bin/usr/kernelchk
 # copy the next 3 lines into it with, and chmod it to 755  
 #!/bin/bash
@@ -28,14 +28,29 @@ echo -e "This ${MAGENTA}text${NC} is ${MAGENTA}Magenta.${NC}"
 echo -e "This ${BLUE}text${NC} is ${BLUE}Blue.${NC}"
 echo -e "This ${WHITE}text${NC} is ${WHITE}White.${NC}"
 
-#test
-#running_kernel="6.4.6"
-#installed_kernel="6.4.6"
 
-running_kernel=$(uname -r | sed 's/-zen$//;s/-/./')
-installed_kernel=$(pacman -Qi linux-zen | awk '/Version/ {print $3}')
+#arch
+#running_kernel=$(uname -r | sed 's/-zen$//;s/-/./')
+#installed_kernel=$(pacman -Qi linux-zen | awk '/Version/ {print $3}')
+#debian
+#running_kernel=$(uname -r)
+#installed_kernel=$(dpkg -l | grep linux-image | awk '{print $2}' | grep -E "^[0-9]+\.[0-9]+\.[0-9]+-[0-9]+" | head -n 1)
+
+if [ -f /etc/debian_version ]; then
+    # Ubuntu/Debian
+    running_kernel=$(uname -r)
+    installed_kernel=$(dpkg -l | grep linux-image | awk '{print $2}' | grep -E "^[0-9]+\.[0-9]+\.[0-9]+-[0-9]+" | head -n 1)
+else
+    # Arch Linux
+    running_kernel=$(uname -r | sed 's/-zen$//;s/-/./')
+    installed_kernel=$(pacman -Qi linux-zen | awk '/Version/ {print $3}')
+fi
+
 uptime=$(uptime -p)
 
+
+
+uptime=$(uptime -p)
 
 function version_compare() {
     if [[ $1 == $2 ]]; then
