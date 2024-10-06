@@ -1,7 +1,8 @@
 #!/bin/bash
-echo "#V.17# To use this in cli use"
+set -e
+echo "#V.18.1# To use this in cli use"
 echo "sudo nano /bin/prune
-# copy the next 3 lines into it with, and chmod it to 755  
+# copy the next 3 lines into it with, and chmod it to 755
 #!/bin/bash
 bash <(curl -s https://git.aevl.net/tek/umupdate/raw/branch/main/prune)
 echo 'end of prune'
@@ -10,26 +11,75 @@ bash prune
 ";echo "Sleeping for 4";sleep 4
 
 echo "$USER pruning @$ip"
-echo "Checking for podman"
+echo "Checking for Podman then Docker"
 if command -v podman &>/dev/null; then
     echo "Podman is installed. Proceeding with the commands..."
-    echo "Podman List"
-    sudo podman ps
-    echo "Stop all"
-    sudo podman stop --all
-    echo "Prune?"
-    sudo podman container prune
-    sudo podman ps
-    echo "Updating"
-    sudo podman pull cloudflare/cloudflared
-    echo "bash start"
-    echo "starting if device has it on $ip"
-    sleep 1
-    echo "if next line is an error you need to make the file, and add the docker container info inside it"
-    bash /usr/bin/start
-    echo "resuming..."
-    echo "Status"
-    sudo podman ps
+    prune_podman_containers() {
+        echo "Podman List"
+        sudo podman ps
+        echo "Stop all"
+        sudo podman stop --all
+        sudo podman ps
+        echo "Pruning"
+        sudo podman container stop --all
+        sudo podman ps
+        sudo podman container kill --all
+        sudo podman ps
+        sudo podman container rm --all
+        sudo podman ps
+        sudo systemctl restart podman
+        echo "Updating"
+        sudo podman pull cloudflare/cloudflared
+        echo "bash start"
+        echo "starting if device has it on $ip"
+        sleep 2
+        echo "if the next line is an error you need to make the file and add the Docker container info inside it"
+        bash /bin/start || bash /usr/bin/start
+        echo "Resuming..."
+        echo "Status"
+        sudo podman ps
+        sleep 3
+        }
+    prune_podman_containers
+elif command -v docker &>/dev/null; then
+    echo "Docker is installed. Proceeding with the commands..."
+    prune_docker_containers() {
+        echo "Docker List"
+        sudo docker ps
+        echo "Stop all"
+        # Kill all running containers
+        sudo docker kill $(sudo docker ps -q)
+        # List all containers (none should be running at this point)
+        sudo docker ps -a
+        echo "Prune?"
+        # Stop all running containers if any are running
+            if [ "$(sudo docker ps -q)" ]; then
+            sudo docker stop $(sudo docker ps -q)
+            fi
+        # Remove all containers (both running and stopped) if any exist
+            if [ "$(sudo docker ps -a -q)" ]; then
+                sudo docker rm $(sudo docker ps -a -q)
+            fi
+        # List all containers (none should be present at this point)
+        sudo docker ps -a
+        # Restart Docker service
+        sudo systemctl restart docker
+        sudo docker ps
+        echo "Updating"
+        sudo docker pull cloudflare/cloudflared
+        echo "bash start"
+        echo "starting if device has it on $ip"
+        sleep 2
+        echo "if the next line is an error you need to make the file and add the Docker container info inside it"
+        bash /bin/start || bash /usr/bin/start
+        echo "Resuming..."
+        sleep 3
+
+    }
+    prune_docker_containers
 else
-    echo "Error: Podman not found. Please install Podman and try again."
+    echo "Neither Podman nor Docker found. Exiting..."
+    sleep 2
+    exit 1
 fi
+        sleep 3
