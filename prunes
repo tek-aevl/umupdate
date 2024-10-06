@@ -9,18 +9,17 @@ echo "#To use run"
 echo "bash prunes"
 
 echo "Starting!"
-echo "Setting functions"
-# Function to check and copy SSH key to a remote host if needed
+echo "setting functions"
+#Function to check and copy SSH key to a remote host if needed
 function copy_ssh_key() {
     if [[ ! -f ~/.ssh/id_rsa.pub ]]; then
         echo "SSH key not found. Generating a new SSH key..."
         ssh-keygen -t rsa
     fi
-
     # Check if the SSH key is already present on the remote host
-    if ! ssh-add -L | grep -qF "$(cat ~/.ssh/id_rsa.pub)"; then
+   if ! ssh-add -L | grep -qF "$(cat ~/.ssh/id_rsa.pub)"; then
         #read -p "Enter the IP address or hostname of the remote host: " ip
-        echo "Current client $ip"
+       echo "Current client $ip"
         ssh-copy-id "$ip"
     else
         echo "SSH key is already copied to the remote host. No need to copy again."
@@ -38,36 +37,100 @@ function check_pihole {
   fi
   return 1  # Pi-hole is not installed or not running
 }
-echo "done.."
+echo "...done..."
 
-#echo "Retrieving ARP table"
-# Retrieve IP addresses from ARP table
-#arp_ip_list=$(arp -a | awk '{print $2}' | sed 's/[()]//g')
-#echo "$arp_ip_list done..."
+# Function to prompt the user for ARP inclusion
+prompt_arp() {
+    read -p "Do you want to include ARP in the IP list? (Y/N): " choice
+    case "$choice" in
+        [yY] | [yY][eE][sS])
+            echo "Retrieving ARP table"
+           if [ -f ~/arp_ip_list ]; then
+                      cat ~/arp_ip_list
+               read -p "~/arp_ip_list already exists. Do you want to overwrite it? (y/n): " overwrite
+                  if [ "$overwrite" = "y" ]; then
+                   arp_ip_list=$(arp -av | awk '{print $2}' | sed 's/[()]//g')
+                   echo "$arp_ip_list" > ~/arp_ip_list
+                   echo "$arp_ip_list has been overwritten."
+                  else
+                    arp_ip_list=$(<~/arp_ip_list)
+                    echo "$arp_ip_list No changes made to $arp_ip_list ..."
+                    sleep 1
+                  fi
+                else
+                  arp_ip_list=$(<~/arp_ip_list)
+              echo "$arp_ip_list has loaded."
+          fi
+          echo "$arp_ip_list ...done..."          
+            sleep 8
+            ;;
+        [nN] | [nN][oO])
+            arp_ip_list=""
+            ;;
+        *)
+            echo "Invalid choice. Defaulting to no ARP."
+            arp_ip_list=""
+            ;;
+    esac
+}
+
+prompt_arp
 
 echo "Retrieving active clients over the bridge"
 # Retrieve active clients in the bridge
-#bridge_clients=$(brctl showmacs virbr0 | awk '{if (NR > 1) print $2}')
 bridge_clients=$(ip neigh show dev virbr0 | awk '{print $1}') && echo $bridge_clients
-echo "$bridge_clients done..."
+echo "$bridge_clients ...done..."
+sleep 3
 
+echo "Retrieve Tailscale client IP addresses"
 # Retrieve Tailscale client IP addresses from 'tailscale status' command
-#tailscale_ip_list=$(tailscale status | grep -oE '10\.[0-9]+\.[0-9]+\.[0-9]+')
+##old# tailscale_ip_list=$(tailscale status | grep -oE '10\.[0-9]+\.[0-9]+\.[0-9]+')
+tailscale_ip_list=$(sudo tailscale status | grep -Eo '100\.[0-9]+\.[0-9]+\.[0-9]+' | awk '!seen[$0]++')
+echo "Tailscale Client List"
+echo "$tailscale_ip_list"
+echo ".!.done.!."
+sleep 3
 
 echo "Retrieving custom_ip_list"
 # custom list put the next line in a new file called custom_ip_list
 #custom_ip_list="0.0.0.0"$'\n'"0.0.0.0"
-#old#cat ~/custom_ip_list
 custom_ip_list=$(grep -E -o '([0-9]{1,3}\.){3}[0-9]{1,3}' ~/custom_ip_list)
-echo "#custom_ip_list  done..."
-sleep 2
-echo "done..."
+cat ~/custom_ip_list
+echo "custom_list" && sleep 2
+echo "$custom_ip_list  ...done..."
+sleep 3
 
-echo "combine the list"
-# Combine the IP lists
-#withARP#ip_list="$bridge_clients"$'\n'"$custom_ip_list"$'\n'"$arp_ip_list"$'\n'"$tailscale_ip_list"
-ip_list="$bridge_clients"$'\n'"$custom_ip_list"$'\n'"$tailscale_ip_list"
-echo "$ip_list  done..."
+echo "Retrieving ignore_ip_list"
+# ignore list file needed ignore_ip_list
+#ignore_ip_list="0.0.0.0"$'\n'"0.0.0.0"
+ignore_ip_list=$(grep -E -o '([0-9]{1,3}\.){3}[0-9]{1,3}' ~/ignore_ip_list)
+cat <<< "$ignore_ip_list" > ignore_list.txt
+echo "ignore list created" && sleep 2
+
+# Combine the IP lists based on user choice
+if [ -n "$arp_ip_list" ]; then
+  #withARP
+    ip_list="$bridge_clients"$'\n'"$custom_ip_list"$'\n'"$arp_ip_list"$'\n'"$tailscale_ip_list"
+else
+  #noarp
+    ip_list="$bridge_clients"$'\n'"$custom_ip_list"$'\n'"$tailscale_ip_list"
+fi
+
+echo "$ip_list ...ip list..."
+sleep 5
+
+echo "Removing IPs listed in the ignore list sorting then removing duplicates"
+while IFS= read -r ip; do
+    ip_list=$(echo "$ip_list" | grep -vFx "$ip")
+done < ignore_list.txt
+
+ ip_list=$(echo "$ip_list" | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | sort -u)
+
+ 
+# Step 4: Output the final combined list
+echo "#####Final combined list:#####"
+echo "$ip_list"
+sleep 5
 
 echo "Working this out"
 # Iterate over each IP address and perform SSH connection
