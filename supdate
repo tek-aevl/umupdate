@@ -1,7 +1,7 @@
 #!/bin/bash
-echo "#v.92# To use this in cli use
+echo "#v.94# To use this in cli use
 sudo nano /bin/usr/update
-# copy the next 3 lines into it with, and chmod it to 755  
+# copy the next 3 lines into it with, and chmod it to 755
 #!/bin/bash
 bash <(curl -c https://git.aevl.net/Tek/umupdate/raw/branch/main/supdate)
 echo 'bye'
@@ -40,40 +40,130 @@ function check_pihole {
 }
 echo "...done..."
 
-#echo "Retrieving ARP table"
-# Retrieve IP addresses from ARP table
-#arp_ip_list=$(arp -av | awk '{print $2}' | sed 's/[()]//g')
-#echo "$arp_ip_list ...done..."
-#sleep 2
+# Function to prompt the user for ARP inclusion
+prompt_arp() {
+    read -p "Do you want to include ARP in the IP list? (Y/N): " choice
+    case "$choice" in
+        [yY] | [yY][eE][sS])
+            echo "Retrieving ARP table"
+           if [ -f ~/arp_ip_list ]; then
+           echo "ARP List"
+           cat ~/arp_ip_list |less
+               read -p "~/arp_ip_list already exists. Do you want to overwrite it? (y/n): " overwrite
+                  if [ "$overwrite" = "y" ]; then
+                   arp_ip_list=$(arp -av | awk '{print $2}' | sed 's/[()]//g')
+                   echo "$arp_ip_list" > ~/arp_ip_list
+                   echo "$arp_ip_list is the new list."
+                   sleep 3
+                  else
+                    arp_ip_list=$(<~/arp_ip_list)
+                    echo "No changes made to $arp_ip_list ..."
+                    sleep 3                  
+                  fi
+                else
+                  arp_ip_list=$(<~/arp_ip_list)
+              echo " $arp_ip_list " 
+              exho " .loaded. "
+            sleep 3
+          fi
+          echo "$arp_ip_list" 
+          echo "...done..."          
+            sleep 8
+            ;;
+        [nN] | [nN][oO])
+            arp_ip_list=""
+            ;;
+        *)
+            echo "Invalid choice. Defaulting to no ARP."
+            arp_ip_list=""
+            ;;
+    esac
+}
 
+prompt_arp
+
+
+# Get the default route interface
+default_interface=$(ip route | awk '/default/ {print $5}')
+
+# Get the IP address and subnet mask of the default route interface
+interface_info=$(ip a show dev "$default_interface" | awk '/inet\s/ {print $2}')
+interface_ip=$(echo "$interface_info" | cut -d '/' -f 1)
+interface_subnet=$(echo "$interface_info" | cut -d '/' -f 2)
+
+# Calculate network address and subnet mask length
+IFS='.' read -r -a ip_parts <<< "$interface_ip"
+netmask_length=$(printf "%.*s1" "$interface_subnet" "11111111111111111111111111111111")
+network_address=$(printf "%d.%d.%d.%d\n" "$((ip_parts[0] & 0xFF & (0xFF << (32 - interface_subnet))))" \
+                                       "$((ip_parts[1] & 0xFF & (0xFF << (32 - interface_subnet))))" \
+                                       "$((ip_parts[2] & 0xFF & (0xFF << (32 - interface_subnet))))" \
+                                       "$((ip_parts[3] & 0xFF & (0xFF << (32 - interface_subnet))))")
+
+# Get the list of clients on the same subnet as the default route interface
+bridge_clients_default=$(ip neigh show dev "$default_interface" | awk -v network="$network_address" '{if ($1 ~ network) print $1}')
+echo "Bridge clients on the same subnet as the default route interface ($default_interface):"
+echo "$bridge_clients_default" | more 
 echo "Retrieving active clients over the bridge"
 # Retrieve active clients in the bridge
 bridge_clients=$(ip neigh show dev virbr0 | awk '{print $1}') && echo $bridge_clients
 echo "$bridge_clients ...done..."
-sleep 2
+sleep 3
 
 echo "Retrieve Tailscale client IP addresses"
 # Retrieve Tailscale client IP addresses from 'tailscale status' command
-tailscale_ip_list=$(tailscale status | grep -oE '10\.[0-9]+\.[0-9]+\.[0-9]+')
-echo "$tailscale_ip_list ...done.."
-sleep 2
+##old# tailscale_ip_list=$(tailscale status | grep -oE '10\.[0-9]+\.[0-9]+\.[0-9]+')
+tailscale_ip_list=$(sudo tailscale status | grep -Eo '100\.[0-9]+\.[0-9]+\.[0-9]+' | awk '!seen[$0]++')
+echo "Tailscale Client List"
+echo "$tailscale_ip_list"
+echo ".!.done.!."
+sleep 3
 
 echo "Retrieving custom_ip_list"
 # custom list put the next line in a new file called custom_ip_list
 #custom_ip_list="0.0.0.0"$'\n'"0.0.0.0"
-#old#cat ~/custom_ip_list
 custom_ip_list=$(grep -E -o '([0-9]{1,3}\.){3}[0-9]{1,3}' ~/custom_ip_list)
+cat ~/custom_ip_list
+echo "custom_list" && sleep 2
 echo "$custom_ip_list  ...done..."
-sleep 2
+sleep 3
 
-echo "combine the list"
-# Combine the IP lists
-#withARP#ip_list="$bridge_clients"$'\n'"$custom_ip_list"$'\n'"$arp_ip_list"$'\n'"$tailscale_ip_list"
-ip_list="$bridge_clients"$'\n'"$custom_ip_list"$'\n'"$tailscale_ip_list"
-echo "$ip_list ...done..."
+echo "Retrieving ignore_ip_list"
+ignore_ip_list=$(grep -E -o '([0-9]{1,3}\.){3}[0-9]{1,3}' ~/ignore_ip_list)
+
+# Check if there are any IP addresses found before creating the file
+if [[ -n "$ignore_ip_list" ]]; then
+    # Use printf for better portability and to handle special characters properly
+    printf "%s\n" "$ignore_ip_list" > ~/ignore_list.txt
+fi
+
+echo "ignore list created" && sleep 2
+
+# Combine the IP lists based on user choice
+if [ -n "$arp_ip_list" ]; then
+    ip_list="$bridge_clients_default"$'\n'"$bridge_clients"$'\n'"$custom_ip_list"$'\n'"$arp_ip_list"$'\n'"$tailscale_ip_list"
+else
+    ip_list="$bridge_clients_default"$'\n'"$bridge_clients"$'\n'"$custom_ip_list"$'\n'"$tailscale_ip_list"
+fi
+
+
+echo "$ip_list ...ip list..."
 sleep 5
 
-echo "Working this out"
+echo "Removing IPs listed in the ignore list sorting then removing duplicates"
+while IFS= read -r ip; do
+    ip_list=$(echo "$ip_list" | grep -vFx "$ip")
+done < ignore_list.txt
+
+ ip_list=$(echo "$ip_list" | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | sort -u) 
+ ip_list=$(echo "$ip_list" | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | sort -u)
+
+ 
+# Step 4: Output the final combined list
+echo "#####Final combined list:#####"
+echo "$ip_list" | less
+sleep 5
+
+echo "Running updates!"
 # Iterate over each IP address and perform SSH connection
 for ip in $ip_list; do
     # Perform SSH connection to the device
@@ -82,12 +172,18 @@ for ip in $ip_list; do
 #off#    copy_ssh_key
     if check_pihole $ip; then
       echo -e "Pi-hole detected on $ip "
-      ssh -yt $ip "(curl -s https://git.aevl.net/tek/umupdate/raw/branch/main/rpi-update)|bash"
-      ssh -tY $ip "bash <(curl -s https://git.aevl.net/Tek/umupdate/raw/branch/main/logreset)"
+      ssh -yt $ip "(curl -s https://git.aevl.net/tek/umupdate/raw/branch/main/update)|bash"
+     # ssh -tY $ip "bash <(curl -s https://git.aevl.net/Tek/umupdate/raw/branch/main/logreset)"
     else
       echo -e "Running Updates on $ip "
-      ssh -tY $ip "bash update"
-      ssh -tY $ip "bash <(curl -s https://git.aevl.net/tek/umupdate/raw/branch/main/update)"
-      ssh -tY $ip "bash <(curl -s https://git.aevl.net/Tek/umupdate/raw/branch/main/logreset)"
-    fi
+
+  if ssh -tY $ip "bash /bin/update"; then
+       #ssh -tY $ip "bash update"
+       echo "Success!"
+    else
+ #if not installed run remote.
+     ssh -tY $ip "bash <(curl -s https://git.aevl.net/tek/umupdate/raw/branch/main/update)"
+  fi
+    # ssh -tY $ip "bash <(curl -s https://git.aevl.net/tek/umupdate/raw/branch/main/logreset)"
+fi
 done
