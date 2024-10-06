@@ -1,42 +1,47 @@
 #!/bin/bash
-version="v1.38"
-echo "#$version# Assistance at https://git.aevl.net/tek/umupdate
-#To use run \n bash update
-bash <(curl -s https://git.aevl.net/tek/umupdate/raw/branch/main/update)
-echo 'bye ;p'
-";
-sleep 4
+version="1.66.1"
+echo "Hello ! #v"$version"#"
+echo "Info at https://git.aevl.net/tek/umupdate #To use run # bash update or bash <(curl -s https://git.aevl.net/tek/umupdate/raw/branch/main/update)"
 if [ -f "/bin/update" ]; then
-    cat /bin/update
-###head -l 2 
-echo "bash <(curl -s https://github.com/tek-aevl/umupdate/raw/main/update)"
- echo "The file /bin/update already exist."
-    read -p "Do you update to new version? (y/n): " choice
-    if [ "$choice" == "y" ]; then
-    echo "Removing old"
-    sudo rm /bin/update
-    sudo cat /bin/update
-    echo "Running new bash"
-bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/main/update)
-    exit
-    else
-        echo "Cancelled."
- fi
+   installed_version=$(grep -oP '(?<=#)\S+(?=#)' /bin/update)
+   echo "Installed Version is "$installed_version
+   if [ "$installed_version" == "$version" ]; then
+       echo "Version matches!"
+   else
+       echo "Version mismatch! Installed version: $installed_version"
+       echo "The file /bin/update already exists."
+       read -p "Do you update to a new version? (Y/n): " choice 
+       choice="${choice:-y}"
+       if [ "$choice" == "y" ]; then
+           echo "Removing old"
+           sudo mkdir /bin/update.old
+           sudo mv /bin/update "/bin/update.old/$(date '+%Y%m%d%H%M%S').update"
+           echo $USER"@"$HOSTNAME
+           sleep 3
+           echo "Fetching the new bash script"
+           curl -sO "https://git.aevl.net/tek/umupdate/raw/branch/main/update" && chmod +x update && ./update
+           echo "Bye! $USER@$HOSTNAME "
+           exit;
+       else
+           echo "Cancelled."
+       fi
+   fi
 else
     echo "The file /bin/update does not exist."
-    read -p "Do you want to install it? (y/n): " choice
+    read -p "Do you want to install it? (y/n): " -e choice
     if [ "$choice" == "y" ]; then
-       echo -e '#!/bin/bash \n echo "'$version'" \n echo "Assistance at https://git.aevl.net/tek/umupdate" #To use run \n echo "bash update" \n bash <(curl -s https://github.com/tek-aevl/umupdate/raw/main/update) \n echo "bye!"' | sudo tee /bin/update > /dev/null
+echo -e '#!/bin/bash\n echo "#'$version'#"\n echo "Hello! $USER@$HOSTNAME "\n echo "Assistance at https://git.aevl.net/tek/umupdate" #To use run\n echo "bash update"\n bash <(curl -s https://git.aevl.net/tek/umupdate/raw/branch/main/update)\n echo $USER "bye! XD "' | sudo tee /bin/update > /dev/null
+
         sudo chmod 644 /bin/update
         sudo chmod +x /bin/update
-        echo "Cat contents"
+        echo "Verifying contents"
         cat /bin/update
         echo "Installed /bin/update successfully."
+        sleep 6
     else
         echo "Installation cancelled."
- fi
+    fi
 fi
-###export SUDO_ASKPASS=/usr/X11R6/bin/ssh-askpass  
 
 # Set the colors
 RED='\033[0;31m'       # Red color
@@ -56,7 +61,7 @@ NC='\033[0m'           # No color
 echo -e "This ${RED}text${NC} is ${RED}red.${NC}"
 echo -e "This ${YELLOW}text${NC} is ${YELLOW}yellow.${NC}"
 echo -e "This ${GREEN}text${NC} is ${GREEN}green.${NC}"
-sleep 4
+sleep 1
 
 # Get the IP address of the host
 HOST_IP=$(hostname -I | awk '{print $1}')
@@ -76,31 +81,64 @@ last -10
 sleep 1
 
 # Display information about users currently logged in
-echo ":~${HOST_IP} who -a"
+echo "~${HOST_IP} who -a"
 who -a
 sleep 3
 
-echo -e "${YELLOW} Can you ${RED}sudo${NC}?"
-echo -e "${RED} Password $USER@$HOSTNAME ($HOST_IP)  "
+echo -e "${YELLOW} Can you ${RED} sudo${NC}?"
+echo -e "${RED} Password $USER@$HOSTNAME ($HOST_IP) "
 # Check if sudo password is needed
 sudo -v 2>&1 | grep "Sorry, try again." > /dev/null
 if [ $? -eq 0 ]; then
- echo -e "${GREEN}You can Sudo. Right? ${NC}"
+ echo -e "${GREEN}You can Sudo. Right?${NC}"
+last 5
 sudo sleep 1
-elif sudo -v 2>&1;then 
+#if sudo -v 2>&1;then 
    echo -e "${YELLOW}Sudo password is required.${NC}"
-sudo -A who -a
-sleep 2
+sudo who -a
+sudo sleep 2
 fi
 
 # Programs needed in order to use this script.
-programs=("dialog" "bc" "inxi" "neofetch" "speedtest" "htop" "cron" "nano" "qemu-guest-agent" "fail2ban" "ncdu")
+      programs=("dialog" "bc" "speedtest"     "htop" "cron" "nano" "fail2ban" "ncdu")
 
 # Define the corresponding package names for each program
-package_names=("dialog" "bc" "inxi" "neofetch" "speedtest-cli" "htop" "cron" "nano" "qemu-guest-agent" "fail2ban" "ncdu")
+ package_names=("dialog" "bc" "speedtest-cli" "htop" "cron" "nano" "fail2ban" "ncdu")
+
+# Define the corresponding package names for each program
+programs2delete=("")
+package_delete=("")
+
+# Loop through the programs  ###for ((i=0; i<${#programs2delete[@]};# i++));# do
+for i in "${!programs2delete[@]}"; do
+    program=${programs2delete[i]}
+    package_name=${package_delete[i]}
+        # Check if the program is installed then remove.
+    if ! command -v $program &> /dev/null; then
+        # Program is found, remove it
+        echo "Uninstalling $package_name..."
+        if command -v pacman &> /dev/null; then
+            sudo pacman -R $package_name
+        elif command -v apt &> /dev/null; then
+            sudo apt remove -y $package_name
+        elif command -v dnf &> /dev/null; then  # Add support for Fedora
+            sudo dnf remove -y $package_name
+        elif command -v pkg &> /dev/null; then  # Add support for FreeBSD
+            sudo pkg remove -y $package_name
+        elif command -v zypper &> /dev/null; then  # Add support for openSUSE
+            sudo zypper remove -y $package_name
+        elif command -v pacman &> /dev/null; then  # Add support for Archlinux
+            sudo pacman -R $package_name
+        else
+            echo "Unable to remove $package_name. Please remove it manually."
+        fi
+    fi
+    echo -e "${NC}! ${GREEN} $package_name Removed${MAGENTA}!"
+done
+echo -e " ;-P ${NC} "
 
 # Loop through the programs
-for ((i=0; i<${#programs[@]}; i++)); do
+for i in "${!programs[@]}"; do
     program=${programs[i]}
     package_name=${package_names[i]}
     
@@ -108,11 +146,10 @@ for ((i=0; i<${#programs[@]}; i++)); do
     if ! command -v $program &> /dev/null; then
         # Program is not found, install it
         echo "Installing $package_name..."
-        if command -v apt &> /dev/null; then
-            sudo apt update
+        if command -v pacman &> /dev/null; then # Archlinux support
+            sudo pacman -Sy --noconfirm $package_name
+        elif command -v apt &> /dev/null; then
             sudo apt install -y $package_name
-        elif command -v pacman &> /dev/null; then
-            sudo pacman -Sy $package_name
         elif command -v dnf &> /dev/null; then  # Add support for Fedora
             sudo dnf install -y $package_name
         elif command -v pkg &> /dev/null; then  # Add support for FreeBSD
@@ -123,9 +160,9 @@ for ((i=0; i<${#programs[@]}; i++)); do
             echo "Unable to install $package_name. Please install it manually."
         fi
     fi
-    echo -e "${NC} $package_name ${GREEN} Installed ${MAGENTA}!${NC}"
+    echo -e "${NC}! ${GREEN} $package_name Installed ${MAGENTA}!"
 done
-
+echo -e ";-P${NC}"
 
 echo "get-time $USER@$HOSTNAME ($HOST_IP)"
 # Get the current timestamp
@@ -171,13 +208,19 @@ if pihole -v &> /dev/null; then
 echo -e "${GREEN}Pihole Updates!${NC}"
 
     # Pi-hole is installed, run the commands
+echo "arpflush"
     pihole arpflush
+echo "restartdns"
     pihole restartdns
+echo "-g"
     pihole -g
+echo "restartdns"
     pihole restartdns
+echo "-up"
     pihole -up
+echo "complete"
 
-echo '$USER "@" $HOSTNAME'
+echo $USER "@" $HOSTNAME
 
 echo -e "${CYAN} Automatically selected $force_log_reset ${NC}"
 sleep 2
@@ -232,10 +275,12 @@ update_command=""
 upgrade_command=""
 
 # Check which package manager is available
-if command -v apt &> /dev/null; then
+if command -v pacman &> /dev/null; then
+    update_command="sudo pacman -Syyu --noconfirm"
+    upgrade_command="sudo pacman -Syyu --noconfirm"
+elif command -v apt &> /dev/null; then
     update_command="sudo apt update"
     upgrade_command="sudo apt upgrade -y" 
-    
     #secret#
     echo -e  "${YELLOW}autoremove"
     sudo apt autoremove -y
@@ -255,6 +300,9 @@ elif command -v pkg &> /dev/null; then
 elif command -v zypper &> /dev/null; then
     update_command="sudo zypper refresh"
     upgrade_command="sudo zypper update -y"
+elif command -v pacman &> /dev/null; then
+    update_command="sudo pacman -Syyu"
+    upgrade_command="sudo pacman -Syu"
 else
     echo "Unable to determine the package manager. Please update and upgrade manually."
     exit 1
@@ -282,8 +330,10 @@ if [[ $version =~ ^([0-9]+\.[0-9]+\.[0-9]+).* ]]; then
 sleep 10
 fi
 running_kernel=$version
+
 # Get the installed kernel version
 installed_kernel=$(dpkg --list | grep "linux-image" | awk '{print $3}' | awk -F'-' '{print $1}' | sort -V | tail -n1)
+
 # Input version string
 version=""
 version=$(dpkg --list | grep "linux-image" | awk '{print $3}' | awk -F'-' '{print $1}' | sort -V | tail -n1)
@@ -295,7 +345,8 @@ if [[ $version =~ ^([0-9]+\.[0-9]+\.[0-9]+).* ]]; then
   version="${BASH_REMATCH[1]}"
 else
   echo -e "${RED}Invalid version format, is this linux real?${NC}"
-  echo -e "${LIGHT_RED}Skipping${NC}"
+   echo -e "${LIGHT_RED}Final test ${NC}"
+   bash <(curl -s https://git.aevl.net/tek/umupdate/raw/branch/main/kernelchk)
 fi
 installed_kernel=$version
 if [[ $running_kernel != $installed_kernel ]]; then
@@ -306,12 +357,14 @@ if [[ $running_kernel != $installed_kernel ]]; then
        echo -e "L8r $USER@$HOSTNAME ($HOST_IP)"
     # Uncomment the following line to perform the reboot
     sleep 3 
+      echo "${RED}Rebooting....${NC}"
       sudo reboot
+      sleep 10
   else
-    echo -e "${LIGHT_RED}Reboot denied.${NC}"  
-     sleep 3 
     echo "  $USER@$HOSTNAME ($HOST_IP)"
-  fi
+    echo -e "${LIGHT_RED}Reboot denied.${NC}"  
+    sleep 3 
+   fi
 else
 echo -e "${GREEN}Running   version >>: $running_kernel ${NC}"
 inxi
@@ -328,8 +381,8 @@ echo -e "${YELLOW} System uptime: $days days, $hours hours, $minutes minutes ${N
     if [[ $choice != [Nn] ]]; then
       echo -e "${RED} Rebooting... $USER @ $HOSTNAME ($HOST_IP) ${NC}"
       # Uncomment the following line to perform the reboot
-          sleep 2
-          sudo reboot
+      sudo reboot
+        sleep 10
     else
       echo -e "${RED} Reboot skipped. $USER@$HOSTNAME ($HOST_IP) ${NC} " && sleep 3
     fi
@@ -337,53 +390,55 @@ echo -e "${YELLOW} System uptime: $days days, $hours hours, $minutes minutes ${N
 
 echo -e "${GREEN} So good news! ${NC} $USER@$HOSTNAME ($HOST_IP)"   
 echo -e " The system has ${GREEN}not${NC} been running for longer than ${YELLOW}three${NC} days. ${RED}No reboot required. ${NC}"
-uptime
 echo -e "${GREEN} System uptime: $days days, $hours hours, $minutes minutes ${NC}"
 echo "uptime $USER@$HOSTNAME ($HOST_IP)"
 uptime
-sleep 3
+users 
+last 5
+sleep 6
 echo $USER "@" $HOSTNAME
     # Default to "no" if running for less than three days
     read -p "Reboot Anyway? (y/N): " choice
     if [[ $choice == [Yy] ]]; then
       echo -e "${RED} Rebooting... after 10 sec $USER@$HOSTNAME ($HOST_IP) ${NC}"
        sleep 4 
-       neofetch
+       screenfetch
        inxi  
        uname -a
       echo -e " ${RED} byah $USER@$HOSTNAME $HOST_IP ${NC} " && sleep 3
        sudo reboot
+       sleep 10
     else
       echo -e "${GREEN} Reboot Skipped. $USER@$HOSTNAME ($HOST_IP) ${NC}"
     fi
   fi
 fi
 
-echo $USER "@" $HOSTNAME
-read -p "Run Speedtest? (y/N):" response
+echo "$USER@$HOSTNAME"
+read -p "Run Speedtest? (Y/n): " response
 
-if [[ -n $response ]]; then
-    if [[ $response == "yes" ]] || [[ $response == "y" ]]; then
-        echo "$USER@$HOSTNAME speedtest"
-        speedtest --secure
-        sleep 3
-    elif [[ $response == "no" ]] || [[ $response == "n" ]]; then
-        echo -e "${GREEN}Not running speedtest : System uptime: $(uptime)${NC}" 
-        sleep 4
+if [[ -z $response || $response == "y" || $response == "Y" ]]; then
+    echo "$USER@$HOSTNAME speedtest"
+    if command -v lolcat &> /dev/null; then
+        speedtest --secure | lolcat
     else
-        echo -e "${YELLOW}Invalid input.${NC}"
+        speedtest --secure
     fi
+    sleep 3
+elif [[ $response == "n" || $response == "N" ]]; then
+    echo "Not running speedtest : System uptime: $(uptime)"
+    sleep 4
 else
-    echo -e "${YELLOW}No input received. Using default value $nettest.${NC}"
+    echo "Invalid input."
 fi
 
 
 echo $USER "@" $HOSTNAME
 who -a && last -n 6
-neofetch
+sleep 4
 inxi
 uname -a
 echo -e "Current Running kernel ($running_kernel) ; Current Installed kernel ($installed_kernel)."
 echo -e "${GREEN} Byah.!. $USER@$HOSTNAME ($HOST_IP) ${NC}"
 sleep 6
-exit;
+exit; 
