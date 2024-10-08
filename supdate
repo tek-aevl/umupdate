@@ -172,7 +172,7 @@ for ip in $ip_list; do
 #off#    copy_ssh_key
     if check_pihole $ip; then
       echo -e "Pi-hole detected on $ip "
-      ssh -yt $ip "(curl -s https://git.aevl.net/tek/umupdate/raw/branch/main/update)|bash"
+      ssh -yt $ip "(curl -s https://github.com/tek-aevl/umupdate/edit/main/supdate)|bash"
      # ssh -tY $ip "bash <(curl -s https://git.aevl.net/Tek/umupdate/raw/branch/main/logreset)"
     else
       echo -e "Running Updates on $ip "
@@ -182,7 +182,7 @@ for ip in $ip_list; do
        echo "Success!"
     else
  #if not installed run remote.
-     ssh -tY $ip "bash <(curl -s https://git.aevl.net/tek/umupdate/raw/branch/main/update)"
+     ssh -tY $ip "bash <(curl -s https://github.com/tek-aevl/umupdate/edit/main/update)"
   fi
     # ssh -tY $ip "bash <(curl -s https://git.aevl.net/tek/umupdate/raw/branch/main/logreset)"
 fi
