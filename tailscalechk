@@ -32,15 +32,16 @@ check_command "tailscale version"
 echo "Running version: $running_version"
 
 # Compare the versions using 'sort' command
-if [[ "$installed_version" != "$running_version" ]]; then
+if [[ "$installed_version" = "$running_version" ]]; then
+   echo "Running version is $running_version up to date. Installed version is $installed_version up to date."
+    sleep 3
+
+ else
     echo "Running version is older than installed version. Restarting tailscaled..."
     sudo tailscale version
     sudo systemctl restart tailscaled
     sudo systemctl status  tailscaled
-else
-    echo "Running version is $running_version up to date. Installed version is $installed_version up to date."
-    sleep 3
-fi
+ fi
 sudo tailscale status
 echo "tailscalechk complete ;-p"
 sleep 3
