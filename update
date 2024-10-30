@@ -1,7 +1,7 @@
 #!/bin/bash
 version="1.66.1"
 echo "Hello ! #v"$version"#"
-echo "Info at https://git.aevl.net/tek/umupdate #To use run # bash update or bash <(curl -s https://git.aevl.net/tek/umupdate/raw/branch/main/update)"
+echo "Info at https://github.com/tek-aevl/umupdate/ #To use run # bash update or bash <(curl -s https://github.com/tek-aevl/umupdate/raw/refs/heads/main/update)"
 if [ -f "/bin/update" ]; then
    installed_version=$(grep -oP '(?<=#)\S+(?=#)' /bin/update)
    echo "Installed Version is "$installed_version
