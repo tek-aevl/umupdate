@@ -2,7 +2,7 @@
 set -e
 echo "#V.18.1# To use this in cli use"
 echo "sudo nano /bin/prune
-# copy the next 3 lines into it with, and chmod it to 755
+# copy the next 3 lines into it with, and chmod it to 755  
 #!/bin/bash
 bash <(curl -s https://git.aevl.net/tek/umupdate/raw/branch/main/prune)
 echo 'end of prune'
@@ -18,9 +18,9 @@ if command -v podman &>/dev/null; then
         echo "Podman List"
         sudo podman ps
         echo "Stop all"
-        sudo podman stop --all
+        sudo podman stop --all   
         sudo podman ps
-        echo "Pruning"
+        echo "Pruning" 
         sudo podman container stop --all
         sudo podman ps
         sudo podman container kill --all
