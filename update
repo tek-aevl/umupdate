@@ -19,7 +19,7 @@ if [ -f "/bin/update" ]; then
            echo $USER"@"$HOSTNAME
            sleep 3
            echo "Fetching the new bash script"
-           curl -sO "https://git.aevl.net/tek/umupdate/raw/branch/main/update" && chmod +x update && ./update
+           curl -sO "https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update" && chmod +x update && ./update
            echo "Bye! $USER@$HOSTNAME "
            exit;
        else
@@ -30,7 +30,7 @@ else
     echo "The file /bin/update does not exist."
     read -p "Do you want to install it? (y/n): " -e choice
     if [ "$choice" == "y" ]; then
-echo -e '#!/bin/bash\n echo "#'$version'#"\n echo "Hello! $USER@$HOSTNAME "\n echo "Assistance at https://git.aevl.net/tek/umupdate" #To use run\n echo "bash update"\n bash <(curl -s https://git.aevl.net/tek/umupdate/raw/branch/main/update)\n echo $USER "bye! XD "' | sudo tee /bin/update > /dev/null
+echo -e '#!/bin/bash\n echo "#'$version'#"\n echo "Hello! $USER@$HOSTNAME "\n echo "Assistance at https://github.com/tek-aevl/umupdate/" #To use run\n echo "bash update"\n bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update)\n echo $USER "bye! XD "' | sudo tee /bin/update > /dev/null
 
         sudo chmod 644 /bin/update
         sudo chmod +x /bin/update
