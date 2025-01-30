@@ -23,10 +23,10 @@ sleep 4
 echo -e "Welcome " $USER "@" $HOSTNAME "${GREEN}"
 
 # Define a list of programs to check
-programs=("dialog" "bc" "inxi" "neofetch" "speedtest" "htop" "cron" "nano")
+programs=("dialog" "bc" "inxi"  "speedtest" "htop" "cron" "nano")
 
 # Define the corresponding package names for each program
-package_names=("dialog" "bc" "inxi" "neofetch" "speedtest-cli" "htop" "cron" "nano")
+package_names=("dialog" "bc" "inxi"  "speedtest-cli" "htop" "cron" "nano")
 
 # Loop through the programs
 for ((i=0; i<${#programs[@]}; i++)); do
