@@ -196,7 +196,7 @@ echo -e "${RED} Current Time variables : $days days, $hours hours, $minutes minu
 sleep 4
 
 
-if [[ $days -ge 3 ]]; then
+if [[ $days -ge 1 ]]; then
    force_log_reset="yes"
     echo -e "${RED}System uptime: $days days, $hours hours, $minutes minutes ${NC}" 
     else
