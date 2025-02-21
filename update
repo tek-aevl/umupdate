@@ -226,15 +226,15 @@ echo -e "${GREEN}Pihole Updates!${NC}"
 
     # Pi-hole is installed, run the commands
 echo "arpflush"
-    pihole arpflush
+    sudo pihole arpflush
 echo "restartdns"
-    pihole restartdns
+    sudo pihole restartdns
 echo "-g"
-    pihole -g
+    sudo pihole -g
 echo "restartdns"
-    pihole restartdns
+    sudo pihole restartdns
 echo "-up"
-    pihole -up
+    sudo pihole -up
 echo "complete"
 
 echo $USER "@" $HOSTNAME
@@ -432,7 +432,7 @@ echo $USER "@" $HOSTNAME
 fi
 
 echo "$USER@$HOSTNAME"
-read -p "Run Speedtest? (Y/n): " response
+read -p "Run Speedtest? (y/n): " response
 
 if [[ -z $response || $response == "y" || $response == "Y" ]]; then
     echo "$USER@$HOSTNAME speedtest"
