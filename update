@@ -30,13 +30,32 @@ else
     echo "The file /bin/update does not exist."
     read -p "Do you want to install it? (y/n): " -e choice
     if [ "$choice" == "y" ]; then
+/# START SECTION/
 echo -e '#!/bin/bash\n echo "#'$version'#"\n echo "Hello! $USER@$HOSTNAME "\n echo "Assistance at https://github.com/tek-aevl/umupdate/" #To use run\n echo "bash update"\n bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update)\n echo $USER "bye! XD "' | sudo tee /bin/update > /dev/null
-
+/# END SECTION/
         sudo chmod 644 /bin/update
         sudo chmod +x /bin/update
         echo "Verifying contents"
-        cat /bin/update
-        echo "Installed /bin/update successfully."
+#!/bin/bash
+
+echo "Verifying contents of /bin/update..."
+
+# Fetch the latest update script from GitHub
+curl -s -o /tmp/github_update "https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update"
+
+# Show the contents of /bin/update
+cat /bin/update
+
+# Compare the entire file with the online version
+if diff -q /bin/update /tmp/github_update > /dev/null; then
+    echo "✅ /bin/update matches the latest version from GitHub."
+else
+    echo "❌ Warning: /bin/update does not match the latest version from GitHub!"
+    diff -u /bin/update /tmp/github_update  # Show differences
+fi
+
+echo "Installed /bin/update successfully."
+
         sleep 6
     else
         echo "Installation cancelled."
