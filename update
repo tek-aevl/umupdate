@@ -100,10 +100,10 @@ sudo sleep 2
 fi
 
 # Programs needed in order to use this script ("dialog" "bc" "speedtest" ), and extra tools that are nice.
-      programs=("dialog" "bc" "speedtest"  "nload"    "htop" "cron" "nano" "fail2ban" "ncdu" "iftop" "lolcat")
+      programs=("dialog" "bc" "speedtest"  "nload"    "htop" "cron" "nano" "fail2ban" "ncdu" "iftop" "lolcat" "screenfetch")
 
 # Define the corresponding package names for each program
- package_names=("dialog" "bc" "speedtest-cli" "nload" "htop" "cron" "nano" "fail2ban" "ncdu" "iftop" "lolcat")
+ package_names=("dialog" "bc" "speedtest-cli" "nload" "htop" "cron" "nano" "fail2ban" "ncdu" "iftop" "lolcat" "screenfetch")
 
 # Define the corresponding package names for each program
 programs2delete=("")
