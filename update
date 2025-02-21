@@ -76,8 +76,8 @@ uname -a
 sleep 1
 echo -e "${NC}"
 # Display login history
-echo ":~${HOST_IP} last -10"
-last -10
+echo ":~${HOST_IP} last "
+last -F | head -10
 sleep 1
 
 # Display information about users currently logged in
