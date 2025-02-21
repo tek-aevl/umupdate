@@ -242,7 +242,7 @@ if [[ $force_log_reset != "no" && $force_log_reset != "n" ]]; then
    echo "# current old db size"
         sudo du -h /etc/pihole/pihole-FTL-old.db -h
    echo "#pihole flush"
-      pihole flush
+        sudo pihole flush
    echo "# Output pihole db size"
         sudo du -h /etc/pihole/pihole-FTL.db -h
         sudo rm /etc/pihole/pihole-FTL-old.db 
