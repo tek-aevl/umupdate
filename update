@@ -1,5 +1,5 @@
 #!/bin/bash
-version="1.69.1.1"
+version="1.69.1.2"
 echo "Hello ! #v"$version"#"
 echo "Info at https://github.com/tek-aevl/umupdate/ #To use run # bash update or bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update)"
 if [ -f "/bin/update" ]; then
@@ -30,10 +30,10 @@ else
     echo "The file /bin/update does not exist."
     read -p "Do you want to install it? (y/n): " -e choice
     if [ "$choice" == "y" ]; then
-#!/bin/bash
-
+/# START SECTION/
+echo -e '#!/bin/bash\n echo "#'$version'#"\n echo "Hello! $USER@$HOSTNAME "\n echo "Assistance at https://github.com/tek-aevl/umupdate/" #To use run\n echo "bash update"\n bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update)\n echo $USER "bye! XD "' | sudo tee /bin/update > /dev/null
+/# END SECTION/
 echo "Verifying contents of /bin/update..."
-
 # Fetch the latest update script from GitHub
 curl -s -o /tmp/github_update "https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update"
 
