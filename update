@@ -1,5 +1,5 @@
 #!/bin/bash
-version="1.69.1.2"
+version="1.69.1.0"
 echo "Hello ! #v"$version"#"
 echo "Info at https://github.com/tek-aevl/umupdate/ #To use run # bash update or bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update)"
 if [ -f "/bin/update" ]; then
@@ -231,15 +231,17 @@ if pihole -v &> /dev/null; then
 echo -e "${GREEN}Pihole Updates!${NC}"
 
     # Pi-hole is installed, run the commands
-echo "arpflush"
+echo "sudo pihole arpflush"
     sudo pihole arpflush
-echo "restartdns"
-    sudo pihole restartdns
-echo "-g"
+echo "sudo pihole flush"
+    sudo pihole flush
+echo "sudo pihole reloaddns"
+    sudo pihole  reloaddns 
+echo "sudo pihole updateGravity"
     sudo pihole -g
-echo "restartdns"
-    sudo pihole restartdns
-echo "-up"
+echo "reload list"
+    sudo pihole reloadlist
+echo "sudo pihole -up"
     sudo pihole -up
 echo "complete"
 
