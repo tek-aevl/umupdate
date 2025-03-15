@@ -73,7 +73,7 @@ days=$((time_difference / 86400))
 hours=$(( (time_difference % 86400) / 3600 ))
 minutes=$(( (time_difference % 3600) / 60 ))
 
-if [[ $days -ge 3 ]]; then
+if [[ $days -ge 1 ]]; then
    force_log_reset="yes"
     echo -e "${YELLOW}System uptime: $days days, $hours hours, $minutes minutes ${NC}" 
     else
