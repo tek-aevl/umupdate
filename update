@@ -218,8 +218,10 @@ minutes=$(echo "$uptime_seconds % 3600 / 60" | bc)
 echo -e "${RED} Current Time variables : $days days, $hours hours, $minutes minutes ${NC}"
 sleep 4
 
+# Set threshold for the number of days before running this
+waitfor=1  # Change this value as needed
 
-if [[ $days -ge 1 ]]; then
+if [[ "$days" -ge "$waitfor" ]]; then
    force_log_reset="yes"
     echo -e "${RED}System uptime: $days days, $hours hours, $minutes minutes ${NC}" 
     else
