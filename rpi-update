@@ -74,7 +74,7 @@ hours=$(( (time_difference % 86400) / 3600 ))
 minutes=$(( (time_difference % 3600) / 60 ))
 
 # Set threshold for the number of days before running this
-waitfor=1  # Change this value as needed
+waitfor=0  # Change this value as needed
 
 if [[ "$days" -ge "$waitfor" ]]; then
     force_log_reset="yes"
