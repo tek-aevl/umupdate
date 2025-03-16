@@ -248,7 +248,7 @@ else
 fi
 echo $USER "@" $HOSTNAME
 echo -e " $USER @ $HOSTNAME "
-neofetch
+fastfetch
 inxi
 uname -a
 echo -e "Current Running kernel ($running_kernel) ; Current Installed kernel ($installed_kernel)."
