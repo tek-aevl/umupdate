@@ -218,7 +218,7 @@ minutes=$(echo "$uptime_seconds % 3600 / 60" | bc)
 echo -e "${RED} Current Time variables : $days days, $hours hours, $minutes minutes ${NC}"
 sleep 4
 
-# Set threshold for the number of days before running this
+# Set threshold for the number of days before running this ###pihole tasks###
 waitfor=1  # Change this value as needed
 
 if [[ "$days" -ge "$waitfor" ]]; then
@@ -295,7 +295,7 @@ else
     echo -e "${YELLOW}Invalid input.${NC}"
 fi
 fi 
-
+###end of pihole tasks###
 
 # Define the package manager update/upgrade commands
 update_command=""
