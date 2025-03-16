@@ -89,11 +89,11 @@ if pihole -v &> /dev/null; then
 echo -e "${GREEN}Pihole Updates!${NC}"
 
     # Pi-hole is installed, run the commands
-    pihole arpflush
-    pihole restartdns
-    pihole -g
-    pihole restartdns
-    pihole -up
+    sudo pihole arpflush
+    sudo pihole restartdns
+    sudo pihole -g
+    sudo pihole restartdns
+    sudo pihole -up
 
 echo $USER "@" $HOSTNAME
 
