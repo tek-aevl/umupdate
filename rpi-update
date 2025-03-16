@@ -149,6 +149,7 @@ fi
 #####################################################
 uptime; sleep 3; 
 
+nettest=" "
 echo -e "${YELLOW}Speedtest!${NC}" 
 nettest="yes"
 read -p "Speedtest? (y/n): $nettest " nettest
@@ -157,9 +158,10 @@ if [[ -n $nettest ]]; then
     if [[ $nettest == "yes" ]] || [[ $nettest == "y" ]]; then
         echo "$USER@$HOSTNAME speedtest"
         speedtest --secure
-        sleep 3
+        sleep 1
     elif [[ $nettest == "no" ]] || [[ $nettest == "n" ]]; then
-        echo -e "${GREEN} Not running speedtest : System uptime: $days days, $hours hours, $minutes minutes ${NC}" 
+        echo "$USER@$HOSTNAME speedtest"
+        echo -e "${GREEN} Canceled : System uptime: $days days, $hours hours, $minutes minutes ${NC}" 
         sleep 4
     else
         echo -e "${YELLOW}Invalid input.${NC}"
