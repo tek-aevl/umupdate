@@ -150,7 +150,7 @@ fi
 uptime; sleep 3; 
 
 echo -e "${YELLOW}Speedtest!${NC}" 
-nettest="no"
+nettest="yes"
 read -p "Speedtest? (y/n): $nettest " nettest
 
 if [[ -n $nettest ]]; then
