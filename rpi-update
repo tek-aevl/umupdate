@@ -193,7 +193,7 @@ uptime_timestamp=$(printf "%.0f" $(cut -d' ' -f1 /proc/uptime))
 
 uname -a
 echo -e "${YELLOW}l8r ! " $USER "@" $HOSTNAME "${NC}"
-neofetch
+fastfetch
 inxi
 sleep 3
 # Get the uptime of the system
