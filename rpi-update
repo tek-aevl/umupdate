@@ -23,10 +23,10 @@ sleep 4
 echo -e "Welcome " $USER "@" $HOSTNAME "${GREEN}"
 
 # Define a list of programs to check
-programs=("dialog" "bc" "inxi"  "speedtest" "htop" "cron" "nano" "fastfetch")
+programs=("dialog" "bc" "inxi"  "speedtest" "htop" "cron" "nano" "screenfetch")
 
 # Define the corresponding package names for each program
-package_names=("dialog" "bc" "inxi"  "speedtest-cli" "htop" "cron" "nano" "fastfetch")
+package_names=("dialog" "bc" "inxi"  "speedtest-cli" "htop" "cron" "nano" "screenfetch")
 
 # Loop through the programs
 for ((i=0; i<${#programs[@]}; i++)); do
@@ -193,7 +193,7 @@ uptime_timestamp=$(printf "%.0f" $(cut -d' ' -f1 /proc/uptime))
 
 uname -a
 echo -e "${YELLOW}l8r ! " $USER "@" $HOSTNAME "${NC}"
-fastfetch
+screenfetch
 inxi
 sleep 3
 # Get the uptime of the system
@@ -248,7 +248,7 @@ else
 fi
 echo $USER "@" $HOSTNAME
 echo -e " $USER @ $HOSTNAME "
-fastfetch
+screenfetch
 inxi
 uname -a
 echo -e "Current Running kernel ($running_kernel) ; Current Installed kernel ($installed_kernel)."
