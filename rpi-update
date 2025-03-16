@@ -1,6 +1,6 @@
 #!/bin/bash
 ###################################################################################################################
-echo "#c.70###TEST-premerge# To use this in cli use"
+echo "#c.71###TEST-premerge# To use this in cli use"
 echo "sudo nano /bin/usr/update
 # copy the next 3 lines into it with, and chmod it to 755  
 #!/bin/bash
