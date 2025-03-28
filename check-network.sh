@@ -23,6 +23,7 @@ else
   echo -e "${RED}❌ Default gateway is $GATEWAY, expected 10.30.0.1${NC}"
 fi
 
+
 echo -e "\n📡 Checking DNS servers..."
 if command -v resolvectl &>/dev/null; then
   DNS_SERVERS=$(resolvectl dns "$DEFAULT_DEV" | awk '{for (i=2; i<=NF; i++) print $i}')
