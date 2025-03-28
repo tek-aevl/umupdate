@@ -25,7 +25,7 @@ if [[ "$GATEWAY" == "10.30.0.1" ]]; then
   echo -e "${GREEN}✅ Default gateway is correctly set to 10.30.0.1${NC}"
 
 elif [[ "$GATEWAY" == "10.20.0.1" && "$DISTRO" == "arch" ]]; then
-  echo -e "${GREEN}✅ Default gateway is 10.20.0.1 (allowed for Arch)${NC}"
+  echo -e "${GREEN}✅ Default gateway is 10.20.0.1 (allowed for nested VM)${NC}"
 
 else
   echo -e "${RED}❌ Default gateway is $GATEWAY — expected 10.30.0.1"
