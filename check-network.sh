@@ -1,4 +1,6 @@
 #!/bin/bash
+# Run this script directly from GitHub:
+# bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/check-network.sh)
 
 # Color codes
 GREEN='\033[0;32m'
