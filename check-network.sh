@@ -17,17 +17,21 @@ fi
 echo -e "\n🌐 Checking default gateway..."
 GATEWAY=$(ip route | awk '/default/ {print $3}' | head -n1)
 
-case "$GATEWAY" in
-  "10.30.0.1")
-    echo -e "${GREEN}✅ Default gateway is correctly set to 10.30.0.1${NC}"
-    ;;
-  "10.20.0.1")
-    echo -e "${RED}⚠️ Default gateway is $GATEWAY. Acceptable, but not preferred.${NC}"
-    ;;
-  *)
-    echo -e "${RED}❌ Default gateway is $GATEWAY, expected 10.30.0.1${NC}"
-    ;;
-esac
+# Detect OS
+DISTRO=$(source /etc/os-release && echo "$ID")
+
+# Check gateway
+if [[ "$GATEWAY" == "10.30.0.1" ]]; then
+  echo -e "${GREEN}✅ Default gateway is correctly set to 10.30.0.1${NC}"
+
+elif [[ "$GATEWAY" == "10.20.0.1" && "$DISTRO" == "arch" ]]; then
+  echo -e "${GREEN}✅ Default gateway is 10.20.0.1 (allowed for Arch)${NC}"
+
+else
+  echo -e "${RED}❌ Default gateway is $GATEWAY — expected 10.30.0.1"
+  echo -e "   Arch systems may use 10.20.0.1${NC}"
+fi
+
 
 
 echo -e "\n📡 Checking DNS servers..."
