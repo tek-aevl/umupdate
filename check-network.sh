@@ -17,11 +17,17 @@ fi
 echo -e "\n🌐 Checking default gateway..."
 GATEWAY=$(ip route | awk '/default/ {print $3}' | head -n1)
 
-if [[ "$GATEWAY" == "10.30.0.1" ]]; then
-  echo -e "${GREEN}✅ Default gateway is correctly set to 10.30.0.1${NC}"
-else
-  echo -e "${RED}❌ Default gateway is $GATEWAY, expected 10.30.0.1${NC}"
-fi
+case "$GATEWAY" in
+  "10.30.0.1")
+    echo -e "${GREEN}✅ Default gateway is correctly set to 10.30.0.1${NC}"
+    ;;
+  "10.20.0.1")
+    echo -e "${RED}⚠️ Default gateway is $GATEWAY. Acceptable, but not preferred.${NC}"
+    ;;
+  *)
+    echo -e "${RED}❌ Default gateway is $GATEWAY, expected 10.30.0.1${NC}"
+    ;;
+esac
 
 
 echo -e "\n📡 Checking DNS servers..."
