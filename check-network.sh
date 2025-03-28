@@ -3,7 +3,11 @@
 # Color codes
 GREEN='\033[0;32m'
 RED='\033[0;31m'
+YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
+
+FIX_MODE=false
+[[ "$1" == "--fix" ]] && FIX_MODE=true
 
 echo -e "\n🔍 Checking default network device..."
 DEFAULT_DEV=$(ip route | awk '/default/ {print $5}' | head -n1)
@@ -26,7 +30,6 @@ else
 fi
 
 echo -e "\n🌐 Checking default gateway..."
-
 if [[ "$GATEWAY" == "10.30.0.1" ]]; then
   echo -e "${GREEN}✅ Default gateway is correctly set to 10.30.0.1${NC}"
 elif [[ "$GATEWAY" == "10.20.0.1" && "$DHCP_SERVER" == "10.20.0.1" ]]; then
@@ -35,6 +38,11 @@ else
   echo -e "${RED}❌ Unexpected gateway configuration:${NC}"
   echo -e "${RED}   Gateway: $GATEWAY${NC}"
   echo -e "${RED}   DHCP Server: $DHCP_SERVER${NC}"
+  if $FIX_MODE; then
+    echo -e "${YELLOW}⚙️  Attempting to set default gateway to 10.30.0.1...${NC}"
+    sudo ip route replace default via 10.30.0.1 dev "$DEFAULT_DEV"
+    echo -e "${GREEN}✅ Gateway updated to 10.30.0.1${NC}"
+  fi
 fi
 
 # Check DNS servers
@@ -50,4 +58,9 @@ if echo "$DNS_SERVERS" | grep -q "10.30.0.1"; then
 else
   echo -e "${RED}❌ DNS server is missing 10.30.0.1. Found:${NC}"
   echo "$DNS_SERVERS"
+  if $FIX_MODE; then
+    echo -e "${YELLOW}⚙️  Replacing DNS with 10.30.0.1...${NC}"
+    echo -e "nameserver 10.30.0.1\noptions edns0 trust-ad\n" | sudo tee /etc/resolv.conf > /dev/null
+    echo -e "${GREEN}✅ /etc/resolv.conf updated${NC}"
+  fi
 fi
