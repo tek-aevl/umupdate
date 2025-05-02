@@ -218,6 +218,56 @@ minutes=$(echo "$uptime_seconds % 3600 / 60" | bc)
 echo -e "${RED} Current Time variables : $days days, $hours hours, $minutes minutes ${NC}"
 sleep 4
 
+# Define the package manager update/upgrade commands
+update_command=""
+upgrade_command=""
+
+# Check which package manager is available
+if command -v pacman &> /dev/null; then
+    update_command="sudo pacman -Syyu --noconfirm"
+    upgrade_command="sudo pacman -Syyu --noconfirm"
+elif command -v apt &> /dev/null; then
+    update_command="sudo apt update"
+    upgrade_command="sudo apt upgrade -y" 
+    #secret#
+    echo -e  "${YELLOW}autoremove"
+    sudo apt autoremove -y
+    echo -e  "${NC}"
+    echo -e "${GREEN}Running apt autoremove..."
+    sudo apt autoremove
+    echo -e "${NC}"
+elif command -v pacman &> /dev/null; then
+    update_command="sudo pacman -Syu"
+    upgrade_command="sudo pacman -Syyu --noconfirm"
+elif command -v dnf &> /dev/null; then
+    update_command="sudo dnf check-update"
+    upgrade_command="sudo dnf upgrade -y"
+elif command -v pkg &> /dev/null; then
+    update_command="sudo pkg update"
+    upgrade_command="sudo pkg upgrade -y"
+elif command -v zypper &> /dev/null; then
+    update_command="sudo zypper refresh"
+    upgrade_command="sudo zypper update -y"
+elif command -v pacman &> /dev/null; then
+    update_command="sudo pacman -Su"
+    upgrade_command="sudo pacman -Syyu"
+else
+    echo "Unable to determine the package manager. Please update and upgrade manually."
+    exit 1
+fi
+
+# Update the system
+echo "Updating packages..."
+$update_command
+
+# Upgrade the system
+echo "Upgrading packages..."
+$upgrade_command
+
+echo -e " ${GREEN} Script completed.${NC} "
+sleep 1
+
+
 ###pihole tasks###
 # Set threshold for the number of days before running this 
 waitfor=1  # Change this value as needed
@@ -298,54 +348,10 @@ fi
 fi 
 ###end of pihole tasks###
 
-# Define the package manager update/upgrade commands
-update_command=""
-upgrade_command=""
 
-# Check which package manager is available
-if command -v pacman &> /dev/null; then
-    update_command="sudo pacman -Syyu --noconfirm"
-    upgrade_command="sudo pacman -Syyu --noconfirm"
-elif command -v apt &> /dev/null; then
-    update_command="sudo apt update"
-    upgrade_command="sudo apt upgrade -y" 
-    #secret#
-    echo -e  "${YELLOW}autoremove"
-    sudo apt autoremove -y
-    echo -e  "${NC}"
-    echo -e "${GREEN}Running apt autoremove..."
-    sudo apt autoremove
-    echo -e "${NC}"
-elif command -v pacman &> /dev/null; then
-    update_command="sudo pacman -Syu"
-    upgrade_command="sudo pacman -Syyu --noconfirm"
-elif command -v dnf &> /dev/null; then
-    update_command="sudo dnf check-update"
-    upgrade_command="sudo dnf upgrade -y"
-elif command -v pkg &> /dev/null; then
-    update_command="sudo pkg update"
-    upgrade_command="sudo pkg upgrade -y"
-elif command -v zypper &> /dev/null; then
-    update_command="sudo zypper refresh"
-    upgrade_command="sudo zypper update -y"
-elif command -v pacman &> /dev/null; then
-    update_command="sudo pacman -Syyu"
-    upgrade_command="sudo pacman -Syu"
-else
-    echo "Unable to determine the package manager. Please update and upgrade manually."
-    exit 1
-fi
 
-# Update the system
-echo "Updating packages..."
-$update_command
 
-# Upgrade the system
-echo "Upgrading packages..."
-$upgrade_command
 
-echo -e " ${GREEN} Script completed.${NC} "
-sleep 1
 # Get the running kernel version
 version=$(uname -r)
 echo "Running kernel $version"
