@@ -427,30 +427,12 @@ echo -e " The system has ${GREEN}not${NC} been running for longer than ${YELLOW}
 echo -e "${GREEN} System uptime: $days days, $hours hours, $minutes minutes ${NC}"
 echo "uptime $USER@$HOSTNAME ($HOST_IP)"
 uptime
+sleep 3
 users 
-last 5
-sleep 6
-echo $USER "@" $HOSTNAME
-    # Default to "no" if running for less than three days
-    read -p "Reboot Anyway? (y/N): " choice
-    if [[ $choice == [Yy] ]]; then
-      echo -e "${RED} Rebooting... after 10 sec $USER@$HOSTNAME ($HOST_IP) ${NC}"
-       sleep 4 
-       screenfetch
-       inxi  
-       uname -a
-      echo -e " ${RED} byah $USER@$HOSTNAME $HOST_IP ${NC} " && sleep 3
-       sudo reboot
-       sleep 10
-    else
-      echo -e "${GREEN} Reboot Skipped. $USER@$HOSTNAME ($HOST_IP) ${NC}"
-    fi
-  fi
-fi
-
+sleep 3
+last 
 echo "$USER@$HOSTNAME"
 read -p "Run Speedtest? (y/n): " response
-
 if [[ -z $response || $response == "y" || $response == "Y" ]]; then
     echo "$USER@$HOSTNAME speedtest"
     if command -v lolcat &> /dev/null; then
@@ -466,6 +448,24 @@ else
     echo "Invalid input."
 fi
 
+sleep 6
+echo $USER "@" $HOSTNAME
+    # Default to "no" if running for less than three days
+    read -p "Reboot Anyway? (y/N): " choice
+    if [[ $choice == [Yy] ]]; then
+      echo -e "${RED} Rebooting... after 10 sec $USER@$HOSTNAME ($HOST_IP) ${NC}"
+       sleep 4 
+       screenfetch
+       inxi  
+       uname -a
+      echo -e " ${RED} byah $USER@$HOSTNAME $HOST_IP ${NC} " && sleep 3
+       sudo reboot
+       exit;
+    else
+      echo -e "${GREEN} Reboot Skipped. $USER@$HOSTNAME ($HOST_IP) ${NC}"
+    fi
+  fi
+fi
 
 echo $USER "@" $HOSTNAME
 who -a && last -n 6
@@ -476,4 +476,4 @@ echo -e "Current Running kernel ($running_kernel) ; Current Installed kernel ($i
 echo -e "${GREEN} Byah.!. $USER@$HOSTNAME ($HOST_IP) ${NC}"
 sleep 6
 screenfetch
-exit; 
+exit;
