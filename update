@@ -348,14 +348,14 @@ fi
 fi 
 ###end of pihole tasks###
 
-
-
+###########################################################################################
+###########################################################################################
 
 
 # Get the running kernel version
 version=$(uname -r)
-echo "Running kernel $version"
-# Extract major version using regular expression
+#echo "Running kernel $version"
+## Extract major version using regular expression
 if [[ $version =~ ^([0-9]+\.[0-9]+\.[0-9]+).* ]]; then
     version="${BASH_REMATCH[1]}"
    else
@@ -363,14 +363,14 @@ if [[ $version =~ ^([0-9]+\.[0-9]+\.[0-9]+).* ]]; then
   echo -e "${RED}Invalid version format${NC}"
 sleep 10
 fi
-running_kernel=$version
+#running_kernel=$version
 
-# Get the installed kernel version
-installed_kernel=$(dpkg --list | grep "linux-image" | awk '{print $3}' | awk -F'-' '{print $1}' | sort -V | tail -n1)
+# Get the installed kernel version (no epoch, no suffix)
+##OLD## installed_kernel=$(dpkg --list | grep "linux-image" | awk '{print $3}' | awk -F'-' '{print $1}' | sort -V | tail -n1)
+#installed_kernel=$(dpkg --list | grep "linux-image" | awk '{print $3}' | sed 's/^.*://; s/-.*//' | sort -V | tail -n1)
 
-# Input version string
+# Reuse same value for version comparison
 version=""
-version=$(dpkg --list | grep "linux-image" | awk '{print $3}' | awk -F'-' '{print $1}' | sort -V | tail -n1)
 echo -e "${YELLOW}Running kernel   ${BLUE}: $running_kernel ${NC}"
 echo -e "${YELLOW}Installed kernel ${BLUE}: $installed_kernel ${NC}"
 
@@ -382,7 +382,26 @@ else
    echo -e "${LIGHT_RED}Final test ${NC}"
    bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/kernelchk)
 fi
-installed_kernel=$version
+
+get_installed_kernel() {
+    if command -v dpkg &>/dev/null; then
+        # Debian/Ubuntu
+        dpkg --list | grep "linux-image" | awk '{print $3}' | sed 's/^.*://; s/-.*//' | sort -V | tail -n1
+    elif command -v pacman &>/dev/null; then
+        # Arch
+        pacman -Q linux | awk '{print $2}' | sed 's/-.*//' 
+    elif command -v rpm &>/dev/null; then
+        # RHEL/Fedora/openSUSE
+        rpm -q kernel | sed 's/^kernel-//' | sort -V | tail -n1
+    elif command -v apk &>/dev/null; then
+        # Alpine (very basic; might not match running kernel exactly)
+        apk info -v linux-lts | sed 's/^linux-lts-//' | sort -V | tail -n1
+    else
+        echo "unknown"
+    fi
+}
+
+installed_kernel=$(get_installed_kernel)
 if [[ $running_kernel != $installed_kernel ]]; then
   echo "pick $USER@$HOSTNAME ($HOST_IP)" &&  uname -a
   read -p "The running kernel ($running_kernel) differs from the installed kernel ($installed_kernel). Do you want to reboot? (y/N): " choice
@@ -406,7 +425,12 @@ echo -e "${BLUE}Installed version >>: $installed_kernel ${NC}"
 uname -a
 sleep 1 
 echo -e "The running kernel $running_kernel ${GREEN}matches${NC} the installed kernel $installed_kernel. ${YELLOW}No reboot required.${NC}"
+###end kernel check###
   echo $USER "@" $HOSTNAME
+#####################################################################
+########################################### uptime
+####################################################################
+
 if [[ $uptime_seconds -ge $((3 * 24 * 3600)) ]]; then
 
 echo -e "${RED} The system has been running for longer than three days. ${NC}"  
