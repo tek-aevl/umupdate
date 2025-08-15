@@ -1,50 +1,44 @@
-bash -c '
-set -euo pipefail
+# 0) sanity check: you'll probably see installer-ish lines here
+head -n 5 /home/tek/kernel-check
 
-read -rp "Filename for the tool (installed as /bin/<name>) [kernel-check]: " fname
-fname=${fname:-kernel-check}
-ts="$(date +%Y%m%d-%H%M%S)"
-target="$HOME/$fname"
-binpath="/bin/$fname"
-
-# If /bin/$fname exists and points to $HOME/$fname, skip install
-if [ -L "$binpath" ] && [ "$(readlink -f "$binpath")" = "$target" ]; then
-  echo "Already installed as $binpath -> $target"
-else
-  # Backup only if file exists and is not the same symlink target
-  if [ -e "$binpath" ]; then
-    sudo mv "$binpath" "/bin/${fname}.${ts}.bak"
-    echo "Backed up $binpath -> /bin/${fname}.${ts}.bak"
-  fi
-
-  # Write/update the script in ~/
-  cat > "$target" <<"EOF"
+# 1) install the REAL checker to /usr/local/bin (exec-friendly, standard)
+sudo tee /usr/local/bin/kernel-check >/dev/null <<'EOF'
 #!/bin/sh
-# kernel-check: compare the running kernel to the newest installed (via modules dirs)
+# kernel-check: compare running kernel to newest installed (modules dirs)
+# POSIX sh, distro-agnostic
 
+# Colors (TTY-aware)
 if [ -t 1 ] && command -v tput >/dev/null 2>&1; then
   RED="$(tput setaf 1)"; YEL="$(tput setaf 3)"; GRN="$(tput setaf 2)"
   MAG="$(tput setaf 5)"; BLU="$(tput setaf 4)"; WHT="$(tput setaf 7)"
   BLD="$(tput bold)"; RST="$(tput sgr0)"
 else
-  RED=""; YEL=""; GRN=""; MAG=""; BLU=""; WHT=""; BLD=""; RST=""
+  RED=""; YEL=""; GRN=""; BLU=""; WHT=""; BLD=""; RST=""
 fi
 say() { printf "%s\n" "$*"; }
 
+# Find module roots
 roots=""
 [ -d /usr/lib/modules ] && roots="$roots /usr/lib/modules"
 [ -d /lib/modules ]     && roots="$roots /lib/modules"
 [ -z "$roots" ] && { say "${RED}No modules directory found.${RST}"; exit 2; }
 
+# List version dirnames safely (no ls; no glob errors)
 list_versions() {
-  for r in $roots; do ls -1d "$r"/* 2>/dev/null | sed "s#.*/##"; done
+  for r in $roots; do
+    for d in "$r"/*; do
+      [ -d "$d" ] || continue
+      b=${d##*/}; printf "%s\n" "$b"
+    done
+  done
 }
-ver_sort() { sort -V 2>/dev/null || sort; }
-uniq_stable() { awk "!seen[\$0]++"; }
+
+uniq_stable() { awk '!seen[$0]++'; }
+ver_sort() { if sort -V </dev/null >/dev/null 2>&1; then sort -V; else sort; fi; }
 
 RUNNING="$(uname -r)"
 ALL="$(list_versions | uniq_stable)"
-[ -z "$ALL" ] && { say "${RED}No kernel versions found.${RST}"; exit 2; }
+[ -z "$ALL" ] && { say "${RED}No kernel versions found under:$roots${RST}"; exit 2; }
 NEWEST="$(printf "%s\n" "$ALL" | ver_sort | tail -n1)"
 
 say "${RED}This text is Red.${RST}"
@@ -57,15 +51,16 @@ say "${BLD}Running Kernel:${RST}   $RUNNING"
 say "${BLD}Newest Installed:${RST} $NEWEST"
 
 if [ "$RUNNING" = "$NEWEST" ]; then
-  say "${GRN}✅ Running kernel matches the newest installed.${RST}"
+  say "${GRN}✅ Running kernel matches the newest installed. No action needed.${RST}"
   exit 0
 fi
 
+# If running modules dir exists, give better hint using version sort (if available)
 if [ -d "/usr/lib/modules/$RUNNING" ] || [ -d "/lib/modules/$RUNNING" ]; then
   if sort -V </dev/null >/dev/null 2>&1; then
     FIRST="$(printf "%s\n%s\n" "$RUNNING" "$NEWEST" | ver_sort | head -n1)"
     if [ "$FIRST" = "$RUNNING" ] && [ "$RUNNING" != "$NEWEST" ]; then
-      say "${YEL}⚠️ Running kernel is OLDER than newest installed.${RST}"
+      say "${YEL}⚠️ Running kernel appears OLDER than newest installed. Consider rebooting.${RST}"
     else
       say "${YEL}ℹ️ Running kernel differs (flavor or naming).${RST}"
     fi
@@ -75,22 +70,15 @@ if [ -d "/usr/lib/modules/$RUNNING" ] || [ -d "/lib/modules/$RUNNING" ]; then
   exit 1
 fi
 
-say "${RED}❌ Modules dir for running kernel is missing.${RST}"
+say "${RED}❌ Modules directory for the running kernel is missing:${RST} ${BLD}/(usr)?/lib/modules/$RUNNING${RST}"
+say "${RED}Rebuild initramfs or reinstall the kernel, then reboot.${RST}"
 exit 2
 EOF
 
-  chmod +x "$target"
-  echo "Wrote $target"
-  sudo ln -sfn "$target" "$binpath"
-  echo "Symlinked: $binpath -> $target"
-fi
+sudo chmod 0755 /usr/local/bin/kernel-check
 
-# Open for review
-if command -v nano >/dev/null 2>&1; then
-  nano "$target"
-else
-  echo "nano not found; skipping editor."
-fi
+# 2) ensure your convenience path points to the real checker
+sudo ln -sfn /usr/local/bin/kernel-check /usr/bin/kernel-check
 
-echo "Done. Run with: $fname"
-'
+# 3) OPTIONAL: keep your installer but don’t shadow the real tool
+mv -n /home/tek/kernel-check ~/install-kernel-check.sh 2>/dev/null || true
