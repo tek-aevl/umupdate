@@ -1,8 +1,4 @@
-# 0) sanity check: you'll probably see installer-ish lines here
-head -n 5 /home/tek/kernel-check
-
-# 1) install the REAL checker to /usr/local/bin (exec-friendly, standard)
-sudo tee /usr/local/bin/kernel-check >/dev/null <<'EOF'
+cat > /home/tek/kernel-check <<'EOF'
 #!/bin/sh
 # kernel-check: compare running kernel to newest installed (modules dirs)
 # POSIX sh, distro-agnostic
@@ -13,34 +9,35 @@ if [ -t 1 ] && command -v tput >/dev/null 2>&1; then
   MAG="$(tput setaf 5)"; BLU="$(tput setaf 4)"; WHT="$(tput setaf 7)"
   BLD="$(tput bold)"; RST="$(tput sgr0)"
 else
-  RED=""; YEL=""; GRN=""; BLU=""; WHT=""; BLD=""; RST=""
+  RED=""; YEL=""; GRN=""; MAG=""; BLU=""; WHT=""; BLD=""; RST=""
 fi
-say() { printf "%s\n" "$*"; }
+say(){ printf "%s\n" "$*"; }
 
-# Find module roots
+# Locate module roots
 roots=""
 [ -d /usr/lib/modules ] && roots="$roots /usr/lib/modules"
 [ -d /lib/modules ]     && roots="$roots /lib/modules"
 [ -z "$roots" ] && { say "${RED}No modules directory found.${RST}"; exit 2; }
 
-# List version dirnames safely (no ls; no glob errors)
+# List version dirnames safely
 list_versions() {
   for r in $roots; do
     for d in "$r"/*; do
       [ -d "$d" ] || continue
-      b=${d##*/}; printf "%s\n" "$b"
+      printf "%s\n" "${d##*/}"
     done
   done
 }
 
-uniq_stable() { awk '!seen[$0]++'; }
-ver_sort() { if sort -V </dev/null >/dev/null 2>&1; then sort -V; else sort; fi; }
+uniq_stable(){ awk '!seen[$0]++'; }
+ver_sort(){ if sort -V </dev/null >/dev/null 2>&1; then sort -V; else sort; fi; }
 
 RUNNING="$(uname -r)"
 ALL="$(list_versions | uniq_stable)"
 [ -z "$ALL" ] && { say "${RED}No kernel versions found under:$roots${RST}"; exit 2; }
 NEWEST="$(printf "%s\n" "$ALL" | ver_sort | tail -n1)"
 
+# Pretty output
 say "${RED}This text is Red.${RST}"
 say "${YEL}This text is Yellow.${RST}"
 say "${GRN}This text is Green.${RST}"
@@ -55,7 +52,7 @@ if [ "$RUNNING" = "$NEWEST" ]; then
   exit 0
 fi
 
-# If running modules dir exists, give better hint using version sort (if available)
+# If running modules dir exists, hint older vs different
 if [ -d "/usr/lib/modules/$RUNNING" ] || [ -d "/lib/modules/$RUNNING" ]; then
   if sort -V </dev/null >/dev/null 2>&1; then
     FIRST="$(printf "%s\n%s\n" "$RUNNING" "$NEWEST" | ver_sort | head -n1)"
@@ -75,10 +72,4 @@ say "${RED}Rebuild initramfs or reinstall the kernel, then reboot.${RST}"
 exit 2
 EOF
 
-sudo chmod 0755 /usr/local/bin/kernel-check
-
-# 2) ensure your convenience path points to the real checker
-sudo ln -sfn /usr/local/bin/kernel-check /usr/bin/kernel-check
-
-# 3) OPTIONAL: keep your installer but don’t shadow the real tool
-mv -n /home/tek/kernel-check ~/install-kernel-check.sh 2>/dev/null || true
+chmod 0755 /home/tek/kernel-check
