@@ -1,24 +1,27 @@
 bash -c '
 set -euo pipefail
 
-# --- ask for filename (no path) ---
 read -rp "Filename for the tool (installed as /bin/<name>) [kernel-check]: " fname
 fname=${fname:-kernel-check}
 ts="$(date +%Y%m%d-%H%M%S)"
+target="$HOME/$fname"
+binpath="/bin/$fname"
 
-# --- backup any existing /bin/$fname ---
-if [ -e "/bin/$fname" ]; then
-  sudo mv "/bin/$fname" "/bin/${fname}.${ts}.bak"
-  echo "Backed up /bin/$fname -> /bin/${fname}.${ts}.bak"
-fi
+# If /bin/$fname exists and points to $HOME/$fname, skip install
+if [ -L "$binpath" ] && [ "$(readlink -f "$binpath")" = "$target" ]; then
+  echo "Already installed as $binpath -> $target"
+else
+  # Backup only if file exists and is not the same symlink target
+  if [ -e "$binpath" ]; then
+    sudo mv "$binpath" "/bin/${fname}.${ts}.bak"
+    echo "Backed up $binpath -> /bin/${fname}.${ts}.bak"
+  fi
 
-# --- write the script to ~/$fname ---
-cat > "$HOME/$fname" <<"EOF"
+  # Write/update the script in ~/
+  cat > "$target" <<"EOF"
 #!/bin/sh
 # kernel-check: compare the running kernel to the newest installed (via modules dirs)
-# POSIX sh, distro-agnostic, no package manager calls.
 
-# --- color helpers (TTY-aware) ---
 if [ -t 1 ] && command -v tput >/dev/null 2>&1; then
   RED="$(tput setaf 1)"; YEL="$(tput setaf 3)"; GRN="$(tput setaf 2)"
   MAG="$(tput setaf 5)"; BLU="$(tput setaf 4)"; WHT="$(tput setaf 7)"
@@ -26,105 +29,65 @@ if [ -t 1 ] && command -v tput >/dev/null 2>&1; then
 else
   RED=""; YEL=""; GRN=""; MAG=""; BLU=""; WHT=""; BLD=""; RST=""
 fi
-
 say() { printf "%s\n" "$*"; }
 
-# --- find modules roots (Arch-style and Debian/RHEL/Fedora-style) ---
 roots=""
 [ -d /usr/lib/modules ] && roots="$roots /usr/lib/modules"
 [ -d /lib/modules ]     && roots="$roots /lib/modules"
+[ -z "$roots" ] && { say "${RED}No modules directory found.${RST}"; exit 2; }
 
-if [ -z "$roots" ]; then
-  say "${RED}No modules directory found (/usr/lib/modules or /lib/modules).${RST}"
-  exit 2
-fi
-
-# gather all kernel version dir names across roots
 list_versions() {
-  for r in $roots; do
-    # shellcheck disable=SC2012
-    ls -1d "$r"/* 2>/dev/null | sed "s#.*/##"
-  done
+  for r in $roots; do ls -1d "$r"/* 2>/dev/null | sed "s#.*/##"; done
 }
-
-# unique + natural version sort; fallback to plain sort if -V not available
-ver_sort() {
-  if sort -V </dev/null >/dev/null 2>&1; then
-    sort -V
-  else
-    sort
-  fi
-}
-
-uniq_stable() {
-  awk "!seen[\$0]++"
-}
+ver_sort() { sort -V 2>/dev/null || sort; }
+uniq_stable() { awk "!seen[\$0]++"; }
 
 RUNNING="$(uname -r)"
-
 ALL="$(list_versions | uniq_stable)"
-if [ -z "$ALL" ]; then
-  say "${RED}No kernel versions found under modules roots: $roots${RST}"
-  exit 2
-fi
-
+[ -z "$ALL" ] && { say "${RED}No kernel versions found.${RST}"; exit 2; }
 NEWEST="$(printf "%s\n" "$ALL" | ver_sort | tail -n1)"
 
-# Pretty lines like your output
 say "${RED}This text is Red.${RST}"
 say "${YEL}This text is Yellow.${RST}"
 say "${GRN}This text is Green.${RST}"
 say "${MAG}This text is Magenta.${RST}"
 say "${BLU}This text is Blue.${RST}"
 say "${WHT}This text is White.${RST}"
-
 say "${BLD}Running Kernel:${RST}   $RUNNING"
 say "${BLD}Newest Installed:${RST} $NEWEST"
 
 if [ "$RUNNING" = "$NEWEST" ]; then
-  say "${GRN}✅ Running kernel matches the newest installed. No action needed.${RST}"
+  say "${GRN}✅ Running kernel matches the newest installed.${RST}"
   exit 0
 fi
 
-# If names differ, still verify the running modules dir actually exists (some distros append flavor)
 if [ -d "/usr/lib/modules/$RUNNING" ] || [ -d "/lib/modules/$RUNNING" ]; then
-  CMP=""
   if sort -V </dev/null >/dev/null 2>&1; then
     FIRST="$(printf "%s\n%s\n" "$RUNNING" "$NEWEST" | ver_sort | head -n1)"
     if [ "$FIRST" = "$RUNNING" ] && [ "$RUNNING" != "$NEWEST" ]; then
-      CMP="older"
+      say "${YEL}⚠️ Running kernel is OLDER than newest installed.${RST}"
     else
-      CMP="newer-or-different"
+      say "${YEL}ℹ️ Running kernel differs (flavor or naming).${RST}"
     fi
+  else
+    say "${YEL}ℹ️ Running kernel differs from newest installed.${RST}"
   fi
-
-  case "$CMP" in
-    older)
-      say "${YEL}⚠️ Running kernel appears OLDER than the newest installed. Consider rebooting.${RST}"
-      ;;
-    newer-or-different|"")
-      say "${YEL}ℹ️ Running kernel differs from the newest modules dir (flavor or naming).${RST}"
-      ;;
-  esac
   exit 1
 fi
 
-# Running kernel modules dir missing entirely — that’s a real problem
-say "${RED}❌ Modules directory for the running kernel is missing:${RST} ${BLD}/(usr)?/lib/modules/$RUNNING${RST}"
-say "${RED}You should rebuild initramfs and/or reinstall the kernel, then reboot.${RST}"
+say "${RED}❌ Modules dir for running kernel is missing.${RST}"
 exit 2
 EOF
 
-chmod +x "$HOME/$fname"
-echo "Wrote $HOME/$fname and made it executable."
+  chmod +x "$target"
+  echo "Wrote $target"
+  sudo ln -sfn "$target" "$binpath"
+  echo "Symlinked: $binpath -> $target"
+fi
 
-# --- (re)create symlink in /bin ---
-sudo ln -sfn "$HOME/$fname" "/bin/$fname"
-echo "Symlinked: /bin/$fname -> $HOME/$fname"
-
-# --- open in nano for quick review ---
+# Open for review
 if command -v nano >/dev/null 2>&1; then
-  nano "$HOME/$fname"
+  nano "$target"
 else
   echo "nano not found; skipping editor."
 fi
