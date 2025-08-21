@@ -427,6 +427,7 @@ sleep 1
 echo -e "The running kernel $running_kernel ${GREEN}matches${NC} the installed kernel $installed_kernel. ${YELLOW}No reboot required.${NC}"
 bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/kernel-check)
 bash kernel-check
+kernel-check
 ###end kernel check###
   echo $USER "@" $HOSTNAME
 #####################################################################
