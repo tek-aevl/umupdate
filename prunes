@@ -81,14 +81,6 @@ echo "Retrieving active clients over the bridge"
 bridge_clients=$(ip neigh show dev virbr0 | awk '{print $1}') && echo $bridge_clients
 echo "$bridge_clients ...done..."
 
-echo "Retrieve Tailscale client IP addresses"
-# Retrieve Tailscale client IP addresses from 'tailscale status' command
-##old# tailscale_ip_list=$(tailscale status | grep -oE '10\.[0-9]+\.[0-9]+\.[0-9]+')
-tailscale_ip_list=$(sudo tailscale status | grep -Eo '100\.[0-9]+\.[0-9]+\.[0-9]+' | awk '!seen[$0]++')
-echo "Tailscale Client List"
-echo "$tailscale_ip_list"
-echo ".!.done.!."
-
 echo "Retrieving custom_ip_list"
 # custom list put the next line in a new file called custom_ip_list
 #custom_ip_list="0.0.0.0"$'\n'"0.0.0.0"
@@ -96,6 +88,14 @@ custom_ip_list=$(grep -E -o '([0-9]{1,3}\.){3}[0-9]{1,3}' ~/custom_ip_list)
 cat ~/custom_ip_list
 echo "custom_list" && sleep 2
 echo "$custom_ip_list  ...done..."
+
+echo "Retrieve Tailscale client IP addresses"
+# Retrieve Tailscale client IP addresses from 'tailscale status' command
+##old# tailscale_ip_list=$(tailscale status | grep -oE '10\.[0-9]+\.[0-9]+\.[0-9]+')
+tailscale_ip_list=$(sudo tailscale status | grep -Eo '100\.[0-9]+\.[0-9]+\.[0-9]+' | awk '!seen[$0]++')
+echo "Tailscale Client List"
+echo "$tailscale_ip_list"
+echo ".!.done.!."
 
 echo "Retrieving ignore_ip_list"
 # ignore list file needed ignore_ip_list
