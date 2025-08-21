@@ -426,7 +426,7 @@ uname -a
 sleep 1 
 echo -e "The running kernel $running_kernel ${GREEN}matches${NC} the installed kernel $installed_kernel. ${YELLOW}No reboot required.${NC}"
 bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/kernel-check)
-bash kernel-check
+#bash kernel-check
 kernel-check
 ###end kernel check###
   echo $USER "@" $HOSTNAME
@@ -454,9 +454,9 @@ echo -e " The system has ${GREEN}not${NC} been running for longer than ${YELLOW}
 echo -e "${GREEN} System uptime: $days days, $hours hours, $minutes minutes ${NC}"
 echo "uptime $USER@$HOSTNAME ($HOST_IP)"
 uptime
-sleep 3
+sleep 2
 users 
-sleep 3
+sleep 2
 last 
 echo "$USER@$HOSTNAME"
 read -p "Run Speedtest? (y/n): " response
@@ -467,15 +467,15 @@ if [[ -z $response || $response == "y" || $response == "Y" ]]; then
     else
         speedtest --secure
     fi
-    sleep 3
+    sleep 1
 elif [[ $response == "n" || $response == "N" ]]; then
     echo "Not running speedtest : System uptime: $(uptime)"
-    sleep 4
+    sleep 1
 else
     echo "Invalid input."
 fi
 
-sleep 6
+sleep 1
 echo $USER "@" $HOSTNAME
     # Default to "no" if running for less than three days
     read -p "Reboot Anyway? (y/N): " choice
