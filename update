@@ -380,7 +380,7 @@ if [[ $version =~ ^([0-9]+\.[0-9]+\.[0-9]+).* ]]; then
 else
   echo -e "${RED}Invalid version format, is this linux real?${NC}"
    echo -e "${LIGHT_RED}Final test ${NC}"
-   bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/kernelchk)
+   bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/kernel-check)
 fi
 
 get_installed_kernel() {
