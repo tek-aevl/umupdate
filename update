@@ -1,5 +1,5 @@
 #!/bin/bash
-version="1.619.1"
+version="1.69.1"
 echo "Hello ! #v"$version"#"
 echo "Info at https://github.com/tek-aevl/umupdate/ #To use run # bash update or bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update)"
 if [ -f "/bin/update" ]; then
