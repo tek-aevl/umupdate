@@ -424,6 +424,7 @@ inxi
 echo -e "${BLUE}Installed version >>: $installed_kernel ${NC}"
 uname -a
 sleep 1 
+ bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/kernel-check)
 echo -e "The running kernel $running_kernel ${GREEN}matches${NC} the installed kernel $installed_kernel. ${YELLOW}No reboot required.${NC}"
 ###end kernel check###
   echo $USER "@" $HOSTNAME
