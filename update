@@ -117,9 +117,6 @@ else
   echo -e "${YELLOW}sudo password is required (or sudo not configured).${NC}"
 fi
 
-sudo who -a
-sudo sleep 2
-
 # Programs needed in order to use this script ("dialog" "bc" "speedtest" ), and extra tools that are nice.
       programs=("dialog" "bc" "speedtest"  "nload"    "htop" "cron" "nano" "fail2ban" "ncdu" "iftop" "lolcat" "screenfetch")
 
