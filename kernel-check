@@ -33,7 +33,7 @@ ckver_sort(){ if sort -V </dev/null >/dev/null 2>&1; then sort -V; else sort; fi
 
 CKRUNNING="$(uname -r)"
 ALL="$(cklist_versions | ckuniq_stable)"
-[ -z "$ALL" ] && { say "${RED}No kernel versions found under:$roots${RST}"; exit 2; }
+[ -z "$ALL" ] && { say "${RED}No kernel versions found under: $roots${RST}"; exit 2; }
 CKNEWEST="$(printf "%s\n" "$ALL" | ckver_sort | tail -n1)"
 
 # Pretty output
@@ -46,7 +46,7 @@ say "${WHT}This text is White.${RST}"
 say "${BLD}Running Kernel:${RST}   $CKRUNNING"
 say "${BLD}Newest Installed:${RST} $CKNEWEST"
 
-if [ "$CKRUNNING" = "CK$NEWEST" ]; then
+if [ "$CKRUNNING" = "$CKNEWEST" ]; then
   say "${GRN}✅ Running kernel matches the newest installed. No action needed.${RST}"
   exit 0
 fi
