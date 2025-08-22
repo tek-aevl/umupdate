@@ -12,6 +12,26 @@ else
 fi
 say(){ printf "%s\n" "$*"; }
 
+# Optional: --reboot to actually reboot when an older kernel is detected
+DO_REBOOT=0
+case "$1" in
+  --reboot|-r) DO_REBOOT=1 ;;
+esac
+
+do_reboot() {
+  say "${YEL}Rebooting to load kernel ${CKNEWEST}...${RST}"
+  if command -v systemctl >/dev/null 2>&1; then
+    systemctl reboot
+  elif command -v reboot >/dev/null 2>&1; then
+    reboot
+  elif command -v shutdown >/dev/null 2>&1; then
+    shutdown -r now
+  else
+    say "${RED}No reboot utility found (systemctl/reboot/shutdown).${RST}"
+    exit 3
+  fi
+}
+
 # Locate module roots
 roots=""
 [ -d /usr/lib/modules ] && roots="$roots /usr/lib/modules"
@@ -56,7 +76,8 @@ if [ -d "/usr/lib/modules/$CKRUNNING" ] || [ -d "/lib/modules/$CKRUNNING" ]; the
   if sort -V </dev/null >/dev/null 2>&1; then
     CKFIRST="$(printf "%s\n%s\n" "$CKRUNNING" "$CKNEWEST" | ckver_sort | head -n1)"
     if [ "$CKFIRST" = "$CKRUNNING" ] && [ "$CKRUNNING" != "$CKNEWEST" ]; then
-      say "${YEL}⚠️ Running kernel appears OLDER than newest installed. Consider rebooting.${RST}"
+say "${YEL}⚠️ Running kernel appears OLDER than newest installed.${RST}" 
+[ "$DO_REBOOT" -eq 1 ] && do_reboot
     else
       say "${YEL}ℹ️ Running kernel differs (flavor or naming).${RST}"
     fi
