@@ -19,7 +19,7 @@ roots=""
 [ -z "$roots" ] && { say "${RED}No modules directory found.${RST}"; exit 2; }
 
 # List version dirnames safely
-list_versions() {
+cklist_versions() {
   for r in $roots; do
     for d in "$r"/*; do
       [ -d "$d" ] || continue
@@ -28,13 +28,13 @@ list_versions() {
   done
 }
 
-uniq_stable(){ awk '!seen[$0]++'; }
-ver_sort(){ if sort -V </dev/null >/dev/null 2>&1; then sort -V; else sort; fi; }
+ckuniq_stable(){ awk '!seen[$0]++'; }
+ckver_sort(){ if sort -V </dev/null >/dev/null 2>&1; then sort -V; else sort; fi; }
 
-RUNNING="$(uname -r)"
-ALL="$(list_versions | uniq_stable)"
+CKRUNNING="$(uname -r)"
+ALL="$(cklist_versions | ckuniq_stable)"
 [ -z "$ALL" ] && { say "${RED}No kernel versions found under:$roots${RST}"; exit 2; }
-NEWEST="$(printf "%s\n" "$ALL" | ver_sort | tail -n1)"
+CKNEWEST="$(printf "%s\n" "$ALL" | ver_sort | tail -n1)"
 
 # Pretty output
 say "${RED}This text is Red.${RST}"
@@ -46,7 +46,7 @@ say "${WHT}This text is White.${RST}"
 say "${BLD}Running Kernel:${RST}   $RUNNING"
 say "${BLD}Newest Installed:${RST} $NEWEST"
 
-if [ "$RUNNING" = "$NEWEST" ]; then
+if [ "$CKRUNNING" = "CK$NEWEST" ]; then
   say "${GRN}✅ Running kernel matches the newest installed. No action needed.${RST}"
   exit 0
 fi
@@ -54,8 +54,8 @@ fi
 # If running modules dir exists, hint older vs different
 if [ -d "/usr/lib/modules/$RUNNING" ] || [ -d "/lib/modules/$RUNNING" ]; then
   if sort -V </dev/null >/dev/null 2>&1; then
-    FIRST="$(printf "%s\n%s\n" "$RUNNING" "$NEWEST" | ver_sort | head -n1)"
-    if [ "$FIRST" = "$RUNNING" ] && [ "$RUNNING" != "$NEWEST" ]; then
+    CKFIRST="$(printf "%s\n%s\n" "$CKRUNNING" "$CKNEWEST" | ver_sort | head -n1)"
+    if [ "$CKFIRST" = "$CKRUNNING" ] && [ "$CKRUNNING" != "$CKNEWEST" ]; then
       say "${YEL}⚠️ Running kernel appears OLDER than newest installed. Consider rebooting.${RST}"
     else
       say "${YEL}ℹ️ Running kernel differs (flavor or naming).${RST}"
@@ -66,9 +66,6 @@ if [ -d "/usr/lib/modules/$RUNNING" ] || [ -d "/lib/modules/$RUNNING" ]; then
   exit 1
 fi
 
-say "${RED}❌ Modules directory for the running kernel is missing:${RST} ${BLD}/(usr)?/lib/modules/$RUNNING${RST}"
+say "${RED}❌ Modules directory for the running kernel is missing:${RST} ${BLD}/(usr)?/lib/modules/$CKRUNNING${RST}"
 say "${RED}Rebuild initramfs or reinstall the kernel, then reboot.${RST}"
-exit 2
-EOF
 
-chmod 0755 /home/tek/kernel-check
