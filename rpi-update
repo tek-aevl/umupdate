@@ -236,7 +236,13 @@ if [[ $choice != [Nn] ]]; then
 else
   echo -e "The system has ${GREEN}not${NC} been running for longer than ${YELLOW}three${NC} days. ${GREEN}No reboot required.${NC}"
   echo -e "${GREEN}System uptime: $days days, $hours hours, $minutes minutes${NC}"
-
+echo "kernel-check"
+sleep 3
+bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/kernel-check)
+bash kernel-check
+kernel-check
+echo "end of back up kernel check"
+sleep 3
 # Default to "no" if running for less than three days
   read -p "Do you want to reboot? (y/N): " choice
   if [[ $choice == [Yy] ]]; then
@@ -253,5 +259,6 @@ echo -e " $USER @ $HOSTNAME "
 screenfetch
 inxi
 uname -a
+
 echo -e "Current Running kernel ($running_kernel) ; Current Installed kernel ($installed_kernel)."
 echo -e "${GREEN}fin ;p  ;-p ${NC}"; 
