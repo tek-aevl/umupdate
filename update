@@ -421,7 +421,7 @@ echo $USER "@" $HOSTNAME
     else
       echo -e "${GREEN} Reboot Skipped. $USER@$HOSTNAME ($HOST_IP) ${NC}"
     fi
-  fi
+
 
 
 echo $USER "@" $HOSTNAME
