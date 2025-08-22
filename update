@@ -340,6 +340,7 @@ elif [[ $force_log_reset != "yes" && $force_log_reset != "y" ]]; then
 else
     echo -e "${YELLOW}Invalid input.${NC}"
 fi
+fi
 ###end of pihole tasks###
 
 ###########################################################################################
