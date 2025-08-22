@@ -428,8 +428,10 @@ echo -e "The running kernel $running_kernel ${GREEN}matches${NC} the installed k
 echo "kernel-check"
 sleep 3
 bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/kernel-check)
-#bash kernel-check
+bash kernel-check
 kernel-check
+echo "end of back up kernel check"
+sleep 3
 ###end kernel check###
   echo $USER "@" $HOSTNAME
 #####################################################################
