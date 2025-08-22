@@ -1,401 +1,151 @@
-#!/bin/bash
-version="v1.57"
-echo "Hello! "$USER"@"$HOSTNAME
-echo "#$version # Assistance at https://github.com/tek-aevl/umupdate/raw/main/update-dev #To use run # bash update or bash <(curl -s https://github.com/tek-aevl/umupdate/raw/main/update-dev)
-echo 'Bye! XD'"
-if [ -f "/bin/update" ]; then
-   installed_version=$(grep -oP '(?<=#)\S+(?=#)' /bin/update)
-   echo "Installed Version is "$installed_version
-  if [ "$installed_version" == "$version" ]; then
-        echo "Version matches!"
-    else
-        echo "Version mismatch! Installed version: $installed_version"
-         echo "The file /bin/update already exist."
-    cat /bin/update
+#!/usr/bin/env bash
+# sysupdate.sh — cross‑distro updater with safety checks, logging, and reboot hints
+# Supports: Debian/Ubuntu (apt), Arch (pacman), Fedora/RHEL (dnf), openSUSE (zypper)
+# Tek‑style: minimal prompts, sane defaults, clear output
 
-    read -p "Do you update to new version? (Y/n): " -e choice
-choice="${choice:-y}"
-if [ "$choice" == "y" ]; then
-    echo "Removing old"
-    sudo rm /bin/update
-    sudo cat /bin/update
-    echo $USER"@"$HOSTNAME
-    sleep 3
-    echo "Running new bash"
-    bash <(curl -s https://github.com/tek-aevl/umupdate/raw/main/update-dev)
-    exit;
-    echo 'Bye! $USER"@"$HOSTNAME'
-    else
-        echo "Cancelled."
- fi
+set -euo pipefail
+IFS=$'\n\t'
+
+VERSION="1.0.0"
+LOG_DIR="/var/log"
+LOG_FILE="$LOG_DIR/sysupdate.log"
+DRY_RUN=0
+QUIET=0
+NO_REBOOT_CHECK=0
+CLEAN=1
+
+usage() {
+  cat <<EOF
+Usage: $(basename "$0") [options]
+
+Options:
+  -n, --dry-run         Show what would run, don't change anything
+  -q, --quiet           Less chatty output
+  -k, --no-kernel-check Skip running-vs-installed kernel check
+  -c, --no-clean        Don't autoremove/cleanup caches
+  -h, --help            This help
+  -v, --version         Print version
+
+Examples:
+  sudo $(basename "$0")
+  sudo $(basename "$0") -n    # plan only
+EOF
+}
+
+say() { [[ $QUIET -eq 0 ]] && echo -e "$*"; }
+log() { echo -e "$(date +'%F %T') | $*" | sudo tee -a "$LOG_FILE" >/dev/null; }
+run() { if [[ $DRY_RUN -eq 1 ]]; then say "DRY: $*"; else eval "$@"; fi }
+
+need_root() { if [[ $EUID -ne 0 ]]; then echo "Please run as root (sudo)." >&2; exit 1; fi }
+
+trap 'code=$?; [[ $code -ne 0 ]] && echo "\n[!] Failed with exit $code — see $LOG_FILE" >&2' EXIT
+
+# Ensure log path
+if [[ ! -w "$LOG_DIR" ]]; then
+  sudo mkdir -p "$LOG_DIR"
+  sudo chmod 755 "$LOG_DIR"
 fi
-else
-    echo "The file /bin/update does not exist."
-    read -p "Do you want to install it? (y/n): " choice
-    if [ "$choice" == "y" ]; then
-       echo -e '#!/bin/bash \n echo "#'$version'#" \n echo "Hello! "$USER"@"$HOSTNAME \n echo "Assistance at https://github.com/tek-aevl/umupdate/" #To use run \n echo "bash update" \n bash <(curl -s https://github.com/tek-aevl/umupdate/raw/main/update-dev) \n echo $USER" bye! XD "' | sudo tee /bin/update > /dev/null
-        sudo chmod 644 /bin/update
-        sudo chmod +x /bin/update
-        echo "Creating contents"
-        cat /bin/update
-        echo "Installed /bin/update successfully."
-        sleep 6
-    else
-        echo "Installation cancelled."
- fi
-fi
+: | sudo tee -a "$LOG_FILE" >/dev/null
 
-# Set the colors
-RED='\033[0;31m'       # Red color
-LIGHT_RED='\033[0;91m'    # Light red color
-YELLOW='\033[0;33m'    # Yellow color
-LIGHT_YELLOW='\033[0;93m' # Light yellow color
-GREEN='\033[0;32m'     # Green color
-LIGHT_GREEN='\033[0;92m'  # Light green color
-BLUE='\033[0;34m'         # Blue color
-LIGHT_BLUE='\033[0;94m'   # Light blue color
-MAGENTA='\033[0;35m'      # Magenta color
-CYAN='\033[0;36m'         # Cyan color
-WHITE='\033[0;37m'        # White color
-LIGHT_GRAY='\033[0;90m'   # Light gray color
-DARK_GRAY='\033[0;30m'    # Dark gray color
-NC='\033[0m'           # No color
-echo -e "This ${RED}text${NC} is ${RED}red.${NC}"
-echo -e "This ${YELLOW}text${NC} is ${YELLOW}yellow.${NC}"
-echo -e "This ${GREEN}text${NC} is ${GREEN}green.${NC}"
-sleep 1
-
-# Get the IP address of the host
-HOST_IP=$(hostname -I | awk '{print $1}')
-
-# Display a welcome message
-echo -e "${GREEN}Welcome $USER@$HOSTNAME ($HOST_IP)"
-sleep 1
-
-# Display system information
-echo ":~${HOST_IP} uname -a"
-uname -a
-sleep 1
-echo -e "${NC}"
-# Display login history
-echo ":~${HOST_IP} last -10"
-last -10
-sleep 1
-
-# Display information about users currently logged in
-echo ":~${HOST_IP} who -a"
-who -a
-sleep 3
-
-echo -e "${YELLOW} Can you ${RED}sudo${NC}?"
-echo -e "${RED} Password $USER@$HOSTNAME ($HOST_IP)  "
-# Check if sudo password is needed
-sudo -v 2>&1 | grep "Sorry, try again." > /dev/null
-if [ $? -eq 0 ]; then
- echo -e "${GREEN}You can Sudo. Right? ${NC}"
-last 5
-sudo sleep 1
-#if sudo -v 2>&1;then 
-   echo -e "${YELLOW}Sudo password is required.${NC}"
-sudo who -a
-sudo sleep 2
-fi
-
-# Programs needed in order to use this script.
-programs=("dialog" "bc" "inxi" "neofetch" "speedtest" "htop" "cron" "nano" "qemu-guest-agent" "fail2ban" "ncdu" "aide" " ")
-
-# Define the corresponding package names for each program
-package_names=("dialog" "bc" "inxi" "neofetch" "speedtest-cli" "htop" "cron" "nano" "qemu-guest-agent" "fail2ban" "ncdu" "aide" " ")
-
-# Define the corresponding package names for each program
-package_deletes=("")
-
-# Loop through the programs
-for ((i=0; i<${#programs[@]}; i++)); do
-    program=${programs[i]}
-    package_name=${package_names[i]}
-    
-    # Check if the program is installed
-    if ! command -v $program &> /dev/null; then
-        # Program is not found, install it
-        echo "Installing $package_name..."
-        if command -v apt &> /dev/null; then
-            sudo apt update
-            sudo apt install -y $package_name
-        elif command -v pacman &> /dev/null; then
-            sudo pacman -Sy $package_name
-        elif command -v dnf &> /dev/null; then  # Add support for Fedora
-            sudo dnf install -y $package_name
-        elif command -v pkg &> /dev/null; then  # Add support for FreeBSD
-            sudo pkg install -y $package_name
-        elif command -v zypper &> /dev/null; then  # Add support for openSUSE
-            sudo zypper install -y $package_name
-        else
-            echo "Unable to install $package_name. Please install it manually."
-        fi
-    fi
-    echo -e "${NC}! ${GREEN} $package_name Installed ${MAGENTA}!"
+# Parse args
+while [[ ${1-} ]]; do
+  case "$1" in
+    -n|--dry-run) DRY_RUN=1 ;; 
+    -q|--quiet) QUIET=1 ;;
+    -k|--no-kernel-check) NO_REBOOT_CHECK=1 ;;
+    -c|--no-clean) CLEAN=0 ;;
+    -h|--help) usage; exit 0 ;;
+    -v|--version) echo "$VERSION"; exit 0 ;;
+    *) echo "Unknown option: $1"; usage; exit 2 ;;
+  esac
+  shift
 done
-echo -e ";-P${NC}"
 
-echo "get-time $USER@$HOSTNAME ($HOST_IP)"
-# Get the current timestamp
-current_timestamp=$(date +%s)
-echo "do-math $USER@$HOSTNAME ($HOST_IP)"
-# Get the timestamp of three days ago
-three_days_ago=$(date -d '3 days ago' +%s)
+need_root
 
-# Get the uptime of the system
-echo "uptime $USER@$HOSTNAME ($HOST_IP)"
-uptime=$(uptime -s)
-# Convert uptime to timestamp
-uptime_timestamp=$(date -d "$uptime" +%s)
-
-# Calculate the time difference in seconds
-time_difference=$((current_timestamp - uptime_timestamp))
-
-# Convert time difference to days, hours, and minutes
- 
-uptime_seconds=$(cut -d' ' -f1 /proc/uptime)
-uptime_seconds=$(printf "%.0f" "$uptime_seconds")
-
-#days=$(uptime_seconds / 86400)
-#hours=$(uptime_seconds % 86400 / 3600)
-#minutes=$(uptime_seconds % 3600 / 60)
-days=$(echo "$uptime_seconds / 86400" | bc)
-hours=$(echo "$uptime_seconds % 86400 / 3600" | bc)
-minutes=$(echo "$uptime_seconds % 3600 / 60" | bc)
-
-echo -e "${RED} Current Time variables : $days days, $hours hours, $minutes minutes ${NC}"
-sleep 4
-
-
-if [[ $days -ge 3 ]]; then
-   force_log_reset="yes"
-    echo -e "${RED}System uptime: $days days, $hours hours, $minutes minutes ${NC}" 
-    else
-    force_log_reset="no"
-    echo -e "${YELLOW}System uptime: $days days, $hours hours, $minutes minutes ${NC}" 
+# Refuse inside containers unless forced
+if grep -qE '/(lxc|docker)/' /proc/1/cgroup 2>/dev/null || [[ -f /.dockerenv ]]; then
+  say "[!] Container detected; skipping kernel and firmware updates."; NO_REBOOT_CHECK=1
 fi
 
-if pihole -v &> /dev/null; then 
-echo -e "${GREEN}Pihole Updates!${NC}"
+. /etc/os-release
+ID_LIKE=${ID_LIKE:-$ID}
 
-    # Pi-hole is installed, run the commands
-    pihole arpflush
-    pihole restartdns
-    pihole -g
-    pihole restartdns
-    pihole -up
+say "==> Updating on $PRETTY_NAME"
+log "Begin update on $PRETTY_NAME (kernel $(uname -r))"
 
-echo '$USER "@" $HOSTNAME'
-
-echo -e "${CYAN} Automatically selected $force_log_reset ${NC}"
-sleep 2
-
-echo -e "${RED}Reset logs anyway? ( $force_log_reset ) ${NC}"
-read -p "Force log reset? (y/n): " override
-
-if [[ -n $override ]]; then
-    force_log_reset=$override
-else
-    echo -e "${YELLOW}No input received. Using default value $force_log_reset .${NC}"
-fi
-
-if [[ $force_log_reset != "no" && $force_log_reset != "n" ]]; then
-   echo -e "${RED} $force_log_reset was selected.${NC}"
-   echo -e "${YELLOW}Flushing Logs${NC}"
-   echo "# output current pihole db size"
-        sudo du -h /etc/pihole/pihole-FTL.db -h
-   echo "# current old db size"
-        sudo du -h /etc/pihole/pihole-FTL-old.db -h
-   echo "#pihole flush"
-      pihole flush
-   echo "# Output pihole db size"
-        sudo du -h /etc/pihole/pihole-FTL.db -h
-        sudo rm /etc/pihole/pihole-FTL-old.db 
-      sleep 3
-    echo "# Stop pihole FTL service"
-        sudo systemctl stop pihole-FTL
-    echo "# Delete the FTL database file"
-        sudo service pihole-FTL stop
-    echo "moving current db to old db"
-        sudo mv /etc/pihole/pihole-FTL.db /etc/pihole/pihole-FTL-old.db
-        sudo service pihole-FTL start
-    echo "# Start pihole FTL service"
-        sudo systemctl start pihole-FTL
-    echo "# Output reduced pihole db size"
-        sudo du -h /etc/pihole/pihole-FTL.db -h
-        sudo du -h /etc/pihole/pihole-FTL-old.db -h
-    sleep 8
-elif [[ $force_log_reset != "yes" && $force_log_reset != "y" ]]; then
-  echo -e "The system has ${RED}not${NC} been running for longer than three days. ${GREEN}No db operations required.${NC}"
-  echo -e "${GREEN}System uptime: $days days, $hours hours, $minutes minutes ${NC}" 
-  sleep 4
-else
-    echo -e "${YELLOW}Invalid input.${NC}"
-fi
-fi 
-
-
-# Define the package manager update/upgrade commands
-update_command=""
-upgrade_command=""
-
-# Check which package manager is available
-if command -v apt &> /dev/null; then
-    update_command="sudo apt update"
-    upgrade_command="sudo apt upgrade -y" 
-    
-    #secret#
-    echo -e  "${YELLOW}autoremove"
-    sudo apt autoremove -y
-    echo -e  "${NC}"
-    echo -e "${GREEN}Running apt autoremove..."
-    sudo apt autoremove
-    echo -e "${NC}"
-elif command -v pacman &> /dev/null; then
-    update_command="sudo pacman -Syu"
-    upgrade_command="sudo pacman -Syyu --noconfirm"
-elif command -v dnf &> /dev/null; then
-    update_command="sudo dnf check-update"
-    upgrade_command="sudo dnf upgrade -y"
-elif command -v pkg &> /dev/null; then
-    update_command="sudo pkg update"
-    upgrade_command="sudo pkg upgrade -y"
-elif command -v zypper &> /dev/null; then
-    update_command="sudo zypper refresh"
-    upgrade_command="sudo zypper update -y"
-else
-    echo "Unable to determine the package manager. Please update and upgrade manually."
-    exit 1
-fi
-
-# Update the system
-echo "Updating packages..."
-$update_command
-
-# Upgrade the system
-echo "Upgrading packages..."
-$upgrade_command
-
-echo -e " ${GREEN} Script completed.${NC} "
-sleep 1
-# Get the running kernel version
-version=$(uname -r)
-echo "Running kernel $version"
-# Extract major version using regular expression
-if [[ $version =~ ^([0-9]+\.[0-9]+\.[0-9]+).* ]]; then
-    version="${BASH_REMATCH[1]}"
-   else
-  echo -e "${RED} Warning!!!${NC}"
-  echo -e "${RED}Invalid version format${NC}"
-sleep 10
-fi
-running_kernel=$version
-# Get the installed kernel version
-installed_kernel=$(dpkg --list | grep "linux-image" | awk '{print $3}' | awk -F'-' '{print $1}' | sort -V | tail -n1)
-# Input version string
-version=""
-version=$(dpkg --list | grep "linux-image" | awk '{print $3}' | awk -F'-' '{print $1}' | sort -V | tail -n1)
-echo -e "${YELLOW}Running kernel   ${BLUE}: $running_kernel ${NC}"
-echo -e "${YELLOW}Installed kernel ${BLUE}: $installed_kernel ${NC}"
-
-# Extract major version using regular expression
-if [[ $version =~ ^([0-9]+\.[0-9]+\.[0-9]+).* ]]; then
-  version="${BASH_REMATCH[1]}"
-else
-  echo -e "${RED}Invalid version format, is this linux real?${NC}"
-  echo -e "${LIGHT_RED}Skipping${NC}"
-fi
-installed_kernel=$version
-if [[ $running_kernel != $installed_kernel ]]; then
-  echo "pick $USER@$HOSTNAME ($HOST_IP)" &&  uname -a
-  read -p "The running kernel ($running_kernel) differs from the installed kernel ($installed_kernel). Do you want to reboot? (y/N): " choice
-  if [[ $choice == [Yy] ]]; then
-    echo -e "${RED}Rebooting...${NC}"
-       echo -e "L8r $USER@$HOSTNAME ($HOST_IP)"
-    # Uncomment the following line to perform the reboot
-    sleep 3 
-      sudo reboot
-  else
-    echo -e "${LIGHT_RED}Reboot denied.${NC}"  
-     sleep 3 
-    echo "  $USER@$HOSTNAME ($HOST_IP)"
+kernel_hint() {
+  [[ $NO_REBOOT_CHECK -eq 1 ]] && return 0
+  local run_kern inst_kern msg
+  run_kern=$(uname -r)
+  case "$ID" in
+    ubuntu|debian)
+      inst_kern=$(dpkg-query -W -f='${Version}\n' linux-image-$(uname -r | sed 's/-.*//') 2>/dev/null || true)
+      ;;
+    arch)
+      inst_kern=$(pacman -Q linux 2>/dev/null | awk '{print $2}')
+      ;;
+    fedora|rhel|centos)
+      inst_kern=$(rpm -q kernel --qf '%{VERSION}-%{RELEASE}.%{ARCH}\n' | tail -1)
+      ;;
+    opensuse*|suse*)
+      inst_kern=$(rpm -q kernel-default --qf '%{VERSION}-%{RELEASE}.%{ARCH}\n' | tail -1)
+      ;;
+    *) inst_kern="" ;;
+  esac
+  if [[ -n "$inst_kern" ]] && ! uname -r | grep -q "${inst_kern%% *}"; then
+    say "[!] Running kernel ($run_kern) != latest installed ($inst_kern). Reboot recommended."
+    log "Kernel mismatch: running $run_kern vs installed $inst_kern"
   fi
-else
-echo -e "${GREEN}Running   version >>: $running_kernel ${NC}"
-inxi
-echo -e "${BLUE}Installed version >>: $installed_kernel ${NC}"
-uname -a
-sleep 1 
-echo -e "The running kernel $running_kernel ${GREEN}matches${NC} the installed kernel $installed_kernel. ${YELLOW}No reboot required.${NC}"
-  echo $USER "@" $HOSTNAME
-if [[ $uptime_seconds -ge $((3 * 24 * 3600)) ]]; then
+}
 
-echo -e "${RED} The system has been running for longer than three days. ${NC}"  
-echo -e "${YELLOW} System uptime: $days days, $hours hours, $minutes minutes ${NC}"
-    read -p "Would you like to reboot now? (Y/n): " choice
-    if [[ $choice != [Nn] ]]; then
-      echo -e "${RED} Rebooting... $USER @ $HOSTNAME ($HOST_IP) ${NC}"
-      # Uncomment the following line to perform the reboot
-          sleep 2
-          sudo reboot
-    else
-      echo -e "${RED} Reboot skipped. $USER@$HOSTNAME ($HOST_IP) ${NC} " && sleep 3
+case "$ID" in
+  ubuntu|debian)
+    say "==> apt: update & upgrade"
+    run "apt-get update"
+    run "apt-get -y dist-upgrade"
+    if [[ $CLEAN -eq 1 ]]; then
+      run "apt-get -y autoremove --purge"
+      run "apt-get -y autoclean"
     fi
-  else
+    ;;
+  arch)
+    say "==> pacman: sync & upgrade"
+    run "pacman -Syu --noconfirm"
+    if [[ $CLEAN -eq 1 ]]; then
+      run "paccache -rk2 || true"    # keep 2 versions
+      run "pacman -Qtdq | xargs -r pacman -Rns --noconfirm"
+    fi
+    ;;
+  fedora|rhel|centos)
+    say "==> dnf: upgrade"
+    run "dnf -y upgrade --refresh"
+    if [[ $CLEAN -eq 1 ]]; then
+      run "dnf -y autoremove"
+      run "dnf -y clean all"
+    fi
+    ;;
+  opensuse*|suse*)
+    say "==> zypper: refresh & update"
+    run "zypper --non-interactive refresh"
+    run "zypper --non-interactive update"
+    if [[ $CLEAN -eq 1 ]]; then
+      run "zypper --non-interactive packages --orphaned | awk 'NR>2{print $3}' | xargs -r zypper --non-interactive remove --clean-deps"
+      run "zypper clean --all"
+    fi
+    ;;
+  *)
+    echo "Unsupported distro: $ID" >&2; exit 3 ;;
 
-echo -e "${GREEN} So good news! ${NC} $USER@$HOSTNAME ($HOST_IP)"   
-echo -e " The system has ${GREEN}not${NC} been running for longer than ${YELLOW}three${NC} days. ${RED}No reboot required. ${NC}"
-echo -e "${GREEN} System uptime: $days days, $hours hours, $minutes minutes ${NC}"
-echo "uptime $USER@$HOSTNAME ($HOST_IP)"
-uptime
-users 
-last 5
-sleep 6
-echo $USER "@" $HOSTNAME
-    # Default to "no" if running for less than three days
-    read -p "Reboot Anyway? (y/N): " choice
-    if [[ $choice == [Yy] ]]; then
-      echo -e "${RED} Rebooting... after 10 sec $USER@$HOSTNAME ($HOST_IP) ${NC}"
-       sleep 4 
-       neofetch
-       inxi  
-       uname -a
-      echo -e " ${RED} byah $USER@$HOSTNAME $HOST_IP ${NC} " && sleep 3
-       sudo reboot
-    else
-      echo -e "${GREEN} Reboot Skipped. $USER@$HOSTNAME ($HOST_IP) ${NC}"
-    fi
-  fi
+esac
+
+kernel_hint
+
+say "\n==> Done. Log: $LOG_FILE"
+log "Completed successfully"
+
+# Optional: check if reboot required (Debian/Ubuntu)
+if [[ -f /run/reboot-required ]]; then
+  say "[!] Reboot required: /run/reboot-required exists."
+  log "Reboot required flag present"
 fi
-
-echo $USER "@" $HOSTNAME
-read -p "Run Speedtest? (y/N):" response
-
-if [[ -n $response ]]; then
-    if [[ $response == "yes" ]] || [[ $response == "y" ]]; then
-        echo "$USER@$HOSTNAME speedtest"
-        speedtest --secure
-        sleep 3
-    elif [[ $response == "no" ]] || [[ $response == "n" ]]; then
-        echo -e "${GREEN}Not running speedtest : System uptime: $(uptime)${NC}" 
-        sleep 4
-    else
-        echo -e "${YELLOW}Invalid input.${NC}"
-    fi
-else
-    echo -e "${YELLOW}No input received. Using default value $nettest.${NC}"
-fi
-
-
-echo $USER "@" $HOSTNAME
-who -a && last -n 6
-neofetch
-inxi
-uname -a
-echo -e "Current Running kernel ($running_kernel) ; Current Installed kernel ($installed_kernel)."
-echo -e "${GREEN} Byah.!. $USER@$HOSTNAME ($HOST_IP) ${NC}"
-sleep 6
-exit; 
