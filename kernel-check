@@ -34,7 +34,7 @@ ckver_sort(){ if sort -V </dev/null >/dev/null 2>&1; then sort -V; else sort; fi
 CKRUNNING="$(uname -r)"
 ALL="$(cklist_versions | ckuniq_stable)"
 [ -z "$ALL" ] && { say "${RED}No kernel versions found under:$roots${RST}"; exit 2; }
-CKNEWEST="$(printf "%s\n" "$ALL" | ver_sort | tail -n1)"
+CKNEWEST="$(printf "%s\n" "$ALL" | ckver_sort | tail -n1)"
 
 # Pretty output
 say "${RED}This text is Red.${RST}"
@@ -43,8 +43,8 @@ say "${GRN}This text is Green.${RST}"
 say "${MAG}This text is Magenta.${RST}"
 say "${BLU}This text is Blue.${RST}"
 say "${WHT}This text is White.${RST}"
-say "${BLD}Running Kernel:${RST}   $RUNNING"
-say "${BLD}Newest Installed:${RST} $NEWEST"
+say "${BLD}Running Kernel:${RST}   $CKRUNNING"
+say "${BLD}Newest Installed:${RST} $CKNEWEST"
 
 if [ "$CKRUNNING" = "CK$NEWEST" ]; then
   say "${GRN}✅ Running kernel matches the newest installed. No action needed.${RST}"
@@ -52,9 +52,9 @@ if [ "$CKRUNNING" = "CK$NEWEST" ]; then
 fi
 
 # If running modules dir exists, hint older vs different
-if [ -d "/usr/lib/modules/$RUNNING" ] || [ -d "/lib/modules/$RUNNING" ]; then
+if [ -d "/usr/lib/modules/$CKRUNNING" ] || [ -d "/lib/modules/$CKRUNNING" ]; then
   if sort -V </dev/null >/dev/null 2>&1; then
-    CKFIRST="$(printf "%s\n%s\n" "$CKRUNNING" "$CKNEWEST" | ver_sort | head -n1)"
+    CKFIRST="$(printf "%s\n%s\n" "$CKRUNNING" "$CKNEWEST" | ckver_sort | head -n1)"
     if [ "$CKFIRST" = "$CKRUNNING" ] && [ "$CKRUNNING" != "$CKNEWEST" ]; then
       say "${YEL}⚠️ Running kernel appears OLDER than newest installed. Consider rebooting.${RST}"
     else
