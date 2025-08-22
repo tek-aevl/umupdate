@@ -1,4 +1,3 @@
-cat > /home/tek/kernel-check <<'EOF'
 #!/bin/sh
 # kernel-check: compare running kernel to newest installed (modules dirs)
 # POSIX sh, distro-agnostic
