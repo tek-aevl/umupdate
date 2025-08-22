@@ -30,9 +30,9 @@ else
     echo "The file /bin/update does not exist."
     read -p "Do you want to install it? (y/n): " -e choice
     if [ "$choice" == "y" ]; then
-/# START SECTION/
+#/ START SECTION/
 echo -e '#!/bin/bash\n echo "#'$version'#"\n echo "Hello! $USER@$HOSTNAME "\n echo "Assistance at https://github.com/tek-aevl/umupdate/" #To use run\n echo "bash update"\n bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update)\n echo $USER "bye! XD "' | sudo tee /bin/update > /dev/null
-/# END SECTION/
+#/ END SECTION/
 echo "Verifying contents of /bin/update..."
 # Fetch the latest update script from GitHub
 curl -s -o /tmp/github_update "https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update"
@@ -111,13 +111,12 @@ sleep 3
 echo -e "${YELLOW} Can you ${RED} sudo${NC}?"
 echo -e "${RED} Password $USER@$HOSTNAME ($HOST_IP) "
 # Check if sudo password is needed
-sudo -v 2>&1 | grep "Sorry, try again." > /dev/null
-if [ $? -eq 0 ]; then
- echo -e "${GREEN}You can Sudo. Right?${NC}"
-last -F | head -5
-sudo sleep 1
-#if sudo -v 2>&1;then 
-   echo -e "${YELLOW}Sudo password is required.${NC}"
+if sudo -v; then
+  echo -e "${GREEN}sudo works.${NC}"
+else
+  echo -e "${YELLOW}sudo password is required (or sudo not configured).${NC}"
+fi
+
 sudo who -a
 sudo sleep 2
 fi
@@ -316,13 +315,13 @@ if [[ $force_log_reset != "no" && $force_log_reset != "n" ]]; then
    echo -e "${RED} $force_log_reset was selected.${NC}"
    echo -e "${YELLOW}Flushing Logs${NC}"
    echo "# output current pihole db size"
-        sudo du -h /etc/pihole/pihole-FTL.db -h
+        sudo du -h /etc/pihole/pihole-FTL.db 
    echo "# current old db size"
-        sudo du -h /etc/pihole/pihole-FTL-old.db -h
+        sudo du -h /etc/pihole/pihole-FTL-old.db
    echo "#pihole flush"
         sudo pihole flush
    echo "# Output pihole db size"
-        sudo du -h /etc/pihole/pihole-FTL.db -h
+        sudo du -h /etc/pihole/pihole-FTL.db 
         sudo rm /etc/pihole/pihole-FTL-old.db 
       sleep 3
     echo "# Stop pihole FTL service"
@@ -335,8 +334,8 @@ if [[ $force_log_reset != "no" && $force_log_reset != "n" ]]; then
     echo "# Start pihole FTL service"
         sudo systemctl start pihole-FTL
     echo "# Output reduced pihole db size"
-        sudo du -h /etc/pihole/pihole-FTL.db -h
-        sudo du -h /etc/pihole/pihole-FTL-old.db -h
+        sudo du -h /etc/pihole/pihole-FTL.db 
+        sudo du -h /etc/pihole/pihole-FTL-old.db 
     sleep 8
 elif [[ $force_log_reset != "yes" && $force_log_reset != "y" ]]; then
   echo -e "The system has ${RED}not${NC} been running for longer than three days. ${GREEN}No db operations required.${NC}"
@@ -345,7 +344,6 @@ elif [[ $force_log_reset != "yes" && $force_log_reset != "y" ]]; then
 else
     echo -e "${YELLOW}Invalid input.${NC}"
 fi
-fi 
 ###end of pihole tasks###
 
 ###########################################################################################
