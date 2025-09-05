@@ -1,23 +1,44 @@
 #!/usr/bin/env bash
-# umupdate-runner v0.97
-# - Don't abort on single-host errors (ERR trap = log only)
-# - Strict but friendly: -Euo pipefail, guarded commands
-# - Local RFC1918 first (192.168.* -> 10.* -> 172.16-31.*), sorted numerically
-# - Tailscale 100.* always last
-# - Unreachable hosts just WARN and continue
+# umupdate-runner v0.99 (interactive-ready)
+# - Local nets first (10.20 -> 10.30 -> 192.168 -> other 10 -> 172.16–31 -> other -> 100.*)
+# - Two modes:
+#     * Non-interactive (default): timeouts + per-host logs, no stdin
+#     * Interactive: real TTY, stdin open; you see everything and can respond
+# - Per-host choice prompt (ASK_INTERACTIVE=1) or force INTERACTIVE=1
 
 set -Euo pipefail
 
+### ---------- config ----------
 UPDATE_REMOTE_URL="https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/supdate"
-SSH_OPTS="-o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=3 -o ServerAliveInterval=15 -o ServerAliveCountMax=2"
-CURL_OPTS="--max-time 5 -fsS"
+SSH_OPTS="-o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=4 -o ConnectionAttempts=1 -o ServerAliveInterval=15 -o ServerAliveCountMax=2"
+CURL_OPTS="--max-time 10 -fsS"
 DEFAULT_IF="$(ip route show default 2>/dev/null | awk '/default/{print $5; exit}')"
 TAILSCALE_BIN="${TAILSCALE_BIN:-/usr/bin/tailscale}"
-PARALLELISM=${PARALLELISM:-1}
+
+# Priority buckets (ordered)
+PREF=('10.20.' '10.30.' '192.168.' '__group_10__' '__group_172__' '__other__' '__ts__')
+
+PARALLELISM=${PARALLELISM:-1}         # keep 1 if you plan to interact
+HOST_TIMEOUT=${HOST_TIMEOUT:-900}     # seconds cap for non-interactive runs
 DRY_RUN="${DRY_RUN:-0}"
 DEBUG="${DEBUG:-0}"
 
-# Colors
+# Interaction toggles
+INTERACTIVE=${INTERACTIVE:-0}         # 1 = always interactive per host
+ASK_INTERACTIVE=${ASK_INTERACTIVE:-1} # 1 = ask per host (i/s/enter)
+LOG_DIR="${LOG_DIR:-$HOME/umupdate-logs}"
+mkdir -p "$LOG_DIR"
+
+# Non-interactive env on remotes
+REMOTE_ENV='DEBIAN_FRONTEND=noninteractive
+APT_LISTCHANGES_FRONTEND=none
+NEEDRESTART_MODE=a
+DNF_YES=1
+PACMAN_CONFIRM=1'
+REMOTE_ENV_LINE="$(printf "%s" "$REMOTE_ENV" | paste -sd' ' -)"
+### ----------------------------
+
+### ---------- ui/log helpers ----------
 is_tty() { [[ -t 1 ]]; }
 if is_tty; then C0=$'\e[0m'; C1=$'\e[1;36m'; C2=$'\e[1;32m'; C3=$'\e[1;33m'; C4=$'\e[1;31m'; else C0=""; C1=""; C2=""; C3=""; C4=""; fi
 ts() { date +%H:%M:%S; }
@@ -25,116 +46,70 @@ log()  { printf "%s[%s]%s %s\n" "$C1" "$(ts)" "$C0" "$*"; }
 ok()   { printf "%s[ OK ]%s %s\n" "$C2" "$C0" "$*"; }
 warn() { printf "%s[WARN]%s %s\n" "$C3" "$C0" "$*"; }
 err()  { printf "%s[FAIL]%s %s\n" "$C4" "$C0" "$*" >&2; }
-
-# Log-only on ERR; never exit the whole runner
 trap 'err "Unexpected error on line $LINENO (continuing)";' ERR
-
 (( DEBUG )) && set -x
 
 cat <<'BANNER'
-#v0.97#
-Bootstrap a host quickly:
-  sudo bash -c 'bash <(curl -fsSL https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/supdate)'
+#v0.99#
+Non-interactive by default. Press 'i' per host to open an interactive TTY.
+Tip: For fully interactive session across all hosts: INTERACTIVE=1 ./runner.sh
 BANNER
 
 need_cmd() { command -v "$1" >/dev/null 2>&1 || { warn "Missing $1"; return 1; }; }
-for c in ip awk sed grep sort uniq ssh curl; do need_cmd "$c" || true; done
+for c in ip awk sed grep sort uniq ssh curl timeout tee; do need_cmd "$c" || true; done
 
 only_ipv4() {
   grep -Eo '\b([0-9]{1,3}\.){3}[0-9]{1,3}\b' \
   | awk -F. '$1<=255 && $2<=255 && $3<=255 && $4<=255'
 }
+numsort_ips() { awk -F. '{printf("%03d.%03d.%03d.%03d %s\n",$1,$2,$3,$4,$0)}' | sort -k1,1 | awk '{print $2}' ; }
+read_ipv4s_from_file(){ local f="$1"; [[ -f "$f" ]] || return 0; log "Using $f"; grep -Eo '([0-9]{1,3}\.){3}[0-9]{1,3}' "$f" | only_ipv4 || true; }
 
-collect_neighbors() {
-  { [[ -n "${DEFAULT_IF:-}" ]] && ip neigh show dev "$DEFAULT_IF" 2>/dev/null || true; } \
-    | awk '{print $1}' | only_ipv4 || true
-  if ip link show virbr0 >/dev/null 2>&1; then
-    ip neigh show dev virbr0 2>/dev/null | awk '{print $1}' | only_ipv4 || true
-  fi
-  ip -o link show 2>/dev/null \
-    | awk -F': ' '$2 !~ /lo/ {print $2}' \
-    | while read -r ifc; do ip neigh show dev "$ifc" 2>/dev/null | awk '{print $1}'; done \
-    | only_ipv4 || true
+collect_neighbors(){
+  { [[ -n "${DEFAULT_IF:-}" ]] && ip neigh show dev "$DEFAULT_IF" 2>/dev/null || true; } | awk '{print $1}' | only_ipv4 || true
+  if ip link show virbr0 >/dev/null 2>&1; then ip neigh show dev virbr0 2>/dev/null | awk '{print $1}' | only_ipv4 || true; fi
+  ip -o link show 2>/dev/null | awk -F': ' '$2 !~ /lo/ {print $2}' \
+    | while read -r ifc; do ip neigh show dev "$ifc" 2>/dev/null | awk '{print $1}'; done | only_ipv4 || true
 }
+collect_tailscale(){ [[ -x "$TAILSCALE_BIN" ]] || return 0; "$TAILSCALE_BIN" status 2>/dev/null | grep -Eo '\b100\.[0-9]+\.[0-9]+\.[0-9]+\b' | sort -u || true; }
 
-collect_tailscale() {
-  [[ -x "$TAILSCALE_BIN" ]] || return 0
-  "$TAILSCALE_BIN" status 2>/dev/null | grep -Eo '\b100\.[0-9]+\.[0-9]+\.[0-9]+\b' | sort -u || true
-}
-
-read_ipv4s_from_file() {
-  local f="$1"
-  [[ -f "$f" ]] || return 0
-  log "Using $f"
-  grep -Eo '([0-9]{1,3}\.){3}[0-9]{1,3}' "$f" | only_ipv4 || true
-}
-
-# Ask about ARP neighbors
-prompt_neighbors=0
+# Build candidates
 read -r -p "Include L2 neighbors/ARP in IP list? (Y/n) " yn || true
 case "${yn:-Y}" in [nN]*) prompt_neighbors=0 ;; *) prompt_neighbors=1 ;; esac
 
 log "Building IP candidate list…"
-# Gather raw candidates (custom, optional saved ARP, live neighbors, tailscale)
-CANDIDATES=($( {
-    read_ipv4s_from_file "$HOME/custom_ip_list"
-    read_ipv4s_from_file "$HOME/arp_ip_list"
-    (( prompt_neighbors )) && collect_neighbors || true
-    collect_tailscale
-  } | only_ipv4 | sort -u || true ))
-
-# Load ignore list
+CANDIDATES=($( { read_ipv4s_from_file "$HOME/custom_ip_list"; read_ipv4s_from_file "$HOME/arp_ip_list"; (( prompt_neighbors )) && collect_neighbors || true; collect_tailscale; } | only_ipv4 | sort -u || true ))
 IGNORE=($(read_ipv4s_from_file "$HOME/ignore_ip_list" | sort -u || true))
+(( DEBUG )) && { log "CANDIDATES(${#CANDIDATES[@]}):"; printf '  %s\n' "${CANDIDATES[@]}"; log "IGNORE(${#IGNORE[@]}):"; printf '  %s\n' "${IGNORE[@]}"; }
 
-(( DEBUG )) && {
-  log "CANDIDATES(${#CANDIDATES[@]}):"; printf '  %s\n' "${CANDIDATES[@]}";
-  log "IGNORE(${#IGNORE[@]}):"; printf '  %s\n' "${IGNORE[@]}";
+_bucketize(){
+  local ip="$1"
+  case "$ip" in
+    100.*) echo "__ts__" ;;
+    10.20.*) echo "10.20." ;;
+    10.30.*) echo "10.30." ;;
+    192.168.*) echo "192.168." ;;
+    10.*) echo "__group_10__" ;;
+    172.*) local o2; o2=$(echo "$ip" | awk -F. '{print $2}'); ((o2>=16 && o2<=31)) && echo "__group_172__" || echo "__other__" ;;
+    *) echo "__other__" ;;
+  esac
 }
 
-# Split into groups for ordering
-is_192() { [[ "$1" == 192.168.* ]]; }
-is_10()  { [[ "$1" == 10.* ]]; }
-is_172() {
-  local o2; o2=$(echo "$1" | awk -F. '{print $2}')
-  [[ "$1" == 172.* && $o2 -ge 16 && $o2 -le 31 ]]
-}
-is_100() { [[ "$1" == 100.* ]]; }
-
-numsort_ips() { # stable numeric sort of dotted quads
-  awk -F. '{printf("%03d.%03d.%03d.%03d %s\n",$1,$2,$3,$4,$0)}' \
-  | sort -k1,1 \
-  | awk '{print $2}'
-}
-
-# Filter & bucket
-declare -a B192 B10 B172 BOTHER BTS BFINAL
+declare -A BUCKETS
 for ip in "${CANDIDATES[@]}"; do
   [[ "$ip" == "0.0.0.0" || "$ip" == 127.* ]] && continue
-  if ((${#IGNORE[@]})) && printf "%s\n" "${IGNORE[@]}" | grep -Fxq "$ip"; then
-    continue
-  fi
-  if is_100 "$ip"; then
-    BTS+=("$ip"); continue
-  fi
-  if is_192 "$ip"; then
-    B192+=("$ip")
-  elif is_10 "$ip"; then
-    B10+=("$ip")
-  elif is_172 "$ip"; then
-    B172+=("$ip")
-  else
-    BOTHER+=("$ip")
-  fi
+  if ((${#IGNORE[@]})) && printf "%s\n" "${IGNORE[@]}" | grep -Fxq "$ip"; then continue; fi
+  b=$(_bucketize "$ip"); BUCKETS["$b"]+="$ip"$'\n'
 done
 
-# Sort each bucket numerically (lower subnets first), then concat: 192→10→172→other→100.*
-if ((${#B192[@]})); then B192=($(printf "%s\n" "${B192[@]}" | numsort_ips)); fi
-if ((${#B10[@]}));  then B10=($(printf "%s\n" "${B10[@]}"  | numsort_ips));  fi
-if ((${#B172[@]})); then B172=($(printf "%s\n" "${B172[@]}" | numsort_ips)); fi
-if ((${#BOTHER[@]})); then BOTHER=($(printf "%s\n" "${BOTHER[@]}" | numsort_ips)); fi
-if ((${#BTS[@]}));  then BTS=($(printf "%s\n" "${BTS[@]}"  | numsort_ips));  fi
-
-BFINAL=("${B192[@]}" "${B10[@]}" "${B172[@]}" "${BOTHER[@]}" "${BTS[@]}")
+BFINAL=()
+for key in "${PREF[@]}"; do
+  ips="${BUCKETS[$key]:-}"
+  if [[ -n "$ips" ]]; then
+    while IFS= read -r ip; do LIST+=("$ip"); done < <(printf "%s" "$ips" | sed '/^$/d' | numsort_ips)
+    BFINAL+=("${LIST[@]}"); unset LIST
+  fi
+done
 
 if ((${#BFINAL[@]} == 0)); then
   warn "No candidate IPs after filtering."
@@ -146,61 +121,97 @@ fi
 log "Execution order (${#BFINAL[@]} hosts):"
 printf "  %s\n" "${BFINAL[@]}"
 
-# Dry run gate
-if [[ "${DRY_RUN}" != "0" ]]; then
-  warn "DRY_RUN=1 — not touching remotes."
-  exit 0
-fi
-
+if [[ "${DRY_RUN}" != "0" ]]; then warn "DRY_RUN=1 — not touching remotes."; exit 0; fi
 read -r -p "Proceed to run updates on these hosts? (y/N) " go || true
 [[ "${go:-N}" =~ ^[yY]$ ]] || { warn "Aborted."; exit 1; }
 
 CURL_BIN="$(command -v curl || true)"
 
-is_pihole() {
+is_pihole(){
   local host="$1"
-  ssh $SSH_OPTS -q "$host" \
-    "systemctl is-active --quiet pihole-FTL.service || command -v pihole >/dev/null" \
-    >/dev/null 2>&1 || return 1
-  # best-effort HTTP probe, ignore result
+  timeout 10s ssh $SSH_OPTS -q "$host" "systemctl is-active --quiet pihole-FTL.service || command -v pihole >/dev/null" </dev/null >/dev/null 2>&1 || return 1
   curl $CURL_OPTS -I -H "Host: pi.hole" "http://$host/admin/" >/dev/null 2>&1 || true
   return 0
 }
 
-run_host() {
-  local ip="$1"
-  echo
-  log ">>> $ip"
+# Non-interactive remote executor (no stdin, logs, timeout)
+_ssh_do_nonint(){
+  local ip="$1" cmd="$2" logf="$3"
+  timeout "$HOST_TIMEOUT"s ssh -t $SSH_OPTS "$ip" "bash -lc '$REMOTE_ENV_LINE; $cmd'" </dev/null 2>&1 | tee -a "$logf"
+  return "${PIPESTATUS[0]}"
+}
 
-  # quick reachability check (fast-fail)
-  if ! ssh $SSH_OPTS -q "$ip" "true" >/dev/null 2>&1; then
+# Interactive executor (real TTY, stdin open, no forced env, no timeouts)
+_ssh_do_int(){
+  local ip="$1" cmd="$2"
+  # Double -t to force tty, keep stdin attached
+  ssh -tt $SSH_OPTS "$ip" "bash -lc '$cmd'"
+  return $?
+}
+
+run_host(){
+  local ip="$1" logf="$LOG_DIR/$ip.$(date +%Y%m%d-%H%M%S).log" mode="${INTERACTIVE}"
+
+  echo; log ">>> $ip"
+
+  # Reachability
+  if ! timeout 8s ssh $SSH_OPTS -q "$ip" "true" </dev/null >/dev/null 2>&1; then
     warn "$ip unreachable (ssh)"; return 0
   fi
 
+  # Per-host choice?
+  if (( ASK_INTERACTIVE )) && (( INTERACTIVE == 0 )); then
+    printf "%s[CHOICE]%s %s (i=interactive, s=skip, Enter=auto): " "$C3" "$C0" "$ip"
+    read -r key || true
+    case "${key:-}" in
+      i|I) mode=1 ;;
+      s|S) warn "Skipped $ip"; return 0 ;;
+      *)   mode=0 ;;
+    esac
+  fi
+
+  # Decide command to run (prefer local /bin/update if present)
+  if timeout 10s ssh $SSH_OPTS "$ip" "bash -lc 'command -v bash >/dev/null && ([[ -x /bin/update ]] || [[ -x /usr/bin/update ]] || [[ -x ~/bin/update ]])'" </dev/null >/dev/null 2>&1; then
+    local local_cmd="/bin/update || /usr/bin/update || ~/bin/update"
+    if (( mode )); then
+      ok "Interactive: running local update on $ip"
+      _ssh_do_int "$ip" "$local_cmd" || warn "$ip: local interactive update exited non-zero"
+      return 0
+    else
+      ok "Non-interactive: running local update on $ip (timeout ${HOST_TIMEOUT}s)"
+      _ssh_do_nonint "$ip" "$local_cmd" "$logf" || warn "$ip: local update failed/timed-out (see $logf)"
+      return 0
+    fi
+  fi
+
+  # Pi-hole fast path (only makes sense non-interactive usually, but allow both)
   if is_pihole "$ip"; then
-    ok "Pi-hole detected — inline remote update"
-    ssh -t $SSH_OPTS "$ip" "bash -lc '(${CURL_BIN:-curl} -fsSL \"$UPDATE_REMOTE_URL\" | bash)'" \
-      >/dev/null 2>&1 || warn "Inline Pi-hole update failed on $ip"
+    local pi_cmd="(${CURL_BIN:-curl} $CURL_OPTS \"$UPDATE_REMOTE_URL\" | bash)"
+    if (( mode )); then
+      ok "Interactive: Pi-hole inline update on $ip"
+      _ssh_do_int "$ip" "$pi_cmd" || warn "$ip: interactive Pi-hole update failed"
+    else
+      ok "Non-interactive: Pi-hole inline update on $ip (timeout ${HOST_TIMEOUT}s)"
+      _ssh_do_nonint "$ip" "$pi_cmd" "$logf" || warn "$ip: Pi-hole inline update failed (see $logf)"
+    fi
     return 0
   fi
 
-  # Prefer local update script if present
-  if ssh -t $SSH_OPTS "$ip" \
-      "bash -lc 'command -v bash >/dev/null && ([[ -x /bin/update ]] || [[ -x /usr/bin/update ]] || [[ -x ~/bin/update ]])'" \
-      >/dev/null 2>&1; then
-    ok "Local update script found — invoking"
-    ssh -t $SSH_OPTS "$ip" "bash -lc '/bin/update || /usr/bin/update || ~/bin/update'" \
-      >/dev/null 2>&1 || warn "Local update failed on $ip; will try remote one-liner"
+  # Fallback one-liner
+  local one_cmd="(${CURL_BIN:-curl} $CURL_OPTS \"$UPDATE_REMOTE_URL\" | bash)"
+  if (( mode )); then
+    ok "Interactive: remote one-liner on $ip"
+    _ssh_do_int "$ip" "$one_cmd" || warn "$ip: interactive one-liner failed"
+  else
+    ok "Non-interactive: remote one-liner on $ip (timeout ${HOST_TIMEOUT}s)"
+    _ssh_do_nonint "$ip" "$one_cmd" "$logf" || warn "$ip: one-liner failed (see $logf)"
   fi
-
-  ok "Running remote one-liner"
-  ssh -t $SSH_OPTS "$ip" "bash -lc '(${CURL_BIN:-curl} $CURL_OPTS \"$UPDATE_REMOTE_URL\" | bash)'" \
-    >/dev/null 2>&1 || warn "Remote one-liner failed on $ip"
+  return 0
 }
 
-# Execute
+# Execute (keep PARALLELISM=1 if you plan to interact)
 if (( PARALLELISM > 1 )); then
-  warn "Parallel mode ${PARALLELISM} (experimental)"
+  warn "Parallel mode ${PARALLELISM} (note: interactive prompts will be chaotic)"
   pids=(); i=0
   for ip in "${BFINAL[@]}"; do
     run_host "$ip" &
