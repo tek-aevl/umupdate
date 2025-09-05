@@ -1,181 +1,148 @@
 #!/usr/bin/env bash
-# umupdate-runner v0.95 (Tek-tuned)
-# - Safer: set -Eeuo pipefail + traps
-# - Real ARP/neighbor collection fixed
-# - Robust tailscale peer scrape
-# - Pi-hole detection improved
-# - Ignore list honored, dedup/sort stable
-# - Timeouts on ssh/curl, nicer logs, dry-run
+# umupdate-runner v0.96
+# Safer collectors; no realpath; tolerant pipelines; better debug
 
-set -Eeuo pipefail
+set -Euo pipefail
 
-### ---------- config ----------
 UPDATE_REMOTE_URL="https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/supdate"
 SSH_OPTS="-o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=3 -o ServerAliveInterval=15 -o ServerAliveCountMax=2"
 CURL_OPTS="--max-time 4 -fsS"
 DEFAULT_IF="$(ip route show default 2>/dev/null | awk '/default/{print $5; exit}')"
 TAILSCALE_BIN="${TAILSCALE_BIN:-/usr/bin/tailscale}"
-PARALLELISM=1        # set >1 if you want to experiment with backgrounding runs
-DRY_RUN="${DRY_RUN:-0}" # DRY_RUN=1 to test without touching remotes
-### ----------------------------
+PARALLELISM=${PARALLELISM:-1}
+DRY_RUN="${DRY_RUN:-0}"
+DEBUG="${DEBUG:-0}"
 
-# Colors
 is_tty() { [[ -t 1 ]]; }
-if is_tty; then
-  C0=$'\e[0m'; C1=$'\e[1;36m'; C2=$'\e[1;32m'; C3=$'\e[1;33m'; C4=$'\e[1;31m'
-else
-  C0=""; C1=""; C2=""; C3=""; C4=""
-fi
-
-log()   { printf "%s[%s]%s %s\n" "$C1" "$(date +%H:%M:%S)" "$C0" "$*"; }
-ok()    { printf "%s[ OK ]%s %s\n" "$C2" "$C0" "$*"; }
-warn()  { printf "%s[WARN]%s %s\n" "$C3" "$C0" "$*"; }
-err()   { printf "%s[FAIL]%s %s\n" "$C4" "$C0" "$*" >&2; }
-die()   { err "$*"; exit 1; }
+if is_tty; then C0=$'\e[0m'; C1=$'\e[1;36m'; C2=$'\e[1;32m'; C3=$'\e[1;33m'; C4=$'\e[1;31m'; else C0=""; C1=""; C2=""; C3=""; C4=""; fi
+ts() { date +%H:%M:%S; }
+log()  { printf "%s[%s]%s %s\n" "$C1" "$(ts)" "$C0" "$*"; }
+ok()   { printf "%s[ OK ]%s %s\n" "$C2" "$C0" "$*"; }
+warn() { printf "%s[WARN]%s %s\n" "$C3" "$C0" "$*"; }
+err()  { printf "%s[FAIL]%s %s\n" "$C4" "$C0" "$*" >&2; }
+die()  { err "$*"; exit 1; }
 
 trap 'err "Unexpected error on line $LINENO"; exit 1' ERR
 
-### Banner / quick installer snippet
+if (( DEBUG )); then
+  set -x
+  log "DEBUG on: DEFAULT_IF=${DEFAULT_IF:-unset}, TAILSCALE_BIN=$TAILSCALE_BIN"
+fi
+
 cat <<'BANNER'
-#v0.95#
-To bootstrap /bin/update on a host:
+#v0.96#
+Bootstrap a host quickly:
   sudo bash -c 'bash <(curl -fsSL https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/supdate)'
-…or run this aggregator to fan out to your fleet.
 BANNER
 
-### Dependencies presence (optional)
 need_cmd() { command -v "$1" >/dev/null 2>&1 || { warn "Missing $1"; return 1; }; }
 for c in ip awk sed grep sort uniq ssh curl; do need_cmd "$c" || true; done
 
-### SSH key helper (fixed)
 copy_ssh_key() {
   local host="$1"
-  if [[ ! -f "$HOME/.ssh/id_rsa.pub" && ! -f "$HOME/.ssh/id_ed25519.pub" ]]; then
-    log "No SSH key found; generating ed25519 key"
+  if [[ ! -f "$HOME/.ssh/id_ed25519.pub" && ! -f "$HOME/.ssh/id_rsa.pub" ]]; then
+    log "No SSH key found; generating ed25519"
     ssh-keygen -t ed25519 -N "" -f "$HOME/.ssh/id_ed25519" >/dev/null
   fi
-  local pubkey
-  if [[ -f "$HOME/.ssh/id_ed25519.pub" ]]; then pubkey="$HOME/.ssh/id_ed25519.pub"; else pubkey="$HOME/.ssh/id_rsa.pub"; fi
-  # Try passwordless; if fails, let ssh-copy-id prompt
-  if ! ssh $SSH_OPTS "$host" "true" 2>/dev/null; then
+  local pubkey="$HOME/.ssh/id_ed25519.pub"
+  [[ -f "$pubkey" ]] || pubkey="$HOME/.ssh/id_rsa.pub"
+  if ! ssh $SSH_OPTS -q "$host" "true" 2>/dev/null; then
     log "Pushing SSH key to $host"
     ssh-copy-id -o ConnectTimeout=5 "$host" || warn "ssh-copy-id failed for $host"
   fi
-  # ensure agent has key (optional)
   if command -v ssh-add >/dev/null 2>&1; then
-    ssh-add -L >/dev/null 2>&1 || ssh-add "$pubkey%PRIVATE" >/dev/null 2>&1 || true
+    ssh-add -L >/dev/null 2>&1 || ssh-add "${pubkey%.*}" >/dev/null 2>&1 || true
   fi
 }
 
-### Pi-hole check (more robust)
 is_pihole() {
   local host="$1"
-  # service check OR binary present OR web ping
-  if ssh $SSH_OPTS -q "$host" "systemctl is-active --quiet pihole-FTL.service || command -v pihole >/dev/null"; then
-    # try http ping quickly (some are https-only; ignore failures)
-    curl $CURL_OPTS -I -H "Host: pi.hole" "http://$host/admin/" >/dev/null || true
-    return 0
-  fi
+  ssh $SSH_OPTS -q "$host" \
+    "systemctl is-active --quiet pihole-FTL.service || command -v pihole >/dev/null" \
+    && { curl $CURL_OPTS -I -H "Host: pi.hole" "http://$host/admin/" >/dev/null || true; return 0; }
   return 1
 }
 
-### Collect neighbors (L2) from interfaces
-collect_neighbors() {
-  # default iface neighbors
-  if [[ -n "${DEFAULT_IF:-}" ]]; then
-    ip neigh show dev "$DEFAULT_IF" 2>/dev/null | awk '{print $1}'
-  fi
-  # virbr0 neighbors (qemu/kvm)
-  if ip link show virbr0 >/dev/null 2>&1; then
-    ip neigh show dev virbr0 2>/dev/null | awk '{print $1}'
-  fi
-  # all other UP ifaces for good measure
-  ip -o link show | awk -F': ' '$2 !~ /lo/ {print $2}' | while read -r ifc; do
-    ip neigh show dev "$ifc" 2>/dev/null | awk '{print $1}'
-  done
+only_ipv4() {
+  grep -Eo '\b([0-9]{1,3}\.){3}[0-9]{1,3}\b' \
+  | awk -F. '$1<=255 && $2<=255 && $3<=255 && $4<=255'
 }
 
-### Collect Tailscale peer IPs (100.x) — no JSON to avoid dependency
+collect_neighbors() {
+  # Use `|| true` to avoid set -e breaks on empty output
+  { [[ -n "${DEFAULT_IF:-}" ]] && ip neigh show dev "$DEFAULT_IF" 2>/dev/null || true; } | awk '{print $1}' | only_ipv4 || true
+  if ip link show virbr0 >/dev/null 2>&1; then
+    ip neigh show dev virbr0 2>/dev/null | awk '{print $1}' | only_ipv4 || true
+  fi
+  # Walk other UP ifaces; tolerate failures
+  ip -o link show 2>/dev/null \
+    | awk -F': ' '$2 !~ /lo/ {print $2}' \
+    | while read -r ifc; do ip neigh show dev "$ifc" 2>/dev/null | awk '{print $1}'; done \
+    | only_ipv4 || true
+}
+
 collect_tailscale() {
   [[ -x "$TAILSCALE_BIN" ]] || return 0
-  # `tailscale status` output lines hold 100.x addrs
-  "$TAILSCALE_BIN" status 2>/dev/null | grep -Eo '\b100\.[0-9]+\.[0-9]+\.[0-9]+\b' | sort -u
+  "$TAILSCALE_BIN" status 2>/dev/null | grep -Eo '\b100\.[0-9]+\.[0-9]+\.[0-9]+\b' | sort -u || true
 }
 
-### Read list files
 read_ipv4s_from_file() {
   local f="$1"
   [[ -f "$f" ]] || return 0
-  # show file so user sees what’s being used
-  log "Using $(realpath "$f")"
-  grep -Eo '([0-9]{1,3}\.){3}[0-9]{1,3}' "$f" | awk -F. '$1<=255 && $2<=255 && $3<=255 && $4<=255'
+  log "Using $f"
+  grep -Eo '([0-9]{1,3}\.){3}[0-9]{1,3}' "$f" | only_ipv4 || true
 }
 
-### Prompt for ARP/neighbor include (fixed)
 prompt_neighbors=0
 read -r -p "Include L2 neighbors/ARP in IP list? (Y/n) " yn || true
-case "${yn:-Y}" in
-  [nN]*) prompt_neighbors=0 ;;
-  *)     prompt_neighbors=1 ;;
-esac
+case "${yn:-Y}" in [nN]*) prompt_neighbors=0 ;; *) prompt_neighbors=1 ;; esac
 
-### Build candidate list
 log "Building IP candidate list…"
-mapfile -t CANDIDATES < <(
-  {
-    # custom and ignore lists live in $HOME
+# shellcheck disable=SC2207
+CANDIDATES=($( { 
     read_ipv4s_from_file "$HOME/custom_ip_list"
-    # optional pre-saved ARP list
     read_ipv4s_from_file "$HOME/arp_ip_list"
-    # neighbors on demand
-    if [[ $prompt_neighbors -eq 1 ]]; then
-      collect_neighbors
-    fi
-    # tailscale
+    (( prompt_neighbors )) && collect_neighbors || true
     collect_tailscale
-  } | grep -Eo '\b([0-9]{1,3}\.){3}[0-9]{1,3}\b' \
-    | awk -F. '$1<=255 && $2<=255 && $3<=255 && $4<=255' \
-    | sort -u
-)
+  } | only_ipv4 | sort -u || true ))
 
-# Filter ignore list
-mapfile -t IGNORE < <(read_ipv4s_from_file "$HOME/ignore_ip_list" | sort -u || true)
+# IGNORE list
+IGNORE=($(read_ipv4s_from_file "$HOME/ignore_ip_list" | sort -u || true))
 
-filter_list() {
-  local -n in_arr="$1"
-  local -n out_arr="$2"
-  local ignore_pat='^$'
-  if ((${#IGNORE[@]})); then
-    ignore_pat="$(printf "|%s" "${IGNORE[@]}")"; ignore_pat="${ignore_pat:1}"
-  fi
-  for ip in "${in_arr[@]}"; do
-    [[ "$ip" == 0.0.0.0 || "$ip" == 127.* ]] && continue
-    if [[ -n "${ignore_pat}" ]] && printf "%s\n" "${IGNORE[@]}" | grep -Fxq "$ip"; then
-      continue
+(( DEBUG )) && { log "CANDIDATES raw: ${#CANDIDATES[@]}"; printf '  %s\n' "${CANDIDATES[@]}"; log "IGNORE: ${#IGNORE[@]}"; printf '  %s\n' "${IGNORE[@]}"; }
+
+# Filter candidates against ignore; drop 0.0.0.0/127.*
+declare -a FINAL_LIST=()
+if ((${#CANDIDATES[@]})); then
+  for ip in "${CANDIDATES[@]}"; do
+    [[ "$ip" == "0.0.0.0" || "$ip" == 127.* ]] && continue
+    # grep -Fxq is expensive in a loop; use a small awk set instead
+    if ((${#IGNORE[@]})); then
+      printf "%s\n" "${IGNORE[@]}" | grep -Fxq "$ip" && continue
     fi
-    out_arr+=("$ip")
+    FINAL_LIST+=("$ip")
   done
-}
-
-FINAL_LIST=()
-filter_list CANDIDATES FINAL_LIST
+fi
 
 if ((${#FINAL_LIST[@]} == 0)); then
-  die "No candidate IPs after filtering."
+  warn "No candidate IPs after filtering."
+  warn "Try: DEBUG=1 DRY_RUN=1 $0"
+  warn "Also check files: ~/custom_ip_list, ~/arp_ip_list, ~/ignore_ip_list"
+  exit 1
 fi
 
 log "Final list (${#FINAL_LIST[@]} hosts):"
 printf "  %s\n" "${FINAL_LIST[@]}"
 
-### Confirm + dry-run
 if [[ "${DRY_RUN}" != "0" ]]; then
-  warn "DRY_RUN=1 set — not touching remotes. Exiting."
+  warn "DRY_RUN=1 — not touching remotes."
   exit 0
 fi
 read -r -p "Proceed to run updates on these hosts? (y/N) " go || true
 [[ "${go:-N}" =~ ^[yY]$ ]] || die "Aborted."
 
-### Main per-host runner
+CURL_BIN="$(command -v curl || true)"
+
 run_host() {
   local ip="$1"
   echo
@@ -187,32 +154,24 @@ run_host() {
   fi
 
   if is_pihole "$ip"; then
-    ok "Pi-hole detected on $ip — running remote inline update"
-    ssh -t $SSH_OPTS "$ip" "bash -lc '(${CURL_BIN:-curl} -fsSL \"$UPDATE_REMOTE_URL\" | bash)'" \
-      || { warn "Inline update failed on $ip"; return 1; }
+    ok "Pi-hole detected — remote inline update"
+    ssh -t $SSH_OPTS "$ip" "bash -lc '(${CURL_BIN:-curl} -fsSL \"$UPDATE_REMOTE_URL\" | bash)'" || { warn "Inline update failed on $ip"; return 1; }
     return 0
   fi
 
-  # normal hosts: prefer local /bin/update; fallback to remote one-liner
-  if ssh -t $SSH_OPTS "$ip" "command -v bash >/dev/null && [[ -x /bin/update || -x /usr/bin/update || -x ~/bin/update ]]" ; then
+  if ssh -t $SSH_OPTS "$ip" "bash -lc 'command -v bash >/dev/null && ([[ -x /bin/update ]] || [[ -x /usr/bin/update ]] || [[ -x ~/bin/update ]])'"; then
     ok "Found local update script — invoking"
-    ssh -t $SSH_OPTS "$ip" "bash -lc '/bin/update || /usr/bin/update || ~/bin/update'" \
-      || { warn "Local update failed on $ip; will try remote one-liner"; }
+    ssh -t $SSH_OPTS "$ip" "bash -lc '/bin/update || /usr/bin/update || ~/bin/update'" || warn "Local update failed; will try remote one-liner"
   fi
 
   ok "Running remote one-liner"
-  ssh -t $SSH_OPTS "$ip" "bash -lc '(${CURL_BIN:-curl} -fsSL \"$UPDATE_REMOTE_URL\" | bash)'" \
-    || { warn "Remote one-liner failed on $ip"; return 1; }
-
+  ssh -t $SSH_OPTS "$ip" "bash -lc '(${CURL_BIN:-curl} -fsSL \"$UPDATE_REMOTE_URL\" | bash)'" || { warn "Remote one-liner failed on $ip"; return 1; }
   return 0
 }
 
-### Execute (optionally in parallel)
-CURL_BIN="$(command -v curl || true)"
 if (( PARALLELISM > 1 )); then
   warn "Parallel mode ${PARALLELISM} (experimental)"
-  pids=()
-  i=0
+  pids=(); i=0
   for ip in "${FINAL_LIST[@]}"; do
     run_host "$ip" &
     pids+=($!)
@@ -220,9 +179,7 @@ if (( PARALLELISM > 1 )); then
   done
   wait
 else
-  for ip in "${FINAL_LIST[@]}"; do
-    run_host "$ip"
-  done
+  for ip in "${FINAL_LIST[@]}"; do run_host "$ip"; done
 fi
 
 ok "All done."
