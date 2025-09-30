@@ -78,7 +78,7 @@ read -r -p "Include L2 neighbors/ARP in IP list? (Y/n) " yn || true
 case "${yn:-Y}" in [nN]*) prompt_neighbors=0 ;; *) prompt_neighbors=1 ;; esac
 
 log "Building IP candidate list…"
-CANDIDATES=($( { read_ipv4s_from_file "$HOME/custom_ip_list"; read_ipv4s_from_file "$HOME/arp_ip_list"; read_ipv4s_from_file "$HOME/includelist"; (( prompt_neighbors )) && collect_neighbors || true; collect_tailscale; } | only_ipv4 | sort -u || true ))
+CANDIDATES=($( { read_ipv4s_from_file "$HOME/custom_ip_list"; read_ipv4s_from_file "$HOME/arp_ip_list"; (( prompt_neighbors )) && collect_neighbors || true; collect_tailscale; } | only_ipv4 | sort -u || true ))
 IGNORE=($(read_ipv4s_from_file "$HOME/ignore_ip_list" | sort -u || true))
 (( DEBUG )) && { log "CANDIDATES(${#CANDIDATES[@]}):"; printf '  %s\n' "${CANDIDATES[@]}"; log "IGNORE(${#IGNORE[@]}):"; printf '  %s\n' "${IGNORE[@]}"; }
 
