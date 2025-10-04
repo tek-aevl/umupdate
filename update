@@ -348,7 +348,7 @@ fi
 
 echo "kernel-check"
 sleep 3
-bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/kernel-check)
+##removed ##bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/kernel-check)
 bash kernel-check
 kernel-check
 echo "end of back up kernel check"
