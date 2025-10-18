@@ -60,7 +60,7 @@ sudo chmod +x /bin/update
 
 echo "Installed /bin/update successfully."
 
-        sleep 6
+        sleep 3
     else
         echo "Installation cancelled."
     fi
@@ -106,7 +106,7 @@ sleep 1
 # Display information about users currently logged in
 echo "~${HOST_IP} who -a"
 who -a
-sleep 3
+sleep 2
 
 echo -e "${YELLOW} Can you ${RED} sudo${NC}?"
 echo -e "${RED} Password $USER@$HOSTNAME ($HOST_IP) "
@@ -118,10 +118,10 @@ else
 fi
 
 # Programs needed in order to use this script ("dialog" "bc" "speedtest" ), and extra tools that are nice.
-      programs=("dialog" "bc" "speedtest"  "nload"    "htop" "cron" "nano" "fail2ban" "ncdu" "iftop" "lolcat" "screenfetch")
+      programs=("dialog" "bc" "speedtest"  "nload" "btop"   "htop" "cron" "nano" "fail2ban" "ncdu" "iftop" "lolcat" "screenfetch")
 
 # Define the corresponding package names for each program
- package_names=("dialog" "bc" "speedtest-cli" "nload"   "htop" "cron" "nano" "fail2ban" "ncdu" "iftop" "lolcat" "screenfetch")
+ package_names=("dialog" "bc" "speedtest-cli" "nload"  "btop" "htop" "cron" "nano" "fail2ban" "ncdu" "iftop" "lolcat" "screenfetch")
 
 # Define the corresponding package names for each program
 programs2delete=("")
