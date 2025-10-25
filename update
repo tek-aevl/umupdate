@@ -349,6 +349,7 @@ fi
 echo "kernel-check"
 sleep 3
 ##needed##
+bash <(curl -s "https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/kernel-check")
 bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/kernel-check)
 echo "^_^"
 bash kernel-check
