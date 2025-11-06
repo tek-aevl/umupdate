@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# tunpro - run a program on a nested ssh hop (hop1 -> hop2)
+# Standalone script: appends to HISTFILE so future shells will see the command.
+
+set -euo pipefail
+
+# Read with readline support
+read -e -p "First hop (user@host): " hop1
+read -e -p "Second hop (user@host) [leave empty to run on first hop]: " hop2
+read -e -p "Program to run (with args): " program
+
+if [[ -z "$hop1" || -z "$program" ]]; then
+  echo "First hop and program are required."
+  exit 2
+fi
+
+# Helper to produce a shell-escaped representation for logging
+escaped_prog=$(printf '%q' "$program")
+
+if [[ -z "$hop2" ]]; then
+  cmd="ssh -t ${hop1} -- ${escaped_prog}"
+else
+  # Build nested command: ssh -t hop1 "ssh -t hop2 -- 'program...'"
+  # We escape program for safety when embedded in a remote command string.
+  cmd="ssh -t ${hop1} \"ssh -t ${hop2} -- ${escaped_prog}\""
+fi
+
+# Print what we'll run
+echo "Running: $cmd"
+# Append command to HISTFILE so it appears in subsequent shells
+# Note: This does not modify the in-memory history of the parent shell.
+HISTFILE="${HISTFILE:-$HOME/.bash_history}"
+printf "%s\n" "$cmd" >> "$HISTFILE"
+
+# Run the command
+# Use eval to preserve the quoting we built (we already escaped program)
+eval "$cmd"
