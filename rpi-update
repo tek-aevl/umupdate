@@ -151,7 +151,7 @@ uptime; sleep 3;
 
 echo -e "${YELLOW}Speedtest!${NC}" 
 echo "$USER@$HOSTNAME"
-read -p "Run Speedtest? (y/n): " response
+read -p "Run Speedtest? (y/n): $response " response
 if [[ -z $response || $response == "y" || $response == "Y" ]]; then
     echo "$USER@$HOSTNAME speedtest"
     if command -v lolcat &> /dev/null; then
