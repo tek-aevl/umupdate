@@ -11,14 +11,19 @@ IFS=$'\n\t'
 ### ---------- config ----------
 UPDATE_REMOTE_URL="https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update"
 # Default: strict hostkey checking. Set SSH_ACCEPT_NEW=1 in env to allow accept-new behaviour.
-SSH_ACCEPT_NEW="${SSH_ACCEPT_NEW:-0}"
-SSH_STRICT="${SSH_ACCEPT_NEW:-0}"
-SSH_OPTS_BASE="-o BatchMode=yes -o ConnectTimeout=4 -o ConnectionAttempts=1 -o ServerAliveInterval=15 -o ServerAliveCountMax=2"
-if [[ "${SSH_ACCEPT_NEW}" == "1" ]]; then
-  SSH_OPTS="${SSH_OPTS_BASE} -o StrictHostKeyChecking=accept-new"
-else
-  SSH_OPTS="${SSH_OPTS_BASE} -o StrictHostKeyChecking=yes"
-fi
+# SSH config — always use accept-new so new hosts don't get marked unreachable
+SSH_OPTS="-o BatchMode=yes \
+          -o ConnectTimeout=4 \
+          -o ConnectionAttempts=1 \
+          -o ServerAliveInterval=15 \
+          -o ServerAliveCountMax=2 \
+          -o StrictHostKeyChecking=accept-new \
+          -o UserKnownHostsFile=$HOME/.ssh/umupdate_known_hosts"
+
+# Create isolated known_hosts file
+mkdir -p "$HOME/.ssh"
+touch "$HOME/.ssh/umupdate_known_hosts"
+
 
 CURL_OPTS="--max-time 10 -fsS --retry 2 --retry-delay 1"
 DEFAULT_IF="$(ip route show default 2>/dev/null | awk '/default/{print $5; exit}')"
