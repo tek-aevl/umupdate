@@ -1,308 +1,191 @@
-#!/usr/bin/env bash
-# umupdate-runner v1.00
-# - Automatically detects local subnets (no hard-coded lists)
-# - Keeps interactive/non-interactive modes
-# - Improved security for SSH host keys and Pi-hole detection
-# - Per-host logs, better error handling, optional verbosity
-
-set -Euo pipefail
-IFS=$'\n\t'
-
-### ---------- config ----------
-UPDATE_REMOTE_URL="https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update"
-# Default: strict hostkey checking. Set SSH_ACCEPT_NEW=1 in env to allow accept-new behaviour.
-# SSH config — always use accept-new so new hosts don't get marked unreachable
-SSH_OPTS="-o BatchMode=yes \
-          -o ConnectTimeout=4 \
-          -o ConnectionAttempts=1 \
-          -o ServerAliveInterval=15 \
-          -o ServerAliveCountMax=2 \
-          -o StrictHostKeyChecking=accept-new \
-          -o UserKnownHostsFile=$HOME/.ssh/umupdate_known_hosts"
-
-# Create isolated known_hosts file
-mkdir -p "$HOME/.ssh"
-touch "$HOME/.ssh/umupdate_known_hosts"
-
-
-CURL_OPTS="--max-time 10 -fsS --retry 2 --retry-delay 1"
-DEFAULT_IF="$(ip route show default 2>/dev/null | awk '/default/{print $5; exit}')"
-TAILSCALE_BIN="${TAILSCALE_BIN:-/usr/bin/tailscale}"
-
-PARALLELISM=${PARALLELISM:-1}
-HOST_TIMEOUT=${HOST_TIMEOUT:-900}
-DRY_RUN="${DRY_RUN:-0}"
-DEBUG="${DEBUG:-0}"
-VERBOSE="${VERBOSE:-1}"
-
-INTERACTIVE=${INTERACTIVE:-0}
-ASK_INTERACTIVE=${ASK_INTERACTIVE:-1}
-LOG_DIR="${LOG_DIR:-$HOME/umupdate-logs}"
-mkdir -p "$LOG_DIR"
-
-REMOTE_ENV='DEBIAN_FRONTEND=noninteractive
-APT_LISTCHANGES_FRONTEND=none
-NEEDRESTART_MODE=a
-DNF_YES=1
-PACMAN_CONFIRM=1'
-REMOTE_ENV_LINE="$(printf "%s" "$REMOTE_ENV" | paste -sd' ' -)"
-
-### ---------- ui/log helpers ----------
-is_tty() { [[ -t 1 ]]; }
-if is_tty; then C0=$'\e[0m'; C1=$'\e[1;36m'; C2=$'\e[1;32m'; C3=$'\e[1;33m'; C4=$'\e[1;31m'; else C0=""; C1=""; C2=""; C3=""; C4=""; fi
-ts() { date +%H:%M:%S; }
-log()  { printf "%s[%s]%s %s\n" "$C1" "$(ts)" "$C0" "$*"; }
-logv(){ (( VERBOSE )) && log "$@"; }
-ok()   { printf "%s[ OK ]%s %s\n" "$C2" "$C0" "$*"; }
-warn() { printf "%s[WARN]%s %s\n" "$C3" "$C0" "$*"; }
-err()  { printf "%s[FAIL]%s %s\n" "$C4" "$C0" "$*" >&2; }
-trap 'err "Unexpected error on line $LINENO (continuing)";' ERR
-(( DEBUG )) && set -x
-
-cat <<'BANNER'
-umupdate-runner v1.00
-Auto-detects local subnets. Use INTERACTIVE=1 for full interactive mode.
-BANNER
-
-need_cmd() { command -v "$1" >/dev/null 2>&1 || { warn "Missing $1"; return 1; }; }
-for c in ip awk sed grep sort uniq ssh curl timeout tee getent; do need_cmd "$c" || true; done
-
-only_ipv4() {
-  grep -Eo '\b([0-9]{1,3}\.){3}[0-9]{1,3}\b' \
-  | awk -F. '$1<=255 && $2<=255 && $3<=255 && $4<=255'
-}
-numsort_ips() { awk -F. '{printf("%03d.%03d.%03d.%03d %s\n",$1,$2,$3,$4,$0)}' | sort -k1,1 | awk '{print $2}' ; }
-read_ipv4s_from_file(){ local f="$1"; [[ -f "$f" ]] || return 0; logv "Using $f"; grep -Eo '([0-9]{1,3}\.){3}[0-9]{1,3}' "$f" | only_ipv4 || true; }
-
-### ---------- network discovery ----------
-# Get interface subnets (e.g. 10.30.0.0/24)
-detect_local_subnets(){
-  ip -4 -o addr show scope global 2>/dev/null \
-    | awk '{print $4}' | sort -u || true
-}
-# Convert CIDR to network base (e.g. 10.30.1.0/24 -> 10.30.)
-cidr_to_prefix(){
-  local cidr="$1"
-  # pick prefix length and decide how many octets to use for a coarse grouping:
-  local net ip masklen a b c d
-  ip="${cidr%%/*}"; masklen="${cidr##*/}"
-  IFS=. read -r a b c d <<< "$ip"
-  if (( masklen <= 8 )); then echo "${a}."; return
-  elif (( masklen <= 16 )); then echo "${a}.${b}."; return
-  else echo "${a}.${b}.${c}."; return
-  fi
-}
-
-# collect tailscale addresses (100.x)
-collect_tailscale(){ [[ -x "$TAILSCALE_BIN" ]] || return 0; "$TAILSCALE_BIN" status 2>/dev/null | grep -Eo '\b100\.[0-9]+\.[0-9]+\.[0-9]+\b' | sort -u || true; }
-
-# Gather candidates
-read -r -p "Include L2 neighbors/ARP in IP list? (Y/n) " yn || true
-case "${yn:-Y}" in [nN]*) prompt_neighbors=0 ;; *) prompt_neighbors=1 ;; esac
-
-collect_neighbors(){
-  local defif="$DEFAULT_IF"
-  ( [[ -n "$defif" ]] && ip neigh show dev "$defif" 2>/dev/null | awk '{print $1}' ) || true
-  if ip link show virbr0 >/dev/null 2>&1; then ip neigh show dev virbr0 2>/dev/null | awk '{print $1}'; fi
-  ip -o link show 2>/dev/null | awk -F': ' '$2 !~ /lo/ {print $2}' \
-    | while read -r ifc; do ip neigh show dev "$ifc" 2>/dev/null | awk '{print $1}'; done || true
-}
-log "Building IP candidate list…"
-CANDIDATES=($( { read_ipv4s_from_file "$HOME/custom_ip_list"; read_ipv4s_from_file "$HOME/arp_ip_list"; (( prompt_neighbors )) && collect_neighbors || true; collect_tailscale; } | only_ipv4 | sort -u || true ))
-IGNORE=($(read_ipv4s_from_file "$HOME/ignore_ip_list" | sort -u || true))
-
-### ---------- smart ordering ----------
-# Build ordering preferences from local subnets first, then private ranges, then others, then tailscale last
-PREF_PREFIXES=()
-local_subnets=($(detect_local_subnets))
-for s in "${local_subnets[@]:-}"; do
-  PREF_PREFIXES+=("$(cidr_to_prefix "$s")")
-done
-# Add broad private prefixes (coarse)
-PREF_PREFIXES+=("10." "192.168." "172.16." "172.17." "172.18." "172.19." "172.20." "172.21." "172.22." "172.23." "172.24." "172.25." "172.26." "172.27." "172.28." "172.29." "172.30." "172.31.")
-# tailscale net (100.) should be handled but pushed lower if it's not local
-PREF_PREFIXES+=("__other__" "100.")
-
-# helper: find prefix index (lower is higher priority)
-prefix_index(){
-  local ip="$1"
-  local idx=0
-  for p in "${PREF_PREFIXES[@]}"; do
-    (( idx++ ))
-    if [[ "$p" == "__other__" ]]; then
-      continue
+#!/bin/bash
+echo "#v.94# To use this in cli use
+sudo nano /bin/usr/update
+# copy the next 3 lines into it with, and chmod it to 755
+#!/bin/bash
+bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/supdate)
+echo 'bye'
+###above###
+"
+echo "#To use run"
+echo "bash update"
+sleep 2
+echo "setting functions"
+#Function to check and copy SSH key to a remote host if needed
+function copy_ssh_key() {
+    if [[ ! -f ~/.ssh/id_rsa.pub ]]; then
+        echo "SSH key not found. Generating a new SSH key..."
+        ssh-keygen -t rsa
     fi
-    if [[ "$ip" == "$p"* ]]; then
-      printf "%d" "$idx"
-      return
+    # Check if the SSH key is already present on the remote host
+   if ! ssh-add -L | grep -qF "$(cat ~/.ssh/id_rsa.pub)"; then
+        #read -p "Enter the IP address or hostname of the remote host: " ip
+       echo "Current client $ip"
+        ssh-copy-id "$ip"
+    else
+        echo "SSH key is already copied to the remote host. No need to copy again."
     fi
-  done
-  # fallback big number for other nets
-  printf "%d" "$(( ${#PREF_PREFIXES[@]} + 100 ))"
 }
 
-_bucketize_dynamic(){
-  local ip="$1"
-  prefix_index "$ip"
-}
-
-# Filter candidates and bucketize
-declare -A BUCKETS
-for ip in "${CANDIDATES[@]}"; do
-  [[ "$ip" == "0.0.0.0" || "$ip" == 127.* ]] && continue
-  if ((${#IGNORE[@]})) && printf "%s\n" "${IGNORE[@]}" | grep -Fxq "$ip"; then continue; fi
-  key=$(_bucketize_dynamic "$ip")
-  BUCKETS["$key"]+="$ip"$'\n'
-done
-
-# Flatten in order of bucket (numerical keys)
-BFINAL=()
-for k in $(printf "%s\n" "${!BUCKETS[@]}" | sort -n); do
-  ips="${BUCKETS[$k]:-}"
-  if [[ -n "$ips" ]]; then
-    while IFS= read -r ip; do LIST+=("$ip"); done < <(printf "%s" "$ips" | sed '/^$/d' | numsort_ips)
-    BFINAL+=("${LIST[@]}"); unset LIST
+# Function to check if Pi-hole is installed and running on a host
+function check_pihole {
+  # Check if the Pi-hole service is running
+  if ssh -q -o ConnectTimeout=1 $1 "systemctl is-active pihole-FTL.service &> /dev/null"; then
+    # Check if the Pi-hole web interface is accessible
+    if curl -s -I -H "Host: pi.hole" http://$1/admin/ &> /dev/null; then
+      return 0  # Pi-hole is installed and running
+    fi
   fi
-done
-
-if ((${#BFINAL[@]} == 0)); then
-  warn "No candidate IPs after filtering."
-  warn "Try: DEBUG=1 DRY_RUN=1 $0"
-  warn "Check: ~/custom_ip_list, ~/arp_ip_list, ~/ignore_ip_list"
-  exit 1
-fi
-
-log "Execution order (${#BFINAL[@]} hosts):"
-printf "  %s\n" "${BFINAL[@]}"
-
-if [[ "${DRY_RUN}" != "0" ]]; then warn "DRY_RUN=1 — not touching remotes."; exit 0; fi
-read -r -p "Proceed to run updates on these hosts? (y/N) " go || true
-[[ "${go:-N}" =~ ^[yY]$ ]] || { warn "Aborted."; exit 1; }
-
-CURL_BIN="$(command -v curl || true)"
-
-# Determine hostname for an IP for nicer logs (safe under set -Euo pipefail)
-resolve_host() {
-  local ip="$1"
-  local hn=""
-  hn="$(getent hosts "$ip" 2>/dev/null | awk 'NF {print $2}' | head -1 || true)"
-  hn="${hn:-}"
-  printf "%s" "$hn"
+  return 1  # Pi-hole is not installed or not running
 }
+echo "...done..."
 
-# Improved Pi-hole detection (returns 0 only if checks pass)
-is_pihole(){
-  local host="$1"
-  # quick SSH check for pihole service or binary
-  if ! timeout 8s ssh $SSH_OPTS -q "$host" "systemctl is-active --quiet pihole-FTL.service || command -v pihole >/dev/null" </dev/null >/dev/null 2>&1; then
-    return 1
-  fi
-  # HTTP admin page check (Host: pi.hole)
-  if ! curl $CURL_OPTS -I -H "Host: pi.hole" "http://$host/admin/" >/dev/null 2>&1; then
-    return 1
-  fi
-  return 0
-}
-
-# Non-interactive remote executor (no stdin, logs, timeout)
-_ssh_do_nonint(){
-  local ip="$1" cmd="$2" logf="$3"
-  # run under timeout and the remote env; capture exit status
-  timeout "$HOST_TIMEOUT"s ssh -t $SSH_OPTS "$ip" "bash -lc '$REMOTE_ENV_LINE; $cmd'" </dev/null 2>"${logf}.err" | tee -a "$logf"
-  return "${PIPESTATUS[0]}"
-}
-
-# Interactive executor (real TTY, stdin open, no forced env, no timeouts)
-_ssh_do_int(){
-  local ip="$1" cmd="$2"
-  ssh -tt $SSH_OPTS "$ip" "bash -lc '$cmd'"
-  return $?
-}
-
-# attempt to run host update
-run_host(){
-  local ip="$1"
-  local hostn; hostn="$(resolve_host "$ip")"
-  local logf="$LOG_DIR/$ip${hostn:+-$hostn}.$(date +%Y%m%d-%H%M%S).log"
-  local mode="${INTERACTIVE}"
-
-  echo; log ">>> $ip${hostn:+ ($hostn)}"
-
-# Reachability test
-if ! timeout 8 ssh $SSH_OPTS "$ip" "echo OK" >/dev/null 2>&1; then
-    warn "$ip unreachable (ssh)"
-    return 0
-fi
-
-
-  # Per-host interactive choice
-  if (( ASK_INTERACTIVE )) && (( INTERACTIVE == 0 )); then
-    printf "%s[CHOICE]%s %s (i=interactive, s=skip, Enter=auto): " "$C3" "$C0" "$ip"
-    read -r key || true
-    case "${key:-}" in
-      i|I) mode=1 ;;
-      s|S) warn "Skipped $ip"; return 0 ;;
-      *)   mode=0 ;;
+# Function to prompt the user for ARP inclusion
+prompt_arp() {
+    read -p "Do you want to include ARP in the IP list? (Y/N): " choice
+    case "$choice" in
+        [yY] | [yY][eE][sS])
+            echo "Retrieving ARP table"
+           if [ -f ~/arp_ip_list ]; then
+           echo "ARP List"
+           cat ~/arp_ip_list |less
+               read -p "~/arp_ip_list already exists. Do you want to overwrite it? (y/n): " overwrite
+                  if [ "$overwrite" = "y" ]; then
+                   arp_ip_list=$(arp -av | awk '{print $2}' | sed 's/[()]//g')
+                   echo "$arp_ip_list" > ~/arp_ip_list
+                   echo "$arp_ip_list is the new list."
+                   sleep 3
+                  else
+                    arp_ip_list=$(<~/arp_ip_list)
+                    echo "No changes made to $arp_ip_list ..."
+                    sleep 3                  
+                  fi
+                else
+                  arp_ip_list=$(<~/arp_ip_list)
+              echo " $arp_ip_list " 
+              exho " .loaded. "
+            sleep 3
+          fi
+          echo "$arp_ip_list" 
+          echo "...done..."          
+            sleep 8
+            ;;
+        [nN] | [nN][oO])
+            arp_ip_list=""
+            ;;
+        *)
+            echo "Invalid choice. Defaulting to no ARP."
+            arp_ip_list=""
+            ;;
     esac
-  fi
-
-  # Prefer a local update binary if present
-  if timeout 10s ssh $SSH_OPTS "$ip" "bash -lc '[[ -x /bin/update ]] || [[ -x /usr/bin/update ]] || [[ -x ~/bin/update ]]'" </dev/null >/dev/null 2>&1; then
-    local local_cmd="/bin/update || /usr/bin/update || ~/bin/update"
-    if (( mode )); then
-      ok "Interactive: running local update on $ip"
-      _ssh_do_int "$ip" "$local_cmd" || warn "$ip: local interactive update exited non-zero"
-      return 0
-    else
-      ok "Non-interactive: running local update on $ip (timeout ${HOST_TIMEOUT}s)"
-      _ssh_do_nonint "$ip" "$local_cmd" "$logf" || warn "$ip: local update failed/timed-out (see $logf)"
-      return 0
-    fi
-  fi
-
-  # Pi-hole fast path
-  if is_pihole "$ip"; then
-    local pi_cmd="(${CURL_BIN:-curl} $CURL_OPTS \"$UPDATE_REMOTE_URL\" | bash)"
-    if (( mode )); then
-      ok "Interactive: Pi-hole inline update on $ip"
-      _ssh_do_int "$ip" "$pi_cmd" || warn "$ip: interactive Pi-hole update failed"
-    else
-      ok "Non-interactive: Pi-hole inline update on $ip (timeout ${HOST_TIMEOUT}s)"
-      _ssh_do_nonint "$ip" "$pi_cmd" "$logf" || warn "$ip: Pi-hole inline update failed (see $logf)"
-    fi
-    return 0
-  fi
-
-  # Fallback one-liner
-  local one_cmd="(${CURL_BIN:-curl} $CURL_OPTS \"$UPDATE_REMOTE_URL\" | bash -s --)"
-  if (( mode )); then
-    ok "Interactive: remote one-liner on $ip"
-    _ssh_do_int "$ip" "$one_cmd" || warn "$ip: interactive one-liner failed"
-  else
-    ok "Non-interactive: remote one-liner on $ip (timeout ${HOST_TIMEOUT}s)"
-    _ssh_do_nonint "$ip" "$one_cmd" "$logf" || warn "$ip: one-liner failed (see $logf)"
-  fi
-  return 0
 }
 
-# Cleanup trap: kill child processes on exit (helps with hung timeouts)
-cleanup(){
-  pkill -P $$ 2>/dev/null || true
-}
-trap cleanup EXIT
+prompt_arp
 
-# Execute
-if (( PARALLELISM > 1 )); then
-  warn "Parallel mode ${PARALLELISM} (interactive prompts may interleave)"
-  pids=(); i=0
-  for ip in "${BFINAL[@]}"; do
-    run_host "$ip" &
-    pids+=($!)
-    (( ++i % PARALLELISM == 0 )) && wait -n || true
-  done
-  wait || true
-else
-  for ip in "${BFINAL[@]}"; do run_host "$ip"; done
+
+# Get the default route interface
+default_interface=$(ip route | awk '/default/ {print $5}')
+
+# Get the IP address and subnet mask of the default route interface
+interface_info=$(ip a show dev "$default_interface" | awk '/inet\s/ {print $2}')
+interface_ip=$(echo "$interface_info" | cut -d '/' -f 1)
+interface_subnet=$(echo "$interface_info" | cut -d '/' -f 2)
+
+# Calculate network address and subnet mask length
+IFS='.' read -r -a ip_parts <<< "$interface_ip"
+netmask_length=$(printf "%.*s1" "$interface_subnet" "11111111111111111111111111111111")
+network_address=$(printf "%d.%d.%d.%d\n" "$((ip_parts[0] & 0xFF & (0xFF << (32 - interface_subnet))))" \
+                                       "$((ip_parts[1] & 0xFF & (0xFF << (32 - interface_subnet))))" \
+                                       "$((ip_parts[2] & 0xFF & (0xFF << (32 - interface_subnet))))" \
+                                       "$((ip_parts[3] & 0xFF & (0xFF << (32 - interface_subnet))))")
+
+# Get the list of clients on the same subnet as the default route interface
+bridge_clients_default=$(ip neigh show dev "$default_interface" | awk -v network="$network_address" '{if ($1 ~ network) print $1}')
+echo "Bridge clients on the same subnet as the default route interface ($default_interface):"
+echo "$bridge_clients_default" | more 
+echo "Retrieving active clients over the bridge"
+# Retrieve active clients in the bridge
+bridge_clients=$(ip neigh show dev virbr0 | awk '{print $1}') && echo $bridge_clients
+echo "$bridge_clients ...done..."
+sleep 3
+
+echo "Retrieve Tailscale client IP addresses"
+# Retrieve Tailscale client IP addresses from 'tailscale status' command
+##old# tailscale_ip_list=$(tailscale status | grep -oE '10\.[0-9]+\.[0-9]+\.[0-9]+')
+tailscale_ip_list=$(sudo tailscale status | grep -Eo '100\.[0-9]+\.[0-9]+\.[0-9]+' | awk '!seen[$0]++')
+echo "Tailscale Client List"
+echo "$tailscale_ip_list"
+echo ".!.done.!."
+sleep 3
+
+echo "Retrieving custom_ip_list"
+# custom list put the next line in a new file called custom_ip_list
+#custom_ip_list="0.0.0.0"$'\n'"0.0.0.0"
+custom_ip_list=$(grep -E -o '([0-9]{1,3}\.){3}[0-9]{1,3}' ~/custom_ip_list)
+cat ~/custom_ip_list
+echo "custom_list" && sleep 2
+echo "$custom_ip_list  ...done..."
+sleep 3
+
+echo "Retrieving ignore_ip_list"
+ignore_ip_list=$(grep -E -o '([0-9]{1,3}\.){3}[0-9]{1,3}' ~/ignore_ip_list)
+
+# Check if there are any IP addresses found before creating the file
+if [[ -n "$ignore_ip_list" ]]; then
+    # Use printf for better portability and to handle special characters properly
+    printf "%s\n" "$ignore_ip_list" > ~/ignore_list.txt
 fi
 
-ok "All done."
+echo "ignore list created" && sleep 2
+
+# Combine the IP lists based on user choice
+if [ -n "$arp_ip_list" ]; then
+    ip_list="$bridge_clients_default"$'\n'"$bridge_clients"$'\n'"$custom_ip_list"$'\n'"$arp_ip_list"$'\n'"$tailscale_ip_list"
+else
+    ip_list="$bridge_clients_default"$'\n'"$bridge_clients"$'\n'"$custom_ip_list"$'\n'"$tailscale_ip_list"
+fi
+
+
+echo "$ip_list ...ip list..."
+sleep 5
+
+echo "Removing IPs listed in the ignore list sorting then removing duplicates"
+while IFS= read -r ip; do
+    ip_list=$(echo "$ip_list" | grep -vFx "$ip")
+done < ignore_list.txt
+
+ ip_list=$(echo "$ip_list" | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | sort -u) 
+ ip_list=$(echo "$ip_list" | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | sort -u)
+
+ 
+# Step 4: Output the final combined list
+echo "#####Final combined list:#####"
+echo "$ip_list" | less
+sleep 5
+
+echo "Running updates!"
+# Iterate over each IP address and perform SSH connection
+for ip in $ip_list; do
+    # Perform SSH connection to the device
+     echo "Connecting to $ip"
+     # Call ssh-copy-id function
+#off#    copy_ssh_key
+    if check_pihole $ip; then
+      echo -e "Pi-hole detected on $ip "
+ssh -yt $ip "(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/supdate)|bash"
+      #ssh -yt $ip "(curl -s https://git.aevl.net/tek/umupdate/raw/branch/main/update)|bash"
+     # ssh -tY $ip "bash <(curl -s https://git.aevl.net/Tek/umupdate/raw/branch/main/logreset)"
+    else
+      echo -e "Running Updates on $ip "
+
+  if ssh -tY $ip "bash /bin/update"; then
+       #ssh -tY $ip "bash update"
+       echo "Success!"
+    else
+ #if not installed run remote.
+ssh -tY $ip "bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/supdate)"   
+#ssh -tY $ip "bash <(curl -s https://git.aevl.net/tek/umupdate/raw/branch/main/update)"
+  fi
+    # ssh -tY $ip "bash <(curl -s https://git.aevl.net/tek/umupdate/raw/branch/main/logreset)"
+fi
+done
