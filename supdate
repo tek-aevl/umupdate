@@ -165,25 +165,43 @@ sleep 5
 
 echo "Running updates!"
 # Iterate over each IP address and perform SSH connection
-for ip in $ip_list; do
-    # Perform SSH connection to the device
-     echo "Connecting to $ip"
-     # Call ssh-copy-id function
-#off#    copy_ssh_key
-    if check_pihole $ip; then
-      echo -e "Pi-hole detected on $ip "
-      ssh -yt $ip "(curl -s https://github.com/tek-aevl/umupdate/edit/main/supdate)|bash"
-     # ssh -tY $ip "bash <(curl -s https://git.aevl.net/Tek/umupdate/raw/branch/main/logreset)"
-    else
-      echo -e "Running Updates on $ip "
+echo "Running updates!"
 
-  if ssh -tY $ip "bash /bin/update"; then
-       #ssh -tY $ip "bash update"
-       echo "Success!"
+PARALLEL=5   # how many hosts at once
+TOTAL=$(echo "$ip_list" | wc -w)
+COUNTER=0
+
+# progress-safe increment
+next_num() {
+    COUNTER=$((COUNTER + 1))
+    echo "$COUNTER"
+}
+
+run_host() {
+    ip="$1"
+    num=$(next_num)
+
+    echo "[$num/$TOTAL] $ip → connecting..."
+
+    if check_pihole "$ip"; then
+        echo "[$num/$TOTAL] $ip → Pi-hole detected"
+        ssh -o BatchMode=yes -ty "$ip" \
+            "(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/supdate)|bash"
     else
- #if not installed run remote.
-     ssh -tY $ip "bash <(curl -s https://github.com/tek-aevl/umupdate/edit/main/update)"
-  fi
-    # ssh -tY $ip "bash <(curl -s https://git.aevl.net/tek/umupdate/raw/branch/main/logreset)"
-fi
-done
+        echo "[$num/$TOTAL] $ip → Running updates..."
+
+        if ssh -o BatchMode=yes -tY "$ip" "bash /bin/update"; then
+            echo "[$num/$TOTAL] $ip → Success!"
+        else
+            echo "[$num/$TOTAL] $ip → Running remote script"
+            ssh -o BatchMode=yes -tY "$ip" \
+                "bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update)"
+        fi
+    fi
+}
+
+export -f next_num
+export -f run_host
+export -f check_pihole
+
+echo "$ip_list" | xargs -n1 -P "$PARALLEL" bash -c 'run_host "$@"' _
