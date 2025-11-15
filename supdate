@@ -176,12 +176,22 @@ read -r -p "Proceed to run updates on these hosts? (y/N) " go || true
 
 CURL_BIN="$(command -v curl || true)"
 
-# Determine hostname for an IP for nicer logs
+# Determine hostname for an IP for nicer logs (safe under set -Euo pipefail)
 resolve_host() {
   local ip="$1"
-  local hn
-  hn="$(getent hosts "$ip" | awk '{print $2; exit}')"
-  printf "%s" "${hn:-}"
+  local hn=""
+
+  # getent may return nothing; awk may return nothing; pipe may fail —
+  # the "|| true" prevents pipefail from tripping the ERR trap.
+  hn="$(getent hosts "$ip" 2>/dev/null \
+        | awk 'NF {print $2}' \
+        | head -1 \
+        || true)"
+
+  # Ensure hn is ALWAYS defined (empty string is fine)
+  hn="${hn:-}"
+
+  printf "%s" "$hn"
 }
 
 # Improved Pi-hole detection (returns 0 only if checks pass)
