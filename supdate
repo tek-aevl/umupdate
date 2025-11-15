@@ -185,17 +185,8 @@ CURL_BIN="$(command -v curl || true)"
 resolve_host() {
   local ip="$1"
   local hn=""
-
-  # getent may return nothing; awk may return nothing; pipe may fail —
-  # the "|| true" prevents pipefail from tripping the ERR trap.
-  hn="$(getent hosts "$ip" 2>/dev/null \
-        | awk 'NF {print $2}' \
-        | head -1 \
-        || true)"
-
-  # Ensure hn is ALWAYS defined (empty string is fine)
+  hn="$(getent hosts "$ip" 2>/dev/null | awk 'NF {print $2}' | head -1 || true)"
   hn="${hn:-}"
-
   printf "%s" "$hn"
 }
 
@@ -237,10 +228,12 @@ run_host(){
 
   echo; log ">>> $ip${hostn:+ ($hostn)}"
 
-  # Reachability
-  if ! timeout 8s ssh $SSH_OPTS -q "$ip" "true" </dev/null >/dev/null 2>&1; then
-    warn "$ip unreachable (ssh)"; return 0
-  fi
+# Reachability test
+if ! timeout 8 ssh $SSH_OPTS "$ip" "echo OK" >/dev/null 2>&1; then
+    warn "$ip unreachable (ssh)"
+    return 0
+fi
+
 
   # Per-host interactive choice
   if (( ASK_INTERACTIVE )) && (( INTERACTIVE == 0 )); then
