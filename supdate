@@ -299,12 +299,9 @@ export TOTAL
 # PARALLEL EXECUTION
 ###############################################################
 printf "%s\n" "$ip_list" \
-  | sed '/^[[:space:]]*$/d' \
   | nl -w1 -s'|' \
-  | sed '/^[[:space:]]*|[[:space:]]*$/d' \
-  | parallel --keep-order --linebuffer --tty -j"$PARALLEL" bash -c '
-        num="${1%%|*}"
-        ip="${1#*|}"
+  | parallel --keep-order --linebuffer --tty -j"$PARALLEL" '
+        num=$(echo {} | cut -d"|" -f1)
+        ip=$(echo {} | cut -d"|" -f2)
         run_host "$num" "$ip"
-    ' _ {}
-
+    '
