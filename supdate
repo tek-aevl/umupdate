@@ -222,7 +222,7 @@ show_progress() {
         fi
     done
 
-    echo -e "${RD}===== UMUPDATE PROGRESS =====${NC}"
+    echo -e "${RD}===== SUPDATE PROGRESS =====${NC}"
     echo -e "${RD}Current: [$current/$total]  $ip${NC}"
     echo
 
@@ -331,6 +331,6 @@ TOTAL_RUNTIME=$((SCRIPT_END - SCRIPT_START))
 
 echo
 echo "=========================================="
-echo "      UMUPDATE FINISHED"
+echo "      SUPDATE FINISHED"
 echo "      Total runtime: $(format_time $TOTAL_RUNTIME)"
 echo "=========================================="
