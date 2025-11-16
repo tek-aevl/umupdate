@@ -253,7 +253,7 @@ done
 ELAPSED=$(( $(date +%s) - SCRIPT_START ))
 echo -e "${GY}Runtime: $(format_time $ELAPSED)${NC}"
 echo
-
+sleep 6
     echo
 }
 
