@@ -68,7 +68,7 @@ prompt_arp() {
           fi
           echo "$arp_ip_list" 
           echo "...done..."          
-            sleep 8
+            sleep 3
             ;;
         [nN] | [nN][oO])
             arp_ip_list=""
@@ -147,7 +147,7 @@ fi
 
 
 echo "$ip_list ...ip list..."
-sleep 5
+sleep 3
 
 echo "Removing IPs listed in the ignore list sorting then removing duplicates"
 while IFS= read -r ip; do
@@ -165,7 +165,7 @@ echo '"$ip_list" | less'
 echo "$ip_list"
 echo '$ip_list | less'
 echo ";-P"
-sleep 10
+sleep 6
 
 # Load IPs into an array
 mapfile -t ALL_IPS <<< "$ip_list"
