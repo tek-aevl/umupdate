@@ -1,4 +1,5 @@
 #!/bin/bash
+SCRIPT_START=$(date +%s)
 echo "#v.95# To use this in cli use
 sudo nano /bin/usr/update
 # copy the next 3 lines into it with, and chmod it to 755
@@ -10,7 +11,14 @@ echo 'bye'
 echo "#To use run"
 echo "bash update"
 sleep 2
+#############################################
 echo "setting functions"
+###############################################
+format_time() {
+    local SECONDS=$1
+    printf "%02d:%02d:%02d" $((SECONDS/3600)) $((SECONDS%3600/60)) $((SECONDS%60))
+}
+
 #Function to check and copy SSH key to a remote host if needed
 function copy_ssh_key() {
     if [[ ! -f ~/.ssh/id_rsa.pub ]]; then
@@ -241,6 +249,11 @@ done
             echo -e "  ${CY}${r}${NC}"
         done
     fi
+
+ELAPSED=$(( $(date +%s) - SCRIPT_START ))
+echo -e "${GY}Runtime: $(format_time $ELAPSED)${NC}"
+echo
+
     echo
 }
 
