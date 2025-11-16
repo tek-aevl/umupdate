@@ -238,7 +238,7 @@ done
         echo -e "  ${GR}(done!)${NC}"
     else
         for r in "${REMAINING_IPS[@]}"; do
-            echo -e "  ${GY}${r}${NC}"
+            echo -e "  ${CY}${r}${NC}"
         done
     fi
     echo
