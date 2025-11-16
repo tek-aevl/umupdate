@@ -176,8 +176,7 @@ run_host() {
 
     if check_pihole "$ip"; then
         echo "[$num/$TOTAL] $ip → Pi-hole detected"
-        ssh -tt "$ip" \
-            "bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update)"
+    ssh -ty "$ip" "bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/supdate)"
     else
         echo "[$num/$TOTAL] $ip → Running updates..."
 
@@ -185,8 +184,7 @@ run_host() {
             echo "[$num/$TOTAL] $ip → Success!"
         else
             echo "[$num/$TOTAL] $ip → Running remote update"
-            ssh -tt "$ip" \
-                "bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update)"
+            ssh -ty "$ip" "bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/supdate)"
         fi
     fi
 }
