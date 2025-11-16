@@ -214,19 +214,18 @@ show_progress() {
         fi
     done
 
-    echo -e "${CY}===== UMUPDATE PROGRESS =====${NC}"
-    echo -e "${YE}Current: [$current/$total]  $ip${NC}"
+    echo -e "${BL}===== UMUPDATE PROGRESS =====${NC}"
+    echo -e "${RD}Current: [$current/$total]  $ip${NC}"
     echo
 
     echo -e "${GR}=== Completed ===${NC}"
     if ((${#DONE_IPS[@]} == 0)); then
-        echo -e "  ${GR}(none yet)${NC}"
+        echo -e "  ${GY}(none yet)${NC}"
     else
  
 for d in "${DONE_IPS[@]}"; do
     if [[ "$d" == "$ip" ]]; then
-        # CURRENT IP → YELLOW ARROWS + YELLOW IP
-        echo -e " ${WH}>> ${YE} ${d}${NC}"
+        echo -e " ${RD}>> ${GR} ${d}${NC}"
     else
         echo -e "  ${GR}${d}${NC}"
     fi
@@ -234,12 +233,12 @@ done
     fi
     echo
 
-    echo -e "${BL}=== Remaining ===${NC}"
+    echo -e "${GY}=== Remaining ===${NC}"
     if ((${#REMAINING_IPS[@]} == 0)); then
-        echo -e "  ${BL}(done!)${NC}"
+        echo -e "  ${GR}(done!)${NC}"
     else
         for r in "${REMAINING_IPS[@]}"; do
-            echo -e "  ${GY}${r}${NC}"
+            echo -e "  ${OR}${r}${NC}"
         done
     fi
     echo
