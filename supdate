@@ -259,9 +259,9 @@ export -f show_progress
 export TOTAL
 
 printf "%s\n" "$ip_list" \
-  | awk '{print NR "|" $0}' \
-  | parallel --will-cite --tty -j "$PARALLEL" '
-        num=$(echo {} | cut -d"|" -f1)
-        ip=$(echo {} | cut -d"|" -f2)
-        run_host "$num" "$ip"
+  | nl -w1 -s'|' \
+  | parallel --keep-order --pipe --block 1 --will-cite --tty '
+        while IFS="|" read -r num ip; do
+            run_host "$num" "$ip"
+        done
     '
