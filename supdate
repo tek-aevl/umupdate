@@ -167,44 +167,41 @@ echo '$ip_list | less'
 echo ";-P"
 sleep 10
 
+# Load IPs into an array
+mapfile -t ALL_IPS <<< "$ip_list"
+DONE_IPS=()
+REMAINING_IPS=("${ALL_IPS[@]}")
+
+TOTAL=${#ALL_IPS[@]}
+
 show_progress() {
     local current="$1"
     local total="$2"
     local ip="$3"
 
-    # colors
-    CY="\033[36m"
-    GR="\033[32m"
-    YE="\033[33m"
-    BL="\033[34m"
-    NC="\033[0m"
+    CY=$'\e[36m'
+    GR=$'\e[32m'
+    YE=$'\e[33m'
+    BL=$'\e[34m'
+    NC=$'\e[0m'
 
-    
- printf "%s===== UMUPDATE PROGRESS =====%s\n" "$CY" "$NC"
-    printf "%sCurrent: [%s/%s]  %s%s\n\n" "$YE" "$current" "$total" "$ip" "$NC"
+    clear
+    echo -e "${CY}===== UMUPDATE PROGRESS =====${NC}"
+    echo -e "${YE}Current: [$current/$total]  $ip${NC}"
+    echo
 
-    printf "%s=== Completed ===%s\n" "$GR" "$NC"
-    if ((${#DONE_IPS[@]} == 0)); then
-        printf "  %s(none yet)%s\n\n" "$GR" "$NC"
-    else
-        for d in "${DONE_IPS[@]}"; do
-            printf "  %s%s%s\n" "$GR" "$d" "$NC"
-        done
-        printf "\n"
-    fi
+    echo -e "${GR}=== Completed ===${NC}"
+    for d in "${DONE_IPS[@]}"; do
+        echo -e "  ${GR}${d}${NC}"
+    done
+    echo
 
-    printf "%s=== Remaining ===%s\n" "$BL" "$NC"
-    if ((${#REMAINING_IPS[@]} == 0)); then
-        printf "  %s(done!)%s\n\n" "$BL" "$NC"
-    else
-        for r in "${REMAINING_IPS[@]}"; do
-            printf "  %s%s%s\n" "$BL" "$r" "$NC"
-        done
-        printf "\n"
-    fi
+    echo -e "${BL}=== Remaining ===${NC}"
+    for r in "${REMAINING_IPS[@]}"; do
+        echo -e "  ${BL}${r}${NC}"
+    done
+    echo
 }
-
-
 
 
 echo "Running updates!"
