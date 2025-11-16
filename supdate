@@ -165,8 +165,12 @@ sleep 5
 
 echo "Running updates!"
 
-PARALLEL=5   # how many hosts to update at once
+PARALLEL=5   # adjust as you want
 TOTAL=$(echo "$ip_list" | wc -l)
+
+read -s -p "SSH Password: " SSHPASS
+echo ""
+export SSHPASS
 
 run_host() {
     local num="$1"
@@ -176,24 +180,25 @@ run_host() {
 
     if check_pihole "$ip"; then
         echo "[$num/$TOTAL] $ip → Pi-hole detected"
-        ssh -ty "$ip" "bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/supdate)"
+        sshpass -p "$SSHPASS" ssh -o StrictHostKeyChecking=accept-new -ty "$ip" \
+            "bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update)"
     else
         echo "[$num/$TOTAL] $ip → Running updates..."
-
-        if ssh -ty "$ip" "bash /bin/update"; then
+        if sshpass -p "$SSHPASS" ssh -o StrictHostKeyChecking=accept-new -ty "$ip" "bash /bin/update"; then
             echo "[$num/$TOTAL] $ip → Success!"
         else
             echo "[$num/$TOTAL] $ip → Running remote update"
-            ssh -ty "$ip" "bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update)"
+            sshpass -p "$SSHPASS" ssh -o StrictHostKeyChecking=accept-new -ty "$ip" \
+                "bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update)"
         fi
     fi
 }
 
 export -f run_host
 export -f check_pihole
+export SSHPASS
 
-# Number each IP and run in parallel
+# Number all IPs and run in parallel
 printf "%s\n" "$ip_list" \
   | nl -w1 -s' ' \
   | xargs -n2 -P "$PARALLEL" bash -c 'run_host "$@"' _
-
