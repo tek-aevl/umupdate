@@ -180,20 +180,16 @@ TOTAL=$(echo "$ip_list" | wc -l)
 # INIT ARRAYS FOR UI
 ###############################################################
 
-mapfile -t ALL_IPS <<< "$ip_list"
+ALL_IPS=($ip_list)
 DONE_IPS=()
 REMAINING_IPS=("${ALL_IPS[@]}")
 TOTAL=${#ALL_IPS[@]}
 
-
 sleep 3 
-
-
 
 ###############################################################
 # PROGRESS UI
 ###############################################################
-
 
 show_progress() {
     local current="$1"
