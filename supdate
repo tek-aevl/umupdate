@@ -186,6 +186,12 @@ run_host() {
     local num="$1"
     local ip="$2"
 
+# track progress lists
+    DONE_IPS+=("$ip")
+    REMAINING_IPS=("${ALL_IPS[@]:$num}")
+
+    show_progress "$num" "$TOTAL" "$ip"
+
     echo "[$num/$TOTAL] $ip → connecting..."
 
     if check_pihole "$ip"; then
