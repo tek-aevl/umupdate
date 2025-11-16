@@ -204,9 +204,6 @@ show_progress() {
     BL=$'\e[34m'
     NC=$'\e[0m'
 
-    mapfile -t DONE_IPS < "$STATE_DONE"
-    mapfile -t ALL_IPS < "$STATE_TOTAL"
-
     REMAINING_IPS=()
     for x in "${ALL_IPS[@]}"; do
         if ! printf "%s\n" "${DONE_IPS[@]}" | grep -qx "$x"; then
