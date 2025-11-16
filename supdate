@@ -276,6 +276,9 @@ run_host() {
     # remaining = from next element
     REMAINING_IPS=("${ALL_IPS[@]:$((idx + 1))}")
 
+    # Show the UI
+    show_progress "$num" "$TOTAL" "$ip"
+
     echo "[$num/$TOTAL] $ip → connecting..."
     sleep 1
     if check_pihole "$ip"; then
@@ -285,7 +288,7 @@ run_host() {
             echo "[$num/$TOTAL] $ip → Used local script. Going to next one!"
         else
     ssh -tY $ip "bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update)"
-     echo "[$num/$TOTAL] $ip → USed Remote script. Moving on!"        
+     echo "[$num/$TOTAL] $ip → Used Remote script. Moving on!"        
         fi
     fi
     sleep 3
