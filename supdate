@@ -303,3 +303,4 @@ for ip in "${ALL_IPS[@]}"; do
     ((n++))
 done
 
+echo "All done."
