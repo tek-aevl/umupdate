@@ -185,15 +185,23 @@ show_progress() {
     echo
 
     echo -e "${GR}=== Completed ===${NC}"
-    for d in "${DONE_IPS[@]}"; do
-        echo -e "  ${GR}${d}${NC}"
-    done
+    if ((${#DONE_IPS[@]} == 0)); then
+        echo -e "  ${GR}(none yet)${NC}"
+    else
+        for d in "${DONE_IPS[@]}"; do
+            echo -e "  ${GR}${d}${NC}"
+        done
+    fi
     echo
 
     echo -e "${BL}=== Remaining ===${NC}"
-    for r in "${REMAINING_IPS[@]}"; do
-        echo -e "  ${BL}${r}${NC}"
-    done
+    if ((${#REMAINING_IPS[@]} == 0)); then
+        echo -e "  ${BL}(done!)${NC}"
+    else
+        for r in "${REMAINING_IPS[@]}"; do
+            echo -e "  ${BL}${r}${NC}"
+        done
+    fi
     echo
 }
 
@@ -201,9 +209,8 @@ show_progress() {
 echo "Running updates!"
 #max 1 Probably
 PARALLEL=1
-echo "parallel=1"
-
-sleep 5
+echo "parallel=$PARALLEL"
+sleep 2
 
 # CLEAN LIST AGAIN JUST IN CASE
 ###old## ip_list=$(echo "$ip_list" | grep -Eo '([0-9]{1,3}\.){3}[0-9]{1,3}' | sort -u)
@@ -254,10 +261,8 @@ export -f check_pihole
 export -f show_progress
 export TOTAL
 
-printf "%s\n" "$ip_list" \
-  | nl -w1 -s'|' \
-  | parallel --keep-order --linebuffer --tty -j"$PARALLEL" '
-        num=$(echo {} | cut -d"|" -f1)
-        ip=$(echo {}  | cut -d"|" -f2)
-        run_host "$num" "$ip"
-    '
+n=1
+for ip in "${ALL_IPS[@]}"; do
+    run_host "$n" "$ip"
+    ((n++))
+done
