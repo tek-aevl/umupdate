@@ -63,7 +63,7 @@ prompt_arp() {
                 else
                   arp_ip_list=$(<~/arp_ip_list)
               echo " $arp_ip_list " 
-              exho " .loaded. "
+              echo " .loaded. "
             sleep 3
           fi
           echo "$arp_ip_list" 
@@ -163,7 +163,7 @@ echo "$ip_list ...ip list..."
 echo "#####Final combined list:#####"
 echo '"$ip_list" | less'
 echo "$ip_list"
-$ip_list | less
+'echo $ip_list'|less
 echo ";-P"
 sleep 10
 
@@ -179,7 +179,7 @@ show_progress() {
     BL="\033[34m"
     NC="\033[0m"
 
-    clear
+    
     echo -e "${CY}===== UMUPDATE PROGRESS =====${NC}"
     echo -e "${YE}Current: [$current/$total]  $ip${NC}"
     echo
