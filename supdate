@@ -185,7 +185,7 @@ show_progress() {
     BL=$'\e[34m'
     NC=$'\e[0m'
 
-    clear
+    
     echo -e "${CY}===== UMUPDATE PROGRESS =====${NC}"
     echo -e "${YE}Current: [$current/$total]  $ip${NC}"
     echo
