@@ -176,7 +176,8 @@ run_host() {
 
     if check_pihole "$ip"; then
         echo "[$num/$TOTAL] $ip → Pi-hole detected"
-        ssh -ty "$ip" "bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/supdate)"
+        ssh -tt "$ip" \
+            "bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update)"
     else
         echo "[$num/$TOTAL] $ip → Running updates..."
 
@@ -184,7 +185,8 @@ run_host() {
             echo "[$num/$TOTAL] $ip → Success!"
         else
             echo "[$num/$TOTAL] $ip → Running remote update"
-        ssh -ty "$ip" "bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/supdate)"
+            ssh -tt "$ip" \
+                "bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update)"
         fi
     fi
 }
@@ -193,6 +195,8 @@ export -f run_host
 export -f check_pihole
 export TOTAL
 
+# Force parallel to use bash
 printf "%s\n" "$ip_list" \
     | nl -w1 -s' ' \
-    | parallel --will-cite --tty -j "$PARALLEL" bash -c 'run_host "$@"' _
+    | parallel --will-cite --tty -j "$PARALLEL" \
+        env bash -c 'run_host "$@"' _
