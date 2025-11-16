@@ -186,7 +186,7 @@ DONE_IPS=()
 REMAINING_IPS=("${ALL_IPS[@]}")
 TOTAL=${#ALL_IPS[@]}
 
-sleep 3 
+#sleep 3 
 
 ###############################################################
 # PROGRESS UI
@@ -249,10 +249,9 @@ echo "Running updates!"
 #max 1 Probably
 PARALLEL=1
 echo "parallel=$PARALLEL"
-sleep 2
+#sleep 2
 
-
- ip_list=$(echo "$ip_list" | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | sort -u) 
+# ip_list=$(echo "$ip_list" | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | sort -u) 
 
 # INIT ARRAYS FOR UI (REQUIRED)
 ALL_IPS=($ip_list)
@@ -295,7 +294,7 @@ run_host() {
      echo "[$num/$TOTAL] $ip → Used Remote script. Moving on!"        
         fi
     fi
-    sleep 3
+    sleep 6
 }
 
 export -f run_host
