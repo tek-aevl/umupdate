@@ -221,6 +221,7 @@ sleep 5
 ALL_IPS=($ip_list)
 DONE_IPS=()
 REMAINING_IPS=("${ALL_IPS[@]}")
+TOTAL=${#ALL_IPS[@]}
 
 run_host() {
     local num="$1"
