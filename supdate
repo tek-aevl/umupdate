@@ -286,12 +286,13 @@ run_host() {
     sleep 1
     if check_pihole "$ip"; then
       ssh -tY $ip "bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/rpi-update)"
+     echo "[$num/$TOTAL] $ip → Used Remote script. RPI detected Moving on!"    
     else
         if ssh -tY $ip "bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update)"; then
-            echo "[$num/$TOTAL] $ip → Used local script. Going to next one!"
+            echo "[$num/$TOTAL] $ip → Used Remote script. Moving on!"
         else
     ssh -tt "$ip" "bash /bin/update"
-     echo "[$num/$TOTAL] $ip → Used Remote script. Moving on!"        
+     echo "[$num/$TOTAL] $ip → Used local script. Going to next one!"        
         fi
     fi
     sleep 6
