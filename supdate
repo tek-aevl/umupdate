@@ -232,6 +232,7 @@ run_host() {
 
 export -f run_host
 export -f check_pihole
+export -f show_progress
 export TOTAL
 
 printf "%s\n" "$ip_list" \
