@@ -164,44 +164,36 @@ echo "$ip_list" | less
 sleep 5
 
 echo "Running updates!"
-# Iterate over each IP address and perform SSH connection
-echo "Running updates!"
 
-PARALLEL=2   # how many hosts at once
-TOTAL=$(echo "$ip_list" | wc -w)
-COUNTER=0
-
-# progress-safe increment
-next_num() {
-    COUNTER=$((COUNTER + 1))
-    echo "$COUNTER"
-}
+PARALLEL=5   # how many hosts to update at once
+TOTAL=$(echo "$ip_list" | wc -l)
 
 run_host() {
-    ip="$1"
-    num=$(next_num)
+    local num="$1"
+    local ip="$2"
 
     echo "[$num/$TOTAL] $ip → connecting..."
 
     if check_pihole "$ip"; then
         echo "[$num/$TOTAL] $ip → Pi-hole detected"
-        ssh -o BatchMode=yes -ty "$ip" \
-            "(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update)|bash"
+        ssh -ty "$ip" "bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/supdate)"
     else
         echo "[$num/$TOTAL] $ip → Running updates..."
 
-        if ssh -o BatchMode=yes -tY "$ip" "bash /bin/update"; then
+        if ssh -ty "$ip" "bash /bin/update"; then
             echo "[$num/$TOTAL] $ip → Success!"
         else
-            echo "[$num/$TOTAL] $ip → Running remote script"
-            ssh -o BatchMode=yes -tY "$ip" \
-                "bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update)"
+            echo "[$num/$TOTAL] $ip → Running remote update"
+            ssh -ty "$ip" "bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update)"
         fi
     fi
 }
 
-export -f next_num
 export -f run_host
 export -f check_pihole
 
-echo "$ip_list" | xargs -n1 -P "$PARALLEL" bash -c 'run_host "$@"' _
+# Number each IP and run in parallel
+printf "%s\n" "$ip_list" \
+  | nl -w1 -s' ' \
+  | xargs -n2 -P "$PARALLEL" bash -c 'run_host "$@"' _
+
