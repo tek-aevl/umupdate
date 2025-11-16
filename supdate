@@ -326,3 +326,11 @@ for ip in "${ALL_IPS[@]}"; do
     ((n++))
 done
 
+SCRIPT_END=$(date +%s)
+TOTAL_RUNTIME=$((SCRIPT_END - SCRIPT_START))
+
+echo
+echo "=========================================="
+echo "      UMUPDATE FINISHED"
+echo "      Total runtime: $(format_time $TOTAL_RUNTIME)"
+echo "=========================================="
