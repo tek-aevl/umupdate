@@ -260,5 +260,4 @@ printf "%s\n" "$ip_list" \
   | parallel --keep-order --linebuffer --will-cite --tty -j"$PARALLEL" '
         num=$(echo {} | cut -d"|" -f1)
         ip=$(echo {} | cut -d"|" -f2)
-        run_host "$num" "$ip"
-    '
+        bash -c "run_host \"$num\" \"$ip\""    '
