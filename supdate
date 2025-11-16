@@ -166,6 +166,26 @@ echo "$ip_list"
 echo ";-P"
 sleep 5
 
+show_progress() {
+    local current="$1"
+    local total="$2"
+    local ip="$3"
+
+    clear
+    echo "===== UMUPDATE PROGRESS ====="
+    echo "Current: [$current/$total]  $ip"
+    echo
+
+    echo "=== Completed ==="
+    printf '%s\n' "${DONE_IPS[@]}"
+    echo
+
+    echo "=== Remaining ==="
+    printf '%s\n' "${REMAINING_IPS[@]}"
+    echo
+}
+
+
 echo "Running updates!"
 #max 1 Probably
 PARALLEL=1
@@ -181,6 +201,8 @@ ip_list=$(echo "$ip_list" \
     | uniq)
 
 TOTAL=$(echo "$ip_list" | wc -l)
+
+
 
 run_host() {
     local num="$1"
