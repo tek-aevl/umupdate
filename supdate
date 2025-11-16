@@ -171,19 +171,37 @@ show_progress() {
     local total="$2"
     local ip="$3"
 
+    # colors
+    local CY="\e[36m"
+    local GR="\e[32m"
+    local YE="\e[33m"
+    local BL="\e[34m"
+    local NC="\e[0m"
+
     clear
-    echo "===== UMUPDATE PROGRESS ====="
-    echo "Current: [$current/$total]  $ip"
+    echo -e "${CY}===== UMUPDATE PROGRESS =====${NC}"
+    echo -e "${YE}Current: [$current/$total]  $ip${NC}"
     echo
 
-    echo "=== Completed ==="
-    printf '%s\n' "${DONE_IPS[@]}"
+    echo -e "${GR}=== Completed ===${NC}"
+    if (( ${#DONE_IPS[@]} == 0 )); then
+        echo -e "  ${GR}(none yet)${NC}"
+    else
+        printf "  %b\n" "${DONE_IPS[@]/#/}" |
+            sed "s/^/${GR}/;s/$/${NC}/"
+    fi
     echo
 
-    echo "=== Remaining ==="
-    printf '%s\n' "${REMAINING_IPS[@]}"
+    echo -e "${BL}=== Remaining ===${NC}"
+    if (( ${#REMAINING_IPS[@]} == 0 )); then
+        echo -e "  ${BL}(done!)${NC}"
+    else
+        printf "  %b\n" "${REMAINING_IPS[@]/#/}" |
+            sed "s/^/${BL}/;s/$/${NC}/"
+    fi
     echo
 }
+
 
 echo "Running updates!"
 #max 1 Probably
