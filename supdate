@@ -154,6 +154,18 @@ while IFS= read -r ip; do
     ip_list=$(echo "$ip_list" | grep -vFx "$ip")
 done < ignore_list.txt
 
+# CLEAN LIST AGAIN JUST IN CASE
+###old## ip_list=$(echo "$ip_list" | grep -Eo '([0-9]{1,3}\.){3}[0-9]{1,3}' | sort -u)
+##new
+ip_list=$(echo "$ip_list" \
+    | grep -Eo '([0-9]{1,3}\.){3}[0-9]{1,3}' \
+    | sort -t . -k1,1n -k2,2n -k3,3n -k4,4n \
+    | uniq)
+
+TOTAL=$(echo "$ip_list" | wc -l)
+
+sleep 5 
+
  ip_list=$(echo "$ip_list" | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | sort -u) 
  ip_list=$(echo "$ip_list" | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | sort -u)
 
@@ -168,6 +180,25 @@ echo ";-P"
 sleep 6
 
 
+###############################################################
+# SHARED STATE FOR PARALLEL
+###############################################################
+
+STATE_DONE="/tmp/umupdate_done.$$"
+STATE_TOTAL="/tmp/umupdate_total.$$"
+
+: > "$STATE_DONE"
+printf "%s\n" "$ip_list" > "$STATE_TOTAL"
+
+# Load arrays
+mapfile -t ALL_IPS <<< "$ip_list"
+TOTAL=${#ALL_IPS[@]}
+
+###############################################################
+# PROGRESS UI
+###############################################################
+
+
 show_progress() {
     local current="$1"
     local total="$2"
@@ -179,7 +210,16 @@ show_progress() {
     BL=$'\e[34m'
     NC=$'\e[0m'
 
-    
+    mapfile -t DONE_IPS < "$STATE_DONE"
+    mapfile -t ALL_IPS < "$STATE_TOTAL"
+
+    REMAINING_IPS=()
+    for x in "${ALL_IPS[@]}"; do
+        if ! printf "%s\n" "${DONE_IPS[@]}" | grep -qx "$x"; then
+            REMAINING_IPS+=("$x")
+        fi
+    done
+
     echo -e "${CY}===== UMUPDATE PROGRESS =====${NC}"
     echo -e "${YE}Current: [$current/$total]  $ip${NC}"
     echo
@@ -212,23 +252,17 @@ PARALLEL=2
 echo "parallel=$PARALLEL"
 sleep 2
 
-# CLEAN LIST AGAIN JUST IN CASE
-###old## ip_list=$(echo "$ip_list" | grep -Eo '([0-9]{1,3}\.){3}[0-9]{1,3}' | sort -u)
-##new
-ip_list=$(echo "$ip_list" \
-    | grep -Eo '([0-9]{1,3}\.){3}[0-9]{1,3}' \
-    | sort -t . -k1,1n -k2,2n -k3,3n -k4,4n \
-    | uniq)
-
-TOTAL=$(echo "$ip_list" | wc -l)
-
-sleep 5 
-
 # INIT ARRAYS FOR UI (REQUIRED)
 ALL_IPS=($ip_list)
 DONE_IPS=()
 REMAINING_IPS=("${ALL_IPS[@]}")
 TOTAL=${#ALL_IPS[@]}
+
+
+###############################################################
+# RUN HOST
+###############################################################
+
 
 run_host() {
     local num="$1"
@@ -261,8 +295,13 @@ export -f check_pihole
 export -f show_progress
 export TOTAL
 
-n=1
-for ip in "${ALL_IPS[@]}"; do
-    run_host "$n" "$ip"
-    ((n++))
-done
+###############################################################
+# PARALLEL EXECUTION
+###############################################################
+printf "%s\n" "$ip_list" \
+  | nl -w1 -s'|' \
+  | parallel --keep-order --linebuffer --tty -j1 '
+        num="${1%%|*}"
+        ip="${1#*|}"
+        run_host "$num" "$ip"
+    ' ::: {}
