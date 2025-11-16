@@ -180,21 +180,28 @@ show_progress() {
     NC="\033[0m"
 
     
-    echo -e "${CY}===== UMUPDATE PROGRESS =====${NC}"
-    echo -e "${YE}Current: [$current/$total]  $ip${NC}"
-    echo
+ printf "%s===== UMUPDATE PROGRESS =====%s\n" "$CY" "$NC"
+    printf "%sCurrent: [%s/%s]  %s%s\n\n" "$YE" "$current" "$total" "$ip" "$NC"
 
-    echo -e "${GR}=== Completed ===${NC}"
-    for d in "${DONE_IPS[@]}"; do
-        echo -e "  ${GR}${d}${NC}"
-    done
-    echo
+    printf "%s=== Completed ===%s\n" "$GR" "$NC"
+    if ((${#DONE_IPS[@]} == 0)); then
+        printf "  %s(none yet)%s\n\n" "$GR" "$NC"
+    else
+        for d in "${DONE_IPS[@]}"; do
+            printf "  %s%s%s\n" "$GR" "$d" "$NC"
+        done
+        printf "\n"
+    fi
 
-    echo -e "${BL}=== Remaining ===${NC}"
-    for r in "${REMAINING_IPS[@]}"; do
-        echo -e "  ${BL}${r}${NC}"
-    done
-    echo
+    printf "%s=== Remaining ===%s\n" "$BL" "$NC"
+    if ((${#REMAINING_IPS[@]} == 0)); then
+        printf "  %s(done!)%s\n\n" "$BL" "$NC"
+    else
+        for r in "${REMAINING_IPS[@]}"; do
+            printf "  %s%s%s\n" "$BL" "$r" "$NC"
+        done
+        printf "\n"
+    fi
 }
 
 
