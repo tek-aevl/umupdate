@@ -163,7 +163,7 @@ echo "$ip_list ...ip list..."
 echo "#####Final combined list:#####"
 echo '"$ip_list" | less'
 echo "$ip_list"
-'echo $ip_list'|less
+echo '$ip_list | less'
 echo ";-P"
 sleep 10
 
