@@ -235,7 +235,7 @@ run_host() {
     show_progress "$num" "$TOTAL" "$ip"
 
     echo "[$num/$TOTAL] $ip → connecting..."
-
+     sleep 3
     if check_pihole "$ip"; then
       ssh -tY $ip "bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/rpi-update)"
     else
@@ -246,6 +246,7 @@ run_host() {
      echo "[$num/$TOTAL] $ip → Success!"        
         fi
     fi
+    sleep 3
 }
 
 export -f run_host
