@@ -164,7 +164,7 @@ echo "$ip_list" | less
 sleep 5
 
 echo "Running updates!"
-
+ip_list=$(echo "$ip_list" | sed '/^\s*$/d')
 PARALLEL=5
 TOTAL=$(echo "$ip_list" | wc -l)
 
