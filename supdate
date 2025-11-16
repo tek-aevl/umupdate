@@ -208,7 +208,7 @@ show_progress() {
 
 echo "Running updates!"
 #max 1 Probably
-PARALLEL=1
+PARALLEL=2
 echo "parallel=$PARALLEL"
 sleep 2
 
