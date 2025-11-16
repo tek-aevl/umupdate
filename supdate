@@ -202,6 +202,9 @@ show_progress() {
     YE=$'\e[33m'
     BL=$'\e[34m'
     NC=$'\e[0m'
+    RD=$'\e[31m'
+    OR=$'\e[38;5;208m'
+
 
     REMAINING_IPS=()
     for x in "${ALL_IPS[@]}"; do
