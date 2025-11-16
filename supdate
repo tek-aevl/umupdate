@@ -263,5 +263,5 @@ printf "%s\n" "$ip_list" \
   | parallel --will-cite --tty -j "$PARALLEL" '
         num=$(echo {} | cut -d"|" -f1)
         ip=$(echo {} | cut -d"|" -f2)
-        bash -c "run_host \"$num\" \"$ip\""
+        run_host "$num" "$ip"
     '
