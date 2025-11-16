@@ -64,7 +64,7 @@ prompt_arp() {
                   arp_ip_list=$(<~/arp_ip_list)
               echo " $arp_ip_list " 
               echo " .loaded. "
-            sleep 3
+            sleep 2
           fi
           echo "$arp_ip_list" 
           echo "...done..."          
@@ -107,7 +107,7 @@ echo "Retrieving active clients over the bridge"
 # Retrieve active clients in the bridge
 bridge_clients=$(ip neigh show dev virbr0 | awk '{print $1}') && echo $bridge_clients
 echo "$bridge_clients ...done..."
-sleep 3
+sleep 2
 
 echo "Retrieve Tailscale client IP addresses"
 # Retrieve Tailscale client IP addresses from 'tailscale status' command
@@ -116,7 +116,7 @@ tailscale_ip_list=$(sudo tailscale status | grep -Eo '100\.[0-9]+\.[0-9]+\.[0-9]
 echo "Tailscale Client List"
 echo "$tailscale_ip_list"
 echo ".!.done.!."
-sleep 3
+sleep 2
 
 echo "Retrieving custom_ip_list"
 # custom list put the next line in a new file called custom_ip_list
@@ -125,7 +125,7 @@ custom_ip_list=$(grep -E -o '([0-9]{1,3}\.){3}[0-9]{1,3}' ~/custom_ip_list)
 cat ~/custom_ip_list
 echo "custom_list" && sleep 2
 echo "$custom_ip_list  ...done..."
-sleep 3
+sleep 2
 
 echo "Retrieving ignore_ip_list"
 ignore_ip_list=$(grep -E -o '([0-9]{1,3}\.){3}[0-9]{1,3}' ~/ignore_ip_list)
@@ -147,7 +147,7 @@ fi
 
 
 echo "$ip_list ...ip list..."
-sleep 3
+sleep 2
 
 echo "Removing IPs listed in the ignore list sorting then removing duplicates"
 while IFS= read -r ip; do
@@ -164,7 +164,7 @@ ip_list=$(echo "$ip_list" \
 
 TOTAL=$(echo "$ip_list" | wc -l)
 
-sleep 5 
+sleep 3 
 
  ip_list=$(echo "$ip_list" | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | sort -u) 
  ip_list=$(echo "$ip_list" | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | sort -u)
