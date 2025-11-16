@@ -226,13 +226,14 @@ run_host() {
     local num="$1"
     local ip="$2"
 
-# track progress lists
+    # Update progress arrays
     DONE_IPS+=("$ip")
-    REMAINING_IPS=("${ALL_IPS[@]:$num}")
+    REMAINING_IPS=("${ALL_IPS[@]:num}")
 
     show_progress "$num" "$TOTAL" "$ip"
 
     echo "[$num/$TOTAL] $ip → connecting..."
+
      sleep 3
     if check_pihole "$ip"; then
       ssh -tY $ip "bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/rpi-update)"
@@ -252,12 +253,6 @@ export -f check_pihole
 export -f show_progress
 export TOTAL
 
-# Load IPs into an array
-mapfile -t ALL_IPS <<< "$ip_list"
-DONE_IPS=()
-REMAINING_IPS=("${ALL_IPS[@]}")
-
-TOTAL=${#ALL_IPS[@]}
 
 printf "%s\n" "$ip_list" \
   | nl -w1 -s'|' \
