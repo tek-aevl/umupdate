@@ -164,7 +164,7 @@ echo '$ip_list | less'
 echo ";-P"
 sleep 10
 
- ip_list=$(echo "$ip_list" | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | sort -u)
+##bad## ip_list=$(echo "$ip_list" | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | sort -u)
 
 # CLEAN LIST AGAIN JUST IN CASE
 ###old## ip_list=$(echo "$ip_list" | grep -Eo '([0-9]{1,3}\.){3}[0-9]{1,3}' | sort -u)
