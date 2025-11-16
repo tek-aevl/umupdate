@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "#v.94# To use this in cli use
+echo "#v.95# To use this in cli use
 sudo nano /bin/usr/update
 # copy the next 3 lines into it with, and chmod it to 755
 #!/bin/bash
