@@ -185,7 +185,6 @@ show_progress() {
     echo
 }
 
-
 echo "Running updates!"
 #max 1 Probably
 PARALLEL=1
@@ -202,7 +201,10 @@ ip_list=$(echo "$ip_list" \
 
 TOTAL=$(echo "$ip_list" | wc -l)
 
-
+# INIT ARRAYS FOR UI (REQUIRED)
+ALL_IPS=($ip_list)
+DONE_IPS=()
+REMAINING_IPS=("${ALL_IPS[@]}")
 
 run_host() {
     local num="$1"
