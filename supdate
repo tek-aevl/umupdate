@@ -157,7 +157,8 @@ done < ignore_list.txt
  ip_list=$(echo "$ip_list" | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | sort -u) 
  ip_list=$(echo "$ip_list" | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | sort -u)
 
- 
+echo "$ip_list ...ip list..."
+
 # Step 4: Output the final combined list
 echo "#####Final combined list:#####"
 echo "$ip_list" | less
@@ -165,6 +166,8 @@ sleep 5
 
 echo "Running updates!"
 ip_list=$(echo "$ip_list" | sed '/^\s*$/d')
+echo "$ip_list \n ...final ip list..."
+
 PARALLEL=5
 TOTAL=$(echo "$ip_list" | wc -l)
 
