@@ -272,7 +272,7 @@ run_host() {
     # Update progress arrays
     DONE_IPS+=("$ip")
     # slice remaining
-    REMAINING_IPS=("${ALL_IPS[@]:num}")
+    REMAINING_IPS=("${ALL_IPS[@]:$((num))}")
 
     show_progress "$num" "$TOTAL" "$ip"
 
