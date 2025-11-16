@@ -193,6 +193,7 @@ run_host() {
             echo "[$num/$TOTAL] $ip → Success!"
         else
     ssh -tY $ip "bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update)"
+     echo "[$num/$TOTAL] $ip → Success!"        
         fi
     fi
 }
