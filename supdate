@@ -187,8 +187,9 @@ show_progress() {
     if (( ${#DONE_IPS[@]} == 0 )); then
         echo -e "  ${GR}(none yet)${NC}"
     else
-        printf "  %b\n" "${DONE_IPS[@]/#/}" |
-            sed "s/^/${GR}/;s/$/${NC}/"
+        for d in "${DONE_IPS[@]}"; do
+            echo -e "  ${GR}${d}${NC}"
+        done
     fi
     echo
 
@@ -196,11 +197,13 @@ show_progress() {
     if (( ${#REMAINING_IPS[@]} == 0 )); then
         echo -e "  ${BL}(done!)${NC}"
     else
-        printf "  %b\n" "${REMAINING_IPS[@]/#/}" |
-            sed "s/^/${BL}/;s/$/${NC}/"
+        for r in "${REMAINING_IPS[@]}"; do
+            echo -e "  ${BL}${r}${NC}"
+        done
     fi
     echo
 }
+
 
 
 echo "Running updates!"
