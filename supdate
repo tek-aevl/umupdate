@@ -257,8 +257,8 @@ export TOTAL
 
 printf "%s\n" "$ip_list" \
   | nl -w1 -s'|' \
-  | parallel --keep-order --pipe --block 1 --will-cite --tty '
-        while IFS="|" read -r num ip; do
-            run_host "$num" "$ip"
-        done
+  | parallel --keep-order --linebuffer --will-cite --tty -j"$PARALLEL" '
+        num=$(echo {} | cut -d"|" -f1)
+        ip=$(echo {} | cut -d"|" -f2)
+        run_host "$num" "$ip"
     '
