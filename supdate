@@ -254,12 +254,10 @@ export -f check_pihole
 export -f show_progress
 export TOTAL
 
-
 printf "%s\n" "$ip_list" \
   | nl -w1 -s'|' \
   | parallel --keep-order --linebuffer --tty -j"$PARALLEL" '
-        num="${1%%|*}"
-        ip="${1#*|}"
+        num=$(echo {} | cut -d"|" -f1)
+        ip=$(echo {}  | cut -d"|" -f2)
         run_host "$num" "$ip"
-    ' {}
-
+    '
