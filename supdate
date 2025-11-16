@@ -177,7 +177,7 @@ echo '"$ip_list" | less'
 echo "$ip_list"
 echo '$ip_list | less'
 echo ";-P"
-sleep 6
+sleep 10
 
 
 ###############################################################
