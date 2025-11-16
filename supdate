@@ -167,7 +167,7 @@ echo "Running updates!"
 # Iterate over each IP address and perform SSH connection
 echo "Running updates!"
 
-PARALLEL=5   # how many hosts at once
+PARALLEL=2   # how many hosts at once
 TOTAL=$(echo "$ip_list" | wc -w)
 COUNTER=0
 
@@ -186,7 +186,7 @@ run_host() {
     if check_pihole "$ip"; then
         echo "[$num/$TOTAL] $ip → Pi-hole detected"
         ssh -o BatchMode=yes -ty "$ip" \
-            "(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/supdate)|bash"
+            "(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update)|bash"
     else
         echo "[$num/$TOTAL] $ip → Running updates..."
 
