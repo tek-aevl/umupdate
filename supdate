@@ -271,6 +271,7 @@ run_host() {
 
     # Update progress arrays
     DONE_IPS+=("$ip")
+    # slice remaining
     REMAINING_IPS=("${ALL_IPS[@]:num}")
 
     show_progress "$num" "$TOTAL" "$ip"
@@ -300,12 +301,9 @@ export TOTAL
 # PARALLEL EXECUTION
 ###############################################################
 
+n=1
+for ip in "${ALL_IPS[@]}"; do
+    run_host "$n" "$ip"
+    ((n++))
+done
 
-printf "%s\n" "$ip_list" \
-  | awk '{print NR "|" $0}' \
-  | parallel --will-cite --tty -j "$PARALLEL" '
-        num=$(echo {} | cut -d"|" -f1)
-        ip=$(echo {} | cut -d"|" -f2)
-        bash -c "run_host \"$num\" \"$ip\""
-    '
-echo "All done."
