@@ -165,9 +165,9 @@ echo "$ip_list" | less
 sleep 5
 
 echo "Running updates!"
-#max 2 Probably
-PARALLEL=2
-echo "parallel=2"
+#max 1 Probably
+PARALLEL=1
+echo "parallel=1"
 sleep 3
 
 # CLEAN LIST AGAIN JUST IN CASE
