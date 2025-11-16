@@ -303,7 +303,7 @@ export TOTAL
 
 n=1
 for ip in "${ALL_IPS[@]}"; do
-    run_host "$num" "$ip"
+    run_host "$n" "$ip"
     ((n++))
 done
 
