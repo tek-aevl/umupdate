@@ -166,7 +166,7 @@ sleep 5
 
 echo "Running updates!"
 #max 2 Probably
-ARALLEL=2
+PARALLEL=2
 
 # CLEAN LIST AGAIN JUST IN CASE
 ip_list=$(echo "$ip_list" | grep -Eo '([0-9]{1,3}\.){3}[0-9]{1,3}' | sort -u)
