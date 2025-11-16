@@ -233,12 +233,12 @@ done
     fi
     echo
 
-    echo -e "${GY}=== Remaining ===${NC}"
+    echo -e "${OR}=== Remaining ===${NC}"
     if ((${#REMAINING_IPS[@]} == 0)); then
         echo -e "  ${GR}(done!)${NC}"
     else
         for r in "${REMAINING_IPS[@]}"; do
-            echo -e "  ${OR}${r}${NC}"
+            echo -e "  ${GY}${r}${NC}"
         done
     fi
     echo
