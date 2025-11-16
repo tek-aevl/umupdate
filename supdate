@@ -257,7 +257,9 @@ export TOTAL
 
 printf "%s\n" "$ip_list" \
   | nl -w1 -s'|' \
-  | parallel --keep-order --linebuffer --will-cite --tty -j"$PARALLEL" '
-        num=$(echo {} | cut -d"|" -f1)
-        ip=$(echo {} | cut -d"|" -f2)
-        bash -c "run_host \"$num\" \"$ip\""    '
+  | parallel --keep-order --linebuffer --tty -j"$PARALLEL" '
+        num="${1%%|*}"
+        ip="${1#*|}"
+        run_host "$num" "$ip"
+    ' {}
+
