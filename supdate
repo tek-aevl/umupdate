@@ -167,12 +167,6 @@ echo '$ip_list | less'
 echo ";-P"
 sleep 6
 
-# Load IPs into an array
-mapfile -t ALL_IPS <<< "$ip_list"
-DONE_IPS=()
-REMAINING_IPS=("${ALL_IPS[@]}")
-
-TOTAL=${#ALL_IPS[@]}
 
 show_progress() {
     local current="$1"
@@ -257,6 +251,13 @@ export -f run_host
 export -f check_pihole
 export -f show_progress
 export TOTAL
+
+# Load IPs into an array
+mapfile -t ALL_IPS <<< "$ip_list"
+DONE_IPS=()
+REMAINING_IPS=("${ALL_IPS[@]}")
+
+TOTAL=${#ALL_IPS[@]}
 
 printf "%s\n" "$ip_list" \
   | nl -w1 -s'|' \
