@@ -161,7 +161,9 @@ echo "$ip_list ...ip list..."
 
 # Step 4: Output the final combined list
 echo "#####Final combined list:#####"
-echo "$ip_list" | less
+echo '"$ip_list" | less'
+echo "$ip_list"
+echo ";-P"
 sleep 5
 
 echo "Running updates!"
