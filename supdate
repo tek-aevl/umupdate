@@ -202,8 +202,6 @@ show_progress() {
     YE=$'\e[33m'
     BL=$'\e[34m'
     NC=$'\e[0m'
-    BBL=$'\e[94m'   # bright blue
-
 
     REMAINING_IPS=()
     for x in "${ALL_IPS[@]}"; do
@@ -220,10 +218,11 @@ show_progress() {
     if ((${#DONE_IPS[@]} == 0)); then
         echo -e "  ${GR}(none yet)${NC}"
     else
-     for d in "${DONE_IPS[@]}"; do
+ 
+for d in "${DONE_IPS[@]}"; do
     if [[ "$d" == "$ip" ]]; then
-        # CURRENT IP → BLUE ARROWS + BLUE IP
-        echo -e "  ${BBL}>> ${d}${NC}"
+        # CURRENT IP → YELLOW ARROWS + YELLOW IP
+        echo -e " ${YE}>> ${CY} ${d}${NC}"
     else
         echo -e "  ${GR}${d}${NC}"
     fi
