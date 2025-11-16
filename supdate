@@ -281,10 +281,10 @@ run_host() {
       ssh -tY $ip "bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/rpi-update)"
     else
         if ssh -tt "$ip" "bash /bin/update"; then
-            echo "[$num/$TOTAL] $ip → Success!"
+            echo "[$num/$TOTAL] $ip → Going to next one!"
         else
     ssh -tY $ip "bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update)"
-     echo "[$num/$TOTAL] $ip → Success!"        
+     echo "[$num/$TOTAL] $ip → Moving on!"        
         fi
     fi
     sleep 3
