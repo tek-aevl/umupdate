@@ -297,11 +297,9 @@ export TOTAL
 
 ###############################################################
 # PARALLEL EXECUTION
-###############################################################
-printf "%s\n" "$ip_list" \
-  | nl -w1 -s'|' \
-  | parallel --keep-order --linebuffer --tty -j"$PARALLEL" '
-        num=$(cut -d"|" -f1 <<< "{}")
-        ip=$(cut -d"|" -f2 <<< "{}")
-        run_host "$num" "$ip"
-    '
+n=1
+for ip in "${ALL_IPS[@]}"; do
+    run_host "$n" "$ip"
+    ((n++))
+done
+
