@@ -271,10 +271,13 @@ run_host() {
 
     # Update progress arrays
     DONE_IPS+=("$ip")
-    # slice remaining
-REMAINING_IPS=("${ALL_IPS[@]:$num}")
 
-    show_progress "$num" "$TOTAL" "$ip"
+# slice remaining
+# num starts at 1, array starts at 0
+    local idx=$(( num - 1 ))
+
+    # remaining = from next element
+    REMAINING_IPS=("${ALL_IPS[@]:$((idx + 1))}")
 
     echo "[$num/$TOTAL] $ip → connecting..."
 
