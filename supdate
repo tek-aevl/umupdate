@@ -225,7 +225,7 @@ show_progress() {
  
 for d in "${DONE_IPS[@]}"; do
     if [[ "$d" == "$ip" ]]; then
-        echo -e " ${RD}>Established> ${GR} ${d}${NC}"
+        echo -e " ${WH}Established${RD}>> ${GR} ${d}${NC}"
     else
         echo -e "  ${BL}${d}${NC}"
     fi
