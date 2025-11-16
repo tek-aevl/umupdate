@@ -173,11 +173,11 @@ show_progress() {
     local ip="$3"
 
     # colors
-    local CY="\e[36m"
-    local GR="\e[32m"
-    local YE="\e[33m"
-    local BL="\e[34m"
-    local NC="\e[0m"
+    CY="\033[36m"
+    GR="\033[32m"
+    YE="\033[33m"
+    BL="\033[34m"
+    NC="\033[0m"
 
     clear
     echo -e "${CY}===== UMUPDATE PROGRESS =====${NC}"
@@ -185,25 +185,18 @@ show_progress() {
     echo
 
     echo -e "${GR}=== Completed ===${NC}"
-    if (( ${#DONE_IPS[@]} == 0 )); then
-        echo -e "  ${GR}(none yet)${NC}"
-    else
-        for d in "${DONE_IPS[@]}"; do
-            echo -e "  ${GR}${d}${NC}"
-        done
-    fi
+    for d in "${DONE_IPS[@]}"; do
+        echo -e "  ${GR}${d}${NC}"
+    done
     echo
 
     echo -e "${BL}=== Remaining ===${NC}"
-    if (( ${#REMAINING_IPS[@]} == 0 )); then
-        echo -e "  ${BL}(done!)${NC}"
-    else
-        for r in "${REMAINING_IPS[@]}"; do
-            echo -e "  ${BL}${r}${NC}"
-        done
-    fi
+    for r in "${REMAINING_IPS[@]}"; do
+        echo -e "  ${BL}${r}${NC}"
+    done
     echo
 }
+
 
 
 
