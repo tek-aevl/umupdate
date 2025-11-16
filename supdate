@@ -227,7 +227,7 @@ for d in "${DONE_IPS[@]}"; do
     if [[ "$d" == "$ip" ]]; then
         echo -e " ${RD}>> ${GR} ${d}${NC}"
     else
-        echo -e "  ${GR}${d}${NC}"
+        echo -e "  ${BL}${d}${NC}"
     fi
 done
     fi
