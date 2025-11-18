@@ -117,70 +117,8 @@ else
   echo -e "${YELLOW}sudo password is required (or sudo not configured).${NC}"
 fi
 
-# Programs needed in order to use this script ("dialog" "bc" "speedtest" ), and extra tools that are nice.
-      programs=("dialog" "bc" "speedtest"  "nload" "btop"   "htop" "cron" "nano" "fail2ban" "ncdu" "iftop" "lolcat" "screenfetch")
-
-# Define the corresponding package names for each program
- package_names=("dialog" "bc" "speedtest-cli" "nload"  "btop" "htop" "cron" "nano" "fail2ban" "ncdu" "iftop" "lolcat" "screenfetch")
-
-# Define the corresponding package names for each program
-programs2delete=("")
-package_delete=("")
-
-# Loop through the programs  ###for ((i=0; i<${#programs2delete[@]};# i++));# do
-for i in "${!programs2delete[@]}"; do
-    program=${programs2delete[i]}
-    package_name=${package_delete[i]}
-        # Check if the program is installed then remove.
-    if ! command -v $program &> /dev/null; then
-        # Program is found, remove it
-        echo "Uninstalling $package_name..."
-        if command -v pacman &> /dev/null; then
-            sudo pacman -R $package_name
-        elif command -v apt &> /dev/null; then
-            sudo apt remove -y $package_name
-        elif command -v dnf &> /dev/null; then  # Add support for Fedora
-            sudo dnf remove -y $package_name
-        elif command -v pkg &> /dev/null; then  # Add support for FreeBSD
-            sudo pkg remove -y $package_name
-        elif command -v zypper &> /dev/null; then  # Add support for openSUSE
-            sudo zypper remove -y $package_name
-        elif command -v pacman &> /dev/null; then  # Add support for Archlinux
-            sudo pacman -R $package_name
-        else
-            echo "Unable to remove $package_name. Please remove it manually."
-        fi
-    fi
-    echo -e "${NC}! ${GREEN} $package_name Removed${MAGENTA}!"
-done
 echo -e " ;-P ${NC} "
-
-# Loop through the programs
-for i in "${!programs[@]}"; do
-    program=${programs[i]}
-    package_name=${package_names[i]}
-    
-    # Check if the program is installed
-    if ! command -v $program &> /dev/null; then
-        # Program is not found, install it
-        echo "Installing $package_name..."
-        if command -v pacman &> /dev/null; then # Archlinux support
-            sudo pacman -Sy --noconfirm $package_name
-        elif command -v apt &> /dev/null; then
-            sudo apt install -y $package_name
-        elif command -v dnf &> /dev/null; then  # Add support for Fedora
-            sudo dnf install -y $package_name
-        elif command -v pkg &> /dev/null; then  # Add support for FreeBSD
-            sudo pkg install -y $package_name
-        elif command -v zypper &> /dev/null; then  # Add support for openSUSE
-            sudo zypper install -y $package_name
-        else
-            echo "Unable to install $package_name. Please install it manually."
-        fi
-    fi
-    echo -e "${NC}! ${GREEN} $package_name Installed ${MAGENTA}!"
-done
-echo -e ";-P${NC}"
+echo -e " ;-P ${NC} "
 
 echo "get-time $USER@$HOSTNAME ($HOST_IP)"
 # Get the current timestamp
