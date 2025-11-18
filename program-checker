@@ -118,3 +118,38 @@ for i in "${!programs[@]}"; do
     echo -e "${NC}! ${GREEN} $package_name Installed ${MAGENTA}!"
 done
 echo -e ";-P${NC}"
+echo -e ";-P${NC}"
+
+echo "get-time $USER@$HOSTNAME ($HOST_IP)"
+# Get the current timestamp
+current_timestamp=$(date +%s)
+echo "do-math $USER@$HOSTNAME ($HOST_IP)"
+# Get the timestamp of three days ago
+three_days_ago=$(date -d '3 days ago' +%s)
+
+# Get the uptime of the system
+echo "uptime $USER@$HOSTNAME ($HOST_IP)"
+uptime=$(uptime -s)
+# Convert uptime to timestamp
+uptime_timestamp=$(date -d "$uptime" +%s)
+
+# Calculate the time difference in seconds
+time_difference=$((current_timestamp - uptime_timestamp))
+
+# Convert time difference to days, hours, and minutes
+ 
+uptime_seconds=$(cut -d' ' -f1 /proc/uptime)
+uptime_seconds=$(printf "%.0f" "$uptime_seconds")
+
+#days=$(uptime_seconds / 86400)
+#hours=$(uptime_seconds % 86400 / 3600)
+#minutes=$(uptime_seconds % 3600 / 60)
+days=$(echo "$uptime_seconds / 86400" | bc)
+hours=$(echo "$uptime_seconds % 86400 / 3600" | bc)
+minutes=$(echo "$uptime_seconds % 3600 / 60" | bc)
+
+echo -e "${RED} Current Time variables : $days days, $hours hours, $minutes minutes ${NC}"
+sleep 4
+
+echo ";-p"
+echo "byah"
