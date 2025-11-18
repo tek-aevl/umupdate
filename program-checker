@@ -1,0 +1,120 @@
+#!/bin/bash
+version="1"
+echo "Hello ! #v"$version"#"
+echo "Info at https://github.com/tek-aevl/umupdate/ #To use run # bash update or bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/program-checker)"
+
+# Set the colors
+RED='\033[0;31m'       # Red color
+LIGHT_RED='\033[0;91m'    # Light red color
+YELLOW='\033[0;33m'    # Yellow color
+LIGHT_YELLOW='\033[0;93m' # Light yellow color
+GREEN='\033[0;32m'     # Green color
+LIGHT_GREEN='\033[0;92m'  # Light green color
+BLUE='\033[0;34m'         # Blue color
+LIGHT_BLUE='\033[0;94m'   # Light blue color
+MAGENTA='\033[0;35m'      # Magenta color
+CYAN='\033[0;36m'         # Cyan color
+WHITE='\033[0;37m'        # White color
+LIGHT_GRAY='\033[0;90m'   # Light gray color
+DARK_GRAY='\033[0;30m'    # Dark gray color
+NC='\033[0m'           # No color
+echo -e "This ${RED}text${NC} is ${RED}red.${NC}"
+echo -e "This ${YELLOW}text${NC} is ${YELLOW}yellow.${NC}"
+echo -e "This ${GREEN}text${NC} is ${GREEN}green.${NC}"
+sleep 1
+
+# Get the IP address of the host
+HOST_IP=$(hostname -I | awk '{print $1}')
+
+# Display a welcome message
+echo -e "${GREEN}Welcome $USER@$HOSTNAME ($HOST_IP)"
+sleep 1
+
+# Display system information
+echo ":~${HOST_IP} uname -a"
+uname -a
+sleep 1
+echo -e "${NC}"
+# Display login history
+echo ":~${HOST_IP} last "
+last -F | head -10
+sleep 1
+
+# Display information about users currently logged in
+echo "~${HOST_IP} who -a"
+who -a
+sleep 2
+
+echo -e "${YELLOW} Can you ${RED} sudo${NC}?"
+echo -e "${RED} Password $USER@$HOSTNAME ($HOST_IP) "
+# Check if sudo password is needed
+if sudo -v; then
+  echo -e "${GREEN}sudo works.${NC}"
+else
+  echo -e "${YELLOW}sudo password is required (or sudo not configured).${NC}"
+fi
+
+# Programs needed in order to use this script ("dialog" "bc" "speedtest" ), and extra tools that are nice.
+      programs=("dialog" "bc" "speedtest"  "nload" "btop"   "htop" "cron" "nano" "fail2ban" "ncdu" "iftop" "lolcat" "screenfetch")
+
+# Define the corresponding package names for each program
+ package_names=("dialog" "bc" "speedtest-cli" "nload"  "btop" "htop" "cron" "nano" "fail2ban" "ncdu" "iftop" "lolcat" "screenfetch")
+
+# Define the corresponding package names for each program
+programs2delete=("")
+package_delete=("")
+
+# Loop through the programs  ###for ((i=0; i<${#programs2delete[@]};# i++));# do
+for i in "${!programs2delete[@]}"; do
+    program=${programs2delete[i]}
+    package_name=${package_delete[i]}
+        # Check if the program is installed then remove.
+    if ! command -v $program &> /dev/null; then
+        # Program is found, remove it
+        echo "Uninstalling $package_name..."
+        if command -v pacman &> /dev/null; then
+            sudo pacman -R $package_name
+        elif command -v apt &> /dev/null; then
+            sudo apt remove -y $package_name
+        elif command -v dnf &> /dev/null; then  # Add support for Fedora
+            sudo dnf remove -y $package_name
+        elif command -v pkg &> /dev/null; then  # Add support for FreeBSD
+            sudo pkg remove -y $package_name
+        elif command -v zypper &> /dev/null; then  # Add support for openSUSE
+            sudo zypper remove -y $package_name
+        elif command -v pacman &> /dev/null; then  # Add support for Archlinux
+            sudo pacman -R $package_name
+        else
+            echo "Unable to remove $package_name. Please remove it manually."
+        fi
+    fi
+    echo -e "${NC}! ${GREEN} $package_name Removed${MAGENTA}!"
+done
+echo -e " ;-P ${NC} "
+
+# Loop through the programs
+for i in "${!programs[@]}"; do
+    program=${programs[i]}
+    package_name=${package_names[i]}
+    
+    # Check if the program is installed
+    if ! command -v $program &> /dev/null; then
+        # Program is not found, install it
+        echo "Installing $package_name..."
+        if command -v pacman &> /dev/null; then # Archlinux support
+            sudo pacman -Sy --noconfirm $package_name
+        elif command -v apt &> /dev/null; then
+            sudo apt install -y $package_name
+        elif command -v dnf &> /dev/null; then  # Add support for Fedora
+            sudo dnf install -y $package_name
+        elif command -v pkg &> /dev/null; then  # Add support for FreeBSD
+            sudo pkg install -y $package_name
+        elif command -v zypper &> /dev/null; then  # Add support for openSUSE
+            sudo zypper install -y $package_name
+        else
+            echo "Unable to install $package_name. Please install it manually."
+        fi
+    fi
+    echo -e "${NC}! ${GREEN} $package_name Installed ${MAGENTA}!"
+done
+echo -e ";-P${NC}"
