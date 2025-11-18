@@ -360,6 +360,8 @@ echo $USER "@" $HOSTNAME
    fi
 
 
+
+
 echo $USER "@" $HOSTNAME
 who -a && last -n 6
 sleep 4
