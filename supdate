@@ -1,6 +1,6 @@
 #!/bin/bash
 SCRIPT_START=$(date +%s)
-echo "#v.95# To use this in cli use
+echo "#v.96# To use this in cli use
 sudo nano /bin/usr/update
 # copy the next 3 lines into it with, and chmod it to 755
 #!/bin/bash
@@ -255,10 +255,14 @@ sleep 6
 }
 
 
+
+read -p "Run program-checker after updates? (y/N): " RUN_PC
+RUN_PC=$(echo "$RUN_PC" | tr 'A-Z' 'a-z')
+
 echo "Running updates!"
 #max 1 Probably
-PARALLEL=1
-echo "parallel=$PARALLEL"
+#PARALLEL=1
+#echo "parallel=$PARALLEL"
 #sleep 2
 
 # ip_list=$(echo "$ip_list" | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | sort -u) 
@@ -278,9 +282,6 @@ TOTAL=${#ALL_IPS[@]}
 run_host() {
     local num="$1"
     local ip="$2"
-
-    # Update progress arrays
-    DONE_IPS+=("$ip")
 
 # slice remaining
 # num starts at 1, array starts at 0
@@ -306,6 +307,15 @@ run_host() {
         fi
     fi
 
+    # run program-checker if selected
+    if [[ "$RUN_PC" == "y" ]]; then
+        echo "[$num/$TOTAL] $ip → running program-checker..."
+        ssh -tY "$ip" \
+            "curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/program-checker | bash"
+    fi
+   # Update progress arrays
+    DONE_IPS+=("$ip")
+
 ELAPSED=$(( $(date +%s) - SCRIPT_START ))
 echo -e "${GY}Runtime: $(format_time $ELAPSED)${NC}"
 echo
@@ -315,6 +325,7 @@ export -f run_host
 export -f check_pihole
 export -f show_progress
 export TOTAL
+
 
 ###############################################################
 #  EXECUTION
