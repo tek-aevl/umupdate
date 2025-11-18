@@ -309,9 +309,9 @@ run_host() {
 
     # run program-checker if selected
     if [[ "$RUN_PC" == "y" ]]; then
-        echo "[$num/$TOTAL] $ip → running program-checker..."
-        ssh -tY "$ip" \
-            "curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/program-checker | bash"
+        echo "${GR}[$num/$TOTAL] $ip → running program-checker...${NC}"
+        ssh -tY $ip "bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/program-checker)"
+          echo "[$num/$TOTAL] $ip → Used Remote script. Success!"
     fi
    # Update progress arrays
     DONE_IPS+=("$ip")
