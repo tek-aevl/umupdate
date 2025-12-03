@@ -57,6 +57,7 @@ prompt_arp() {
            if [ -f ~/arp_ip_list ]; then
            echo "ARP List"
            cat ~/arp_ip_list |less
+            cat ~/arp_ip_list
                read -p "~/arp_ip_list already exists. Do you want to overwrite it? (y/n): " overwrite
                   if [ "$overwrite" = "y" ]; then
                    arp_ip_list=$(arp -av | awk '{print $2}' | sed 's/[()]//g')
