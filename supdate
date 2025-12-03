@@ -155,16 +155,18 @@ else
     ip_list="$bridge_clients_default"$'\n'"$bridge_clients"$'\n'"$custom_ip_list"$'\n'"$tailscale_ip_list"
 fi
 
-
-echo "$ip_list ...ip list..."
-#sleep 2
+echo "$ip_list"
+echo "...ip list..."
+sleep 2
 
 echo "Removing IPs listed in the ignore list sorting then removing duplicates"
 while IFS= read -r ip; do
     ip_list=$(echo "$ip_list" | grep -vFx "$ip")
-done < ~ignore_list.txt
+done < ~/ignore_list.txt
 
-echo "$ip_list ...ip list..."
+echo "$ip_list"
+echo "...ip list..."
+sleep 2
 
 # Step 4: Output the final combined list
 echo "#####Final combined list:#####"
@@ -174,11 +176,6 @@ echo '$ip_list | less'
 echo ";-P"
 sleep 3
 
-##bad## ip_list=$(echo "$ip_list" | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | sort -u)
-
-# CLEAN LIST AGAIN JUST IN CASE
-###old## ip_list=$(echo "$ip_list" | grep -Eo '([0-9]{1,3}\.){3}[0-9]{1,3}' | sort -u)
-##new
 ip_list=$(echo "$ip_list" \
     | grep -Eo '([0-9]{1,3}\.){3}[0-9]{1,3}' \
     | sort -t . -k1,1n -k2,2n -k3,3n -k4,4n \
