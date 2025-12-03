@@ -162,7 +162,7 @@ echo "$ip_list ...ip list..."
 echo "Removing IPs listed in the ignore list sorting then removing duplicates"
 while IFS= read -r ip; do
     ip_list=$(echo "$ip_list" | grep -vFx "$ip")
-done < ignore_list.txt
+done < ~ignore_list.txt
 
 echo "$ip_list ...ip list..."
 
