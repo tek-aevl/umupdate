@@ -294,10 +294,10 @@ run_host() {
      echo "[$num/$TOTAL] $ip → Used Remote script. RPI detected Moving on!"    
     else
     if ssh -tY "$ip" "bash /bin/update"; then
-            echo "[$num/$TOTAL] $ip → Used Remote script. Moving on!"
+            echo "[$num/$TOTAL] $ip → Used Local script. Moving on!"
     else
         ssh -tY $ip "bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update)"
-         echo "[$num/$TOTAL] $ip → Used local script. Going to next one!"        
+         echo "[$num/$TOTAL] $ip → Used remote script. Going to next one!"        
       fi
     fi
 
