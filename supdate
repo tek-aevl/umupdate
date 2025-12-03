@@ -268,7 +268,7 @@ echo -e "${RD}Current: [$current/$total]  ${OR}${ip}${NC}"
 echo -e "  ${CY}${r}${NC}"
     done
 fi
-
+}
 ##UI##
 
 read -p "Run program-checker after updates? (y/N): " RUN_PC
