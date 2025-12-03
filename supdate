@@ -225,8 +225,6 @@ show_progress() {
 
 ######**UI**######
 echo -e "${RD}===== SUPDATE PROGRESS =====${NC}"
-
-# 1) Completed (finished IPs) – ABOVE current
 echo -e "${GR}=== Completed ===${NC}"
 if ((${#DONE_IPS[@]} == 0)); then
     echo -e "  ${CY}(none yet)${NC}"
@@ -236,12 +234,9 @@ else
     done
 fi
 echo
-
-# 2) Current IP in the middle
 echo -e "${RD}Current: [$current/$total]  ${OR}${ip}${NC}"
 echo
 
-# 3) Remaining – BELOW current
 echo -e "${YE}=== Remaining ===${NC}"
 if ((${#REMAINING_IPS[@]} == 0)); then
     echo -e "  ${GR}(done!)${NC}"
