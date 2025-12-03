@@ -222,50 +222,44 @@ show_progress() {
         fi
     done
 
-    echo -e "${RD}===== SUPDATE PROGRESS =====${NC}"
-    echo -e "${RD}Current: [$current/$total]  $ip${NC}"
-    echo
+######**UI**######
+echo -e "${RD}===== SUPDATE PROGRESS =====${NC}"
 
-    echo -e "${GR}=== Completed ===${NC}"
-    if ((${#DONE_IPS[@]} == 0)); then
-        echo -e "  ${CY}(none yet)${NC}"
-    else
- 
-for d in "${DONE_IPS[@]}"; do
-    if [[ "$d" == "$ip" ]]; then
-        echo -e " ${GR}Established ${RD} >> ${OR} ${d}${NC}"
-    else
+echo -e "${GR}=== Completed ===${NC}"
+if ((${#DONE_IPS[@]} == 0)); then
+    echo -e "  ${CY}(none yet)${NC}"
+else
+    for d in "${DONE_IPS[@]}"; do
         echo -e "  ${BL}${d}${NC}"
-    fi
-done
-    fi
-    echo
+    done
+fi
+echo
 
-    echo -e "${YE}=== Remaining ===${NC}"
-    if ((${#REMAINING_IPS[@]} == 0)); then
-        echo -e "  ${GR}(done!)${NC}"
-    else
-        for r in "${REMAINING_IPS[@]}"; do
-            echo -e "  ${CY}${r}${NC}"
-        done
-    fi
+echo -e "${RD}Current: [$current/$total]  ${OR}${ip}${NC}"
+echo
 
-sleep 6
-    echo
-}
+echo -e "${YE}=== Remaining ===${NC}"
+if ((${#REMAINING_IPS[@]} == 0)); then
+    echo -e "  ${GR}(done!)${NC}"
+else
+    for r in "${REMAINING_IPS[@]}"; do
+        echo -e "  ${CY}${r}${NC}"
+    done
+fi
 
 
+##UI##
 
 read -p "Run program-checker after updates? (y/N): " RUN_PC
 RUN_PC=$(echo "$RUN_PC" | tr 'A-Z' 'a-z')
 
-echo "Running updates!"
+echo "Running updates on the IP's in the list!"
 #max 1 Probably
 #PARALLEL=1
 #echo "parallel=$PARALLEL"
 #sleep 2
-
-# ip_list=$(echo "$ip_list" | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | sort -u) 
+echo "Sorting the list"
+ ip_list=$(echo "$ip_list" | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" | sort -u) 
 
 # INIT ARRAYS FOR UI (REQUIRED)
 ALL_IPS=($ip_list)
@@ -275,7 +269,7 @@ TOTAL=${#ALL_IPS[@]}
 
 
 ###############################################################
-# RUN HOST
+#    RUN HOST function of executing the updates per each IP   #
 ###############################################################
 
 
@@ -299,12 +293,12 @@ run_host() {
       ssh -tY $ip "bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/rpi-update)"
      echo "[$num/$TOTAL] $ip → Used Remote script. RPI detected Moving on!"    
     else
-        if ssh -tY $ip "bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update)"; then
+    if ssh -tY "$ip" "bash /bin/update"; then
             echo "[$num/$TOTAL] $ip → Used Remote script. Moving on!"
-        else
-    ssh -tt "$ip" "bash /bin/update"
-     echo "[$num/$TOTAL] $ip → Used local script. Going to next one!"        
-        fi
+    else
+        ssh -tY $ip "bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update)"
+         echo "[$num/$TOTAL] $ip → Used local script. Going to next one!"        
+      fi
     fi
 
     # run program-checker if selected
