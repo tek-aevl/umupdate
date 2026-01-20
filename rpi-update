@@ -112,6 +112,15 @@ fi
 if [[ $force_log_reset != "no" && $force_log_reset != "n" ]]; then
    echo -e "${RED} $force_log_reset was selected.${NC}"
    echo -e "${YELLOW}Flushing Logs${NC}"
+
+        FILE="/tmp/pihole-FTL-old.db"
+
+            if [[ -e "$FILE" ]]; then
+                sudo du -h "$FILE"
+            else
+                sudo touch "$FILE"
+                sudo du -h "$FILE"
+            fi
    echo "# output current pihole db size"
       sudo du -h /etc/pihole/pihole-FTL.db 
    echo "# current old db size"
