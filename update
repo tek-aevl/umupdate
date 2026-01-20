@@ -340,8 +340,9 @@ users
 sleep 2
 last 
 echo "$USER@$HOSTNAME"
-read -p "Run Speedtest? (y/N): " response
-if [[ -z $response || $response == "n" || $response == "N" ]]; then
+read -r -p "Run Speedtest? (y/N): " response
+
+if [[ "$response" == "Y" || "$response" == "y" ]]; then
     echo "$USER@$HOSTNAME speedtest"
     if command -v lolcat &> /dev/null; then
         speedtest --secure | lolcat
@@ -349,12 +350,13 @@ if [[ -z $response || $response == "n" || $response == "N" ]]; then
         speedtest --secure
     fi
     sleep 1
-elif [[ $response == "y" || $response == "Y" ]]; then
+elif [[ -z "$response" || "$response" == "N" || "$response" == "n" ]]; then
     echo "Not running speedtest : System uptime: $(uptime)"
     sleep 1
 else
     echo "Invalid input."
 fi
+
 
 sleep 1
 echo $USER "@" $HOSTNAME
