@@ -324,7 +324,9 @@ echo -e "${YELLOW} System uptime: $days days, $hours hours, $minutes minutes ${N
       echo -e "${RED} Rebooting... $USER @ $HOSTNAME ($HOST_IP) ${NC}"
       # Uncomment the following line to perform the reboot
       sudo reboot
-        sleep 10
+       exit;
+echo "sleeping 10"   
+sleep 10
     else
       echo -e "${RED} Reboot skipped. $USER@$HOSTNAME ($HOST_IP) ${NC} " && sleep 3
     fi
@@ -371,6 +373,8 @@ echo $USER "@" $HOSTNAME
       echo -e " ${RED} byah $USER@$HOSTNAME $HOST_IP ${NC} " && sleep 3
        sudo reboot
        exit;
+echo "sleeping 10"   
+sleep 10
     else
       echo -e "${GREEN} Reboot Skipped. $USER@$HOSTNAME ($HOST_IP) ${NC}"
     fi
