@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 THISFILE="$(basename -- "${BASH_SOURCE[0]}")"
+reset && clear
 
 echo "[*] Showing $THISFILE"
 cat "$SCRIPT_DIR/$THISFILE" | less
