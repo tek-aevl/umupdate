@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+reset
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 THISFILE="$(basename -- "${BASH_SOURCE[0]}")"
 reset && clear
