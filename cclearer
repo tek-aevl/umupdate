@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+THISFILE="$(basename -- "${BASH_SOURCE[0]}")"
+
+echo "[*] Showing $THISFILE"
+cat "$SCRIPT_DIR/$THISFILE" | less
+
+set -e
+echo "[*] Syncing disks (flush dirty pages to disk)..."
+sync
+echo "[*] Dropping page cache + dentries + inodes"
+sudo sh -c "echo 3 > /proc/sys/vm/drop_caches"
+echo "[+] Done."
