@@ -359,6 +359,13 @@ else
     echo "Invalid input."
 fi
 
+set -e
+echo "[*] Syncing disks (flush dirty pages to disk)..."
+sync
+echo "[*] Dropping page cache + dentries + inodes"
+sudo sh -c "echo 3 > /proc/sys/vm/drop_caches"
+echo "[+] Done."
+
 
 sleep 1
 echo $USER "@" $HOSTNAME
