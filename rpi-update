@@ -164,10 +164,11 @@ fi
 #####################################################
 uptime; sleep 3; 
 
-echo -e "${YELLOW}Speedtest!${NC}" 
+last 
 echo "$USER@$HOSTNAME"
-read -p "Run Speedtest? (Y/n): $response " response
-if [[ -z $response || $response == "y" || $response == "Y" ]]; then
+read -r -p "Run Speedtest? (y/N): " response
+
+if [[ "$response" == "Y" || "$response" == "y" ]]; then
     echo "$USER@$HOSTNAME speedtest"
     if command -v lolcat &> /dev/null; then
         speedtest --secure | lolcat
@@ -175,9 +176,8 @@ if [[ -z $response || $response == "y" || $response == "Y" ]]; then
         speedtest --secure
     fi
     sleep 1
-elif [[ $response == "n" || $response == "N" ]]; then
+elif [[ -z "$response" || "$response" == "N" || "$response" == "n" ]]; then
     echo "Not running speedtest : System uptime: $(uptime)"
-    echo -e "${GREEN} Canceled : System uptime: $days days, $hours hours, $minutes minutes ${NC}" 
     sleep 1
 else
     echo "Invalid input."
