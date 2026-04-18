@@ -61,8 +61,8 @@ fi
  package_names=("dialog" "bc" "speedtest-cli" "nload"  "btop" "htop" "cron" "nano" "fail2ban" "ncdu" "iftop" "lolcat" "screenfetch")
 
 # Define the corresponding package names for each program
-programs2delete=("")
-package_delete=("")
+programs2delete=("fastfetch")
+package_delete=("fastfetch")
 
 # Loop through the programs  ###for ((i=0; i<${#programs2delete[@]};# i++));# do
 for i in "${!programs2delete[@]}"; do
