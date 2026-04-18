@@ -363,7 +363,7 @@ echo $USER "@" $HOSTNAME "($HOST_IP)"
     # Default to "no" if running for less than three days
     read -p "Reboot Anyway? (y/N): " choice
     if [[ $choice == [Yy] ]]; then
-      echo -e "${RED} Rebooting... after 10 sec $USER@$HOSTNAME ($HOST_IP) ${NC}"
+      echo -e "${RED} Rebooting... after 7 sec $USER@$HOSTNAME ($HOST_IP) ${NC}"
        sleep 4 
        screenfetch
        inxi  
