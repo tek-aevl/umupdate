@@ -381,10 +381,10 @@ sleep 10
    fi
 echo $USER "@" $HOSTNAME
 who -a && last -n 6
+screenfetch
 inxi
 uname -a
 echo -e "Current Running kernel ($CKRUNNING) ; Current Installed kernel ($CKNEWEST)."
 echo -e "${GREEN} Byah.!. $USER@$HOSTNAME ($HOST_IP) ${NC}"
-screenfetch
 sleep 10
 exit;
