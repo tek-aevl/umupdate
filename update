@@ -95,6 +95,8 @@ echo -e "${GREEN}Welcome $USER@$HOSTNAME ($HOST_IP)"
 # Display system information
 echo ":~${HOST_IP} uname -a"
 uname -a
+screenfetch
+inxi  
 sleep 8
 echo -e "${NC}"
 
@@ -383,6 +385,6 @@ inxi
 uname -a
 echo -e "Current Running kernel ($CKRUNNING) ; Current Installed kernel ($CKNEWEST)."
 echo -e "${GREEN} Byah.!. $USER@$HOSTNAME ($HOST_IP) ${NC}"
-sleep 10
 screenfetch
+sleep 10
 exit;
