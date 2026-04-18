@@ -159,12 +159,12 @@ elif command -v apt &> /dev/null; then
     update_command="sudo apt update"
     upgrade_command="sudo apt upgrade -y" 
     #secret#
+    echo -e  "${YELLOW}Autoremove"
+    sudo apt autoremove -y
+    echo -e  "${NC}"
     echo -e "${CYAN}Fix broken updates"
     sudo apt --fix-broken install
     sudo dpkg --configure -a
-    echo -e  "${NC}"
-    echo -e  "${YELLOW}Autoremove"
-    sudo apt autoremove -y
     echo -e  "${NC}"
     echo -e "${GREEN}Running apt autoremove..."
     sudo apt autoremove
