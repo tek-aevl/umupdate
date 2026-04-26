@@ -1,7 +1,7 @@
 #!/bin/sh
 # kernel-check: compare running kernel to newest installed (modules dirs)
 # POSIX sh, distro-agnostic
-
+echo "bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/kernel-check)"
 # Colors (TTY-aware)
 if [ -t 1 ] && command -v tput >/dev/null 2>&1; then
   RED="$(tput setaf 1)"; YEL="$(tput setaf 3)"; GRN="$(tput setaf 2)"
