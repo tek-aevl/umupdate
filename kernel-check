@@ -57,12 +57,6 @@ ALL="$(cklist_versions | ckuniq_stable)"
 CKNEWEST="$(printf "%s\n" "$ALL" | ckver_sort | tail -n1)"
 
 # Pretty output
-say "${RED}This text is Red.${RST}"
-say "${YEL}This text is Yellow.${RST}"
-say "${GRN}This text is Green.${RST}"
-say "${MAG}This text is Magenta.${RST}"
-say "${BLU}This text is Blue.${RST}"
-say "${WHT}This text is White.${RST}"
 say "${BLD}Running Kernel:${RST}   $CKRUNNING"
 say "${BLD}Newest Installed:${RST} $CKNEWEST"
 
