@@ -170,6 +170,7 @@ elif command -v apt &> /dev/null; then
     echo -e  "${NC}"
     echo -e "${GREEN}Running apt autoremove..."
     sudo apt autoremove
+    sudo update-ca-certificates
     echo -e "${NC}"
 elif command -v pacman &> /dev/null; then
     update_command="sudo pacman -Syu"
