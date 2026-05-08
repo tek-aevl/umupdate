@@ -89,6 +89,7 @@ if pihole -v &> /dev/null; then
 echo -e "${GREEN}Pihole Updates!${NC}"
 
     # Pi-hole is installed, run the commands
+    sudo pihole updatechecker
     sudo pihole arpflush
     sudo pihole restartdns
     sudo pihole -g
