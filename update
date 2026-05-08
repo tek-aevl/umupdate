@@ -221,6 +221,8 @@ if pihole -v &> /dev/null; then
 echo -e "${GREEN}Pihole Updates!${NC}"
 
     # Pi-hole is installed, run the commands
+echo "sudo pihole updatechecker"    
+   sudo pihole updatechecker
 echo "sudo pihole arpflush"
     sudo pihole arpflush
 echo "sudo pihole flush"
