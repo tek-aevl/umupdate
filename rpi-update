@@ -21,40 +21,60 @@ echo -e "This ${GREEN}text${NC} is ${GREEN}green.${NC}"
 sleep 4
 
 echo -e "Welcome " $USER "@" $HOSTNAME "${GREEN}"
+# Define the package manager update/upgrade commands
+update_command=""
+upgrade_command=""
 
-# Define a list of programs to check
-programs=("dialog" "bc" "inxi"  "speedtest" "htop" "cron" "nano" "screenfetch")
+# Check which package manager is available
+if command -v pacman &> /dev/null; then
+    update_command="sudo pacman -Syyu --noconfirm"
+    upgrade_command="sudo pacman -Syyu --noconfirm"
+elif command -v apt &> /dev/null; then
+    update_command="sudo apt update"
+    upgrade_command="sudo apt upgrade -y" 
+    #secret#
+    sudo update-ca-certificates
+   echo -e  "${YELLOW}Autoremove"
+   sudo apt autoremove -y
+   echo -e  "${NC}"
+   echo -e "${CYAN}Fix broken updates"
+   sudo apt --fix-broken install
+   sudo dpkg --configure -a
+   echo -e  "${NC}"
+   echo -e "${GREEN}Running apt autoremove..."
+   sudo apt autoremove
+echo -e "${NC}"
 
-# Define the corresponding package names for each program
-package_names=("dialog" "bc" "inxi"  "speedtest-cli" "htop" "cron" "nano" "screenfetch")
+elif command -v pacman &> /dev/null; then
+    update_command="sudo pacman -Syu"
+    upgrade_command="sudo pacman -Syyu --noconfirm"
+elif command -v dnf &> /dev/null; then
+    update_command="sudo dnf check-update"
+    upgrade_command="sudo dnf upgrade -y"
+elif command -v pkg &> /dev/null; then
+    update_command="sudo pkg update"
+    upgrade_command="sudo pkg upgrade -y"
+elif command -v zypper &> /dev/null; then
+    update_command="sudo zypper refresh"
+    upgrade_command="sudo zypper update -y"
+elif command -v pacman &> /dev/null; then
+    update_command="sudo pacman -Su"
+    upgrade_command="sudo pacman -Syyu"
+else
+    echo "Unable to determine the package manager. Please update and upgrade manually."
+    exit 1
+fi
 
-# Loop through the programs
-for ((i=0; i<${#programs[@]}; i++)); do
-    program=${programs[i]}
-    package_name=${package_names[i]}
-    
-    # Check if the program is installed
-    if ! command -v $program &> /dev/null; then
-        # Program is not found, install it
-        echo "Installing $package_name..."
-        if command -v apt &> /dev/null; then
-            sudo apt update
-            sudo apt install -y $package_name
-        elif command -v pacman &> /dev/null; then
-            sudo pacman -Sy $package_name
-        elif command -v dnf &> /dev/null; then  # Add support for Fedora
-            sudo dnf install -y $package_name
-        elif command -v pkg &> /dev/null; then  # Add support for FreeBSD
-            sudo pkg install -y $package_name
-        else
-            echo "Unable to install $package_name. Please install it manually."
-        fi
-    fi
-    echo -e "${GREEN}$package_name Installed ${MAGENTA}!${NC}"
-done
-sudo apt update 
-sudo apt upgrade -y     
-sudo apt autoremove -y
+# Update the system
+echo "Updating packages..."
+$update_command
+
+# Upgrade the system
+echo "Upgrading packages..."
+$upgrade_command
+
+echo -e " ${GREEN} Script completed.${NC} "
+sleep 1
 echo -e "${NC}"
 # Get the uptime of the system
 uptimen=$(uptime -s)
