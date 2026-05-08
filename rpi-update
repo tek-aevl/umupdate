@@ -21,6 +21,15 @@ echo -e "This ${GREEN}text${NC} is ${GREEN}green.${NC}"
 sleep 4
 
 echo -e "Welcome " $USER "@" $HOSTNAME "${GREEN}"
+
+# Display system information
+echo ":~${HOST_IP} uname -a"
+uname -a
+screenfetch
+inxi  
+sleep 8
+echo -e "${NC}"
+
 # Define the package manager update/upgrade commands
 update_command=""
 upgrade_command=""
