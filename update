@@ -201,7 +201,7 @@ $update_command
 echo "Upgrading packages..."
 $upgrade_command
 
-echo -e " ${GREEN} Script completed.${NC} "
+echo -e " ${GREEN} Updates and Upgrades completed on ${HOST_IP}.${NC} "
 sleep 1
 
 
