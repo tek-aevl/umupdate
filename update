@@ -204,20 +204,29 @@ $upgrade_command
 echo -e " ${GREEN} Script completed.${NC} "
 sleep 1
 
+
 echo "sudo rpi-update"
-if sudo rpi-update; then
+update_output=$(sudo rpi-update 2>&1)
+update_rc=$?
+
+echo "$update_output"
+
+if [[ $update_rc -ne 0 ]]; then
+    echo -e "${RED}Firmware update failed.${NC}"
+elif echo "$update_output" | grep -qiE "already.*up.to.date|up.to.date"; then
+    echo -e "${GREEN}Firmware already up to date. No reboot required.${NC}"
+else
     echo -e "${GREEN}Firmware update completed successfully.${NC}"
-
     read -p "Reboot now? (y/n): " reboot_now
-
     if [[ "$reboot_now" =~ ^([yY]|yes)$ ]]; then
         echo -e "${YELLOW}Rebooting...${NC}"
         sudo reboot
+    else
+        echo -e "${GREEN}Reboot skipped.${NC}"
     fi
-else
-    echo -e "${RED}Firmware update failed.${NC}"
 fi
 
+sleep 1
 
 ###pihole tasks###
 # Set threshold for the number of days before running this 
