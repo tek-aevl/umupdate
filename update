@@ -97,14 +97,14 @@ echo ":~${HOST_IP} uname -a"
 uname -a
 screenfetch
 inxi  
-sleep 8
+sleep 1
 echo -e "${NC}"
 
 
 # Display information about users currently logged in
 echo "~${HOST_IP} who -a"
 who -a
-sleep 2
+sleep 1
 
 echo -e "${YELLOW} Can you ${RED} sudo${NC}?"
 echo -e "${RED} Password $USER@$HOSTNAME ($HOST_IP) "
@@ -147,7 +147,7 @@ hours=$(echo "$uptime_seconds % 86400 / 3600" | bc)
 minutes=$(echo "$uptime_seconds % 3600 / 60" | bc)
 
 echo -e "${RED} Current Time variables : $days days, $hours hours, $minutes minutes ${NC}"
-sleep 4
+sleep 1
 
 # Define the package manager update/upgrade commands
 update_command=""
@@ -259,7 +259,7 @@ echo "reload list"
 echo "sudo pihole -up"
     sudo pihole -up
 echo "complete"
-sleep 8
+sleep 1
 echo $USER "@" $HOSTNAME
 
 echo -e "${CYAN} Automatically selected $force_log_reset ${NC}"
@@ -327,14 +327,14 @@ sleep 6
 ###########################################################################################
 
 echo "kernel-check"
-sleep 3
+sleep 2
 ##needed##
 bash <(curl -s "https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/kernel-check")
 echo "^_^"
 bash kernel-check
 kernel-check
 echo "end of back up kernel check"
-sleep 3
+sleep 2
 ###end kernel check###
   echo $USER "@" $HOSTNAME
 #####################################################################
