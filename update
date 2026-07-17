@@ -88,9 +88,21 @@ sleep 1
 
 # Get the IP address of the host
 HOST_IP=$(hostname -I | awk '{print $1}')
+##image#\/#
 if command -v jp2a >/dev/null 2>&1; then
-    curl -sL "https://raw.githubusercontent.com/tek-aevl/tek.aevl.us/0a058f090774eafc4f0358778af54a3a5d9580f6/profile-bu.jpg/339562749_739996280954150_7343322829530321017_n.jpg" | jp2a --colors -
+    # 1. Download it silently to a temporary folder
+    curl -sL "https://raw.githubusercontent.com/tek-aevl/tek.aevl.us/0a058f090774eafc4f0358778af54a3a5d9580f6/profile-bu.jpg/339562749_739996280954150_7343322829530321017_n.jpg" -o /tmp/profile_ascii.jpg
+    
+    # 2. Draw it to the terminal
+    jp2a --colors /tmp/profile_ascii.jpg
+    
+    # 3. Clean up the temp file
+    rm /tmp/profile_ascii.jpg
+else
+    echo "jp2a is not installed. To see the ASCII art, run: sudo apt install jp2a"
 fi
+
+##image##^#
 # Display a welcome message
 echo -e "${GREEN}Welcome $USER@$HOSTNAME ($HOST_IP)"
 
