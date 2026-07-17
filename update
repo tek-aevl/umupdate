@@ -258,7 +258,7 @@ echo "sudo pihole reloaddns"
 echo "sudo pihole updateGravity"
     sudo pihole -g
 echo "reload list"
-    sudo pihole reloadlist
+    sudo pihole reloadlists
 echo "sudo pihole -up"
     sudo pihole -up
 echo "complete"
