@@ -206,7 +206,8 @@ sleep 1
 
 
 echo "sudo rpi-update"
-update_output=$(sudo rpi-update 2>&1)
+# Add SKIP_WARNING=1 right after sudo
+update_output=$(sudo SKIP_WARNING=1 rpi-update 2>&1)
 update_rc=$?
 
 echo "$update_output"
