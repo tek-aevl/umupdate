@@ -55,14 +55,14 @@ else
 fi
 
 # Programs needed in order to use this script ("dialog" "bc" "speedtest" ), and extra tools that are nice.
-      programs=("jp2a" "dialog" "bc" "speedtest"  "nload" "btop"   "htop" "cron" "nano" "fail2ban" "ncdu" "iftop" "lolcat" "screenfetch")
+      programs=("jp2a" "dialog" "bc" "speedtest"  "nload" "btop"   "htop" "cron" "nano" "fail2ban" "ncdu" "iftop" "lolcat" "fastfetch")
 
 # Define the corresponding package names for each program
- package_names=("jp2a" "dialog" "bc" "speedtest-cli" "nload"  "btop" "htop" "cron" "nano" "fail2ban" "ncdu" "iftop" "lolcat" "screenfetch")
+ package_names=("jp2a" "dialog" "bc" "speedtest-cli" "nload"  "btop" "htop" "cron" "nano" "fail2ban" "ncdu" "iftop" "lolcat" "fastfetch")
 
 # Define the corresponding package names for each program
-programs2delete=("fastfetch")
-package_delete=("fastfetch")
+programs2delete=("screenfetch")
+package_delete=("screenfetch")
 
 # Loop through the programs  ###for ((i=0; i<${#programs2delete[@]};# i++));# do
 for i in "${!programs2delete[@]}"; do
