@@ -247,8 +247,8 @@ echo -e "${GREEN}Pihole Updates!${NC}"
     # Pi-hole is installed, run the commands
 echo "sudo pihole updatechecker"    
    sudo pihole updatechecker
-echo "sudo pihole arpflush"
-    sudo pihole arpflush
+echo "sudo pihole networkflush"
+    sudo pihole networkflush
 echo "sudo pihole flush"
     sudo pihole flush
 echo "sudo pihole reloaddns"
