@@ -95,7 +95,6 @@ if command -v jp2a >/dev/null 2>&1; then
     
     # 2. Draw it to the terminal
     jp2a --colors /tmp/profile_ascii.jpg
-    sleep 3
     # 3. Clean up the temp file
     rm /tmp/profile_ascii.jpg
 else
