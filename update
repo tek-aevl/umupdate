@@ -95,7 +95,7 @@ if command -v jp2a >/dev/null 2>&1; then
     
     # 2. Draw it to the terminal
     jp2a --colors /tmp/profile_ascii.jpg
-    
+    sleep 3
     # 3. Clean up the temp file
     rm /tmp/profile_ascii.jpg
 else
@@ -109,9 +109,9 @@ echo -e "${GREEN}Welcome $USER@$HOSTNAME ($HOST_IP)"
 # Display system information
 echo ":~${HOST_IP} uname -a"
 uname -a
-screenfetch
+fastfetch
 inxi  
-sleep 1
+sleep 3
 echo -e "${NC}"
 
 
@@ -409,11 +409,12 @@ echo $USER "@" $HOSTNAME "($HOST_IP)"
     if [[ $choice == [Yy] ]]; then
       echo -e "${RED} Rebooting... after 7 sec $USER@$HOSTNAME ($HOST_IP) ${NC}"
        sleep 4 
-       screenfetch
+       fastfetch
        inxi  
        uname -a
       echo -e " ${RED} byah $USER@$HOSTNAME $HOST_IP ${NC} " && sleep 3
        sudo reboot
+echo "rebooting..."
        exit;
 echo "sleeping 10"   
 sleep 10
@@ -422,8 +423,8 @@ sleep 10
     fi
    fi
 echo $USER "@" $HOSTNAME
-who -a && last -n 6
-screenfetch
+who -a
+fastfetch
 inxi
 uname -a
 echo -e "Current Running kernel ($CKRUNNING) ; Current Installed kernel ($CKNEWEST)."
