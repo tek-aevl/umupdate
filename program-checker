@@ -55,10 +55,10 @@ else
 fi
 
 # Programs needed in order to use this script ("dialog" "bc" "speedtest" ), and extra tools that are nice.
-      programs=("jp2a" "dialog" "bc" "speedtest"  "nload" "btop"   "htop" "cron" "nano" "fail2ban" "ncdu" "iftop" "lolcat" "fastfetch")
+      programs=("jp2a" "dialog" "bc" "speedtest" "speedtest"  "nload" "btop"   "htop" "cron" "nano" "fail2ban" "ncdu" "iftop" "lolcat" "fastfetch")
 
 # Define the corresponding package names for each program
- package_names=("jp2a" "dialog" "bc" "speedtest-cli" "nload"  "btop" "htop" "cron" "nano" "fail2ban" "ncdu" "iftop" "lolcat" "fastfetch")
+ package_names=("jp2a" "dialog" "bc" "speedtest-cli""speedtest" "nload"  "btop" "htop" "cron" "nano" "fail2ban" "ncdu" "iftop" "lolcat" "fastfetch")
 
 # Define the corresponding package names for each program
 programs2delete=("screenfetch")
