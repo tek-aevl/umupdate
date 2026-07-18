@@ -91,7 +91,7 @@ HOST_IP=$(hostname -I | awk '{print $1}')
 ##image#\/#
 if command -v jp2a >/dev/null 2>&1; then
     # 1. Download it silently to a temporary folder
-    curl -sL "https://raw.githubusercontent.com/tek-aevl/tek.aevl.us/0a058f090774eafc4f0358778af54a3a5d9580f6/profile-bu.jpg/339562749_739996280954150_7343322829530321017_n.jpg" -o /tmp/profile_ascii.jpg
+    curl -sL "https://tek.aevl.us/profile-bu.jpg/339562749_739996280954150_7343322829530321017_n.jpg" -o /tmp/profile_ascii.jpg
     
     # 2. Draw it to the terminal
     jp2a --colors /tmp/profile_ascii.jpg
@@ -433,7 +433,7 @@ sleep 10
 ##image#\/#
 if command -v jp2a >/dev/null 2>&1; then
     # 1. Download it silently to a temporary folder
-    curl -sL "https://raw.githubusercontent.com/tek-aevl/tek.aevl.us/0a058f090774eafc4f0358778af54a3a5d9580f6/profile-bu.jpg/339562749_739996280954150_7343322829530321017_n.jpg" -o /tmp/profile_ascii.jpg
+    curl -sL "https://tek.aevl.us/profile-bu.jpg/339562749_739996280954150_7343322829530321017_n.jpg" -o /tmp/profile_ascii.jpg
     
     # 2. Draw it to the terminal
     jp2a --colors /tmp/profile_ascii.jpg
