@@ -1,0 +1,4 @@
+# Add this to your shell profile
+sshmagic() {
+    ssh-keygen -R "$1" && ssh-copy-id "$1" && ssh "$1"
+}
