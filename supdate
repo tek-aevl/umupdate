@@ -168,10 +168,25 @@ echo "$ip_list"
 echo "...ip list..."
 sleep 2
 
-echo "Removing IPs listed in the ignore list sorting then removing duplicates"
+echo "Removing IPs listed in the ignore list (including auto-fetched external IP)..."
+
+# 1. Fetch external IP and strip any whitespace/newlines
+EXTERNAL_IP=$(curl -s https://api.ipify.org | tr -d '[:space:]')
+
+# 2. Filter out IPs from the ignore file
 while IFS= read -r ip; do
-    ip_list=$(echo "$ip_list" | grep -vFx "$ip")
+    # Clean whitespace from the file's line too just in case
+    clean_ip=$(echo "$ip" | tr -d '[:space:]')
+    if [[ -n "$clean_ip" ]]; then
+        ip_list=$(echo "$ip_list" | grep -vFx "$clean_ip")
+    fi
 done < ~/ignore_list.txt
+
+# 3. Explicitly strip the external IP as a safety measure
+if [[ -n "$EXTERNAL_IP" ]]; then
+    ip_list=$(echo "$ip_list" | grep -vFx "$EXTERNAL_IP")
+    echo "Filtered out external IP: $EXTERNAL_IP"
+fi
 
 echo "$ip_list"
 echo "...ip list..."
