@@ -139,6 +139,15 @@ echo "$custom_ip_list  ...done..."
 echo "Retrieving ignore_ip_list"
 ignore_ip_list=$(grep -E -o '([0-9]{1,3}\.){3}[0-9]{1,3}' ~/ignore_ip_list)
 
+# Fetch current external IP and append it to the in-memory list only
+EXTERNAL_IP=$(curl -s https://api.ipify.org)
+if [[ -n "$EXTERNAL_IP" ]]; then
+    ignore_ip_list="${ignore_ip_list}"$'\n'"${EXTERNAL_IP}"
+    echo "Added external IP ($EXTERNAL_IP) to memory ignore list."
+else
+    echo "Warning: Could not fetch external IP address."
+fi
+
 # Check if there are any IP addresses found before creating the file
 if [[ -n "$ignore_ip_list" ]]; then
     # Use printf for better portability and to handle special characters properly
