@@ -383,14 +383,20 @@ read -r -p "Run Speedtest? (y/N): " response
 if [[ "$response" == "Y" || "$response" == "y" ]]; then
     echo "$USER@$HOSTNAME speedtest"
     
-    if command -v lolcat &> /dev/null; then
-        # Try with --secure; if it fails, fallback to standard speedtest, piping both to lolcat
-        (
-            set -o pipefail
-            speedtest --secure | lolcat
-        ) || speedtest | lolcat
+    if ! command -v speedtest &> /dev/null; then
+        echo "Error: speedtest command not found."
     else
-        speedtest --secure || speedtest
+        # Try running with --secure first, fallback to standard speedtest
+        OUTPUT=$(speedtest --secure 2>&1)
+        if [[ $? -ne 0 ]]; then
+            OUTPUT=$(speedtest 2>&1)
+        fi
+        
+        if command -v lolcat &> /dev/null; then
+            echo "$OUTPUT" | lolcat
+        else
+            echo "$OUTPUT"
+        fi
     fi
     
     sleep 1
