@@ -382,11 +382,17 @@ read -r -p "Run Speedtest? (y/N): " response
 
 if [[ "$response" == "Y" || "$response" == "y" ]]; then
     echo "$USER@$HOSTNAME speedtest"
+    
     if command -v lolcat &> /dev/null; then
-        speedtest --secure | lolcat
+        # Try with --secure; if it fails, fallback to standard speedtest, piping both to lolcat
+        (
+            set -o pipefail
+            speedtest --secure | lolcat
+        ) || speedtest | lolcat
     else
-        speedtest --secure
+        speedtest --secure || speedtest
     fi
+    
     sleep 1
 elif [[ -z "$response" || "$response" == "N" || "$response" == "n" ]]; then
     echo "Not running speedtest : System uptime: $(uptime)"
