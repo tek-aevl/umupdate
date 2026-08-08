@@ -381,23 +381,17 @@ echo "$USER@$HOSTNAME $HOST_IP"
 read -r -p "Run Speedtest? (y/N): " response
 if [[ "$response" == "Y" || "$response" == "y" ]]; then
     echo "$USER@$HOSTNAME speedtest"
-    
-    if ! command -v speedtest &> /dev/null; then
-        echo "Error: speedtest command not found."
-    else
-        # Try running with --secure first, fallback to standard speedtest
-        OUTPUT=$(speedtest --secure 2>&1)
-        if [[ $? -ne 0 ]]; then
-            OUTPUT=$(speedtest 2>&1)
-        fi
-        
-        if command -v lolcat &> /dev/null; then
-            echo "$OUTPUT" | lolcat
-        else
-            echo "$OUTPUT"
-        fi
+    # Try with --secure first and capture output/exit status
+    output=$(speedtest --secure 2>&1)
+    # If it failed due to an unknown option or error, fallback to running without --secure
+    if [[ "$output" == *"Unknown option"* ]] || [[ $? -ne 0 ]]; then
+        output=$(speedtest 2>&1)
     fi
-    
+    if command -v lolcat &> /dev/null; then
+        echo "$output" | lolcat
+    else
+        echo "$output"
+    fi
     sleep 1
 elif [[ -z "$response" || "$response" == "N" || "$response" == "n" ]]; then
     echo "Not running speedtest : System uptime: $(uptime)"
