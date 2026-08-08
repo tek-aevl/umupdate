@@ -379,7 +379,6 @@ echo "uptime $USER@$HOSTNAME ($HOST_IP)"
 uptime
 echo "$USER@$HOSTNAME $HOST_IP"
 read -r -p "Run Speedtest? (y/N): " response
-
 if [[ "$response" == "Y" || "$response" == "y" ]]; then
     echo "$USER@$HOSTNAME speedtest"
     
