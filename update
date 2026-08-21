@@ -413,7 +413,7 @@ echo $USER "@" $HOSTNAME "($HOST_IP)"
     if [[ $choice == [Yy] ]]; then
       echo -e "${RED} Rebooting... after 7 sec $USER@$HOSTNAME ($HOST_IP) ${NC}"
        sleep 4 
-       fastfetch
+       screenfetch
        inxi  
        uname -a
       echo -e " ${RED} byah $USER@$HOSTNAME $HOST_IP ${NC} " && sleep 3
