@@ -172,7 +172,7 @@ if command -v pacman &> /dev/null; then
     upgrade_command="sudo pacman -Syyu --noconfirm"
 elif command -v apt &> /dev/null; then
     update_command="sudo apt update"
-    upgrade_command="sudo apt upgrade -y" 
+    upgrade_command="sudo apt -o APT::Get::Always-Include-Phased-Updates=true upgrade -y"
     #secret#
     sudo update-ca-certificates
    echo -e  "${YELLOW}Autoremove"
