@@ -35,17 +35,6 @@ function copy_ssh_key() {
     fi
 }
 
-# Function to check if Pi-hole is installed and running on a host
-function check_pihole {
-  # Check if the Pi-hole service is running
-  if ssh -q -o ConnectTimeout=1 $1 "systemctl is-active pihole-FTL.service &> /dev/null"; then
-    # Check if the Pi-hole web interface is accessible
-    if curl -s -I -H "Host: pi.hole" http://$1/admin/ &> /dev/null; then
-      return 0  # Pi-hole is installed and running
-    fi
-  fi
-  return 1  # Pi-hole is not installed or not running
-}
 echo "...done..."
 
 # Function to prompt the user for ARP inclusion
@@ -306,15 +295,8 @@ run_host() {
 
     echo "${GR}[$num/$TOTAL] $ip → connecting...${NC}"
     sleep 1
-    if check_pihole "$ip"; then
-      ssh -tY $ip "bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update)"
-     echo "[$num/$TOTAL] $ip → Used Remote script. RPI detected Moving on!"    
-    elif  ssh -tY $ip "bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update)"; then
-         echo "[$num/$TOTAL] $ip → Used remote script. Going to next one!" 
-    else
-           if ssh -tY "$ip" "bash /bin/update"; then
-            echo "[$num/$TOTAL] $ip → Used Local script. Moving on!"
-      fi
+   if ssh -tY $ip "bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update)"; then
+        echo "[$num/$TOTAL] $ip → Used remote script. Moving on!"
     fi
 
     # run program-checker if selected
