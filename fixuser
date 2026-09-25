@@ -1,0 +1,45 @@
+#!/bin/bash
+
+# Ensure the script is run with root privileges
+if [[ $EUID -ne 0 ]]; then
+   echo "This script requires root privileges. Please run with sudo."
+   exit 1
+fi
+
+# Populate the array with directory names from /home
+USERS=()
+for dir in /home/*/; do
+    # Verify it is a directory to prevent errors if /home is empty
+    if [[ -d "$dir" ]]; then
+        USERS+=("\((basename "\)dir")")
+    fi
+done
+
+if [[ ${#USERS[@]} -eq 0 ]]; then
+    echo "No user directories found in /home."
+    exit 1
+fi
+
+# Set the prompt for the select menu
+PS3="Select the account to modify (enter the number): "
+
+# Generate the numbered bash menu list
+select TARGET_USER in "${USERS[@]}" "Quit"; do
+    if [[ "$TARGET_USER" == "Quit" ]]; then
+        echo "Exiting without making changes."
+        break
+    elif [[ -n "$TARGET_USER" ]]; then
+        echo "Processing user: $TARGET_USER"
+        
+        # Execute your specified passwd sequence
+        passwd -u "$TARGET_USER" && \
+        passwd -S "$TARGET_USER" && \
+        passwd -d "$TARGET_USER" && \
+        passwd -S "$TARGET_USER"
+        
+        echo "Update complete for $TARGET_USER."
+        break
+    else
+        echo "Invalid selection. Please enter a valid number."
+    fi
+done
