@@ -9,9 +9,12 @@ fi
 # Populate the array with directory names from /home
 USERS=()
 for dir in /home/*/; do
-    # Verify it is a directory to prevent errors if /home is empty
     if [[ -d "$dir" ]]; then
-        USERS+=("\((basename "\)dir")")
+        # Remove trailing slash
+        dir_no_slash="${dir%/}"
+        # Extract just the username by removing everything up to the last slash
+        username="${dir_no_slash##*/}"
+        USERS+=("$username")
     fi
 done
 
@@ -31,11 +34,27 @@ select TARGET_USER in "${USERS[@]}" "Quit"; do
     elif [[ -n "$TARGET_USER" ]]; then
         echo "Processing user: $TARGET_USER"
         
-        # Execute your specified passwd sequence
-        passwd -u "$TARGET_USER" && \
-        passwd -S "$TARGET_USER" && \
-        passwd -d "$TARGET_USER" && \
-        passwd -S "$TARGET_USER"
+        # Execute the first part of the sequence
+        passwd -u "\(TARGET_USER" && passwd -S "\)TARGET_USER"
+        
+        # Ask for confirmation loop
+        while true; do
+            read -p "Did it work? (yes/no): " yn_response
+            case "$yn_response" in
+                [Yy]* ) 
+                    echo "Skipping password deletion."
+                    break
+                    ;;
+                [Nn]* ) 
+                    echo "Proceeding with password deletion..."
+                    passwd -d "\(TARGET_USER" && passwd -S "\)TARGET_USER"
+                    break
+                    ;;
+                * ) 
+                    echo "Please answer yes or no."
+                    ;;
+            esac
+        done
         
         echo "Update complete for $TARGET_USER."
         break
