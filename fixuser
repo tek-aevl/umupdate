@@ -35,7 +35,7 @@ select TARGET_USER in "${USERS[@]}" "Quit"; do
         echo "Processing user: $TARGET_USER"
         
         # Execute the first part of the sequence
-        passwd -u "\(TARGET_USER" && passwd -S "\)TARGET_USER"
+        passwd -u "$TARGET_USER" && passwd -S "$TARGET_USER"
         
         # Ask for confirmation loop
         while true; do
@@ -47,7 +47,7 @@ select TARGET_USER in "${USERS[@]}" "Quit"; do
                     ;;
                 [Nn]* ) 
                     echo "Proceeding with password deletion..."
-                    passwd -d "\(TARGET_USER" && passwd -S "\)TARGET_USER"
+                    passwd -d "$TARGET_USER" && passwd -S "$TARGET_USER"
                     break
                     ;;
                 * ) 
