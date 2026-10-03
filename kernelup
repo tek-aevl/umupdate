@@ -13,6 +13,16 @@ if [ "$EUID" -ne 0 ]; then
     echo "--------------------------------------------------------"
     exit 1
 fi
+echo "[+] Downloading latest kernelup from GitHub..."
+curl -sSL https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/kernelup -o /usr/local/bin/kernelup
+
+if [ $? -eq 0 ]; then
+    sudo chmod +x /usr/local/bin/kernelup
+    echo "[+] Successfully installed! You can now run: sudo kernelup"
+else
+    echo "[-] Download failed. Please check your URL or repository visibility."
+    exit 1
+fi
 
 # 1. Verify if 'mainline' is installed
 if ! command -v mainline &> /dev/null; then
