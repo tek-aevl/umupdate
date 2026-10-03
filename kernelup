@@ -1,0 +1,71 @@
+#!/bin/bash
+#reset terminal
+reset
+# Cache sudo
+sudo -v
+
+# Ensure script is run with root/sudo privileges
+if [ "$EUID" -ne 0 ]; then
+    echo "[-] Please run this script with sudo: sudo kernelup"
+    exit 1
+fi
+
+# 1. Verify if 'mainline' is installed
+if ! command -v mainline &> /dev/null; then
+    echo "[!] The 'mainline' utility is not installed."
+    read -p "Would you like to install it now? (y/N) " -n 1 -r
+    echo
+    if [[ \(REPLY =~ ^[Yy]\) ]]; then
+        echo "[+] Adding PPA and installing mainline..."
+        add-apt-repository ppa:cappelikan/ppa -y
+        apt update
+        apt install mainline -y
+    else
+        echo "[-] Mainline is required to run this tool. Exiting."
+        exit 1
+    fi
+fi
+
+# 2. Capture current running kernel
+CURRENT_KERNEL=$(uname -r)
+echo "--------------------------------------------------------"
+echo "[*] Current Running Kernel : $CURRENT_KERNEL"
+echo "--------------------------------------------------------"
+
+# 3. Show top 5 available mainline kernels (filtered to show only version numbers)
+echo "[+] Top 5 Available Mainline Kernels:"
+echo "--------------------------------------------------------"
+mainline list | grep -E '^[0-9]' | head -n 5
+echo "--------------------------------------------------------"
+
+echo "[+] Checking for updates and installing the latest mainline kernel..."
+# Capture output to check if an update actually happened
+INSTALL_OUTPUT=$(mainline install-latest 2>&1)
+echo "$INSTALL_OUTPUT"
+
+# 4. Check if changes were made
+NEW_KERNEL_CHECK=$(uname -r)
+
+echo "--------------------------------------------------------"
+echo "[+] Kernel update check complete."
+echo "[*] Previous Kernel : $CURRENT_KERNEL"
+echo "[*] Active Kernel Now: $NEW_KERNEL_CHECK"
+echo "--------------------------------------------------------"
+
+# 5. Only prompt for reboot if "No updates" wasn't the result or if the active kernel session differs
+if echo "$INSTALL_OUTPUT" | grep -q "No updates"; then
+    echo "[*] Your system is already running the latest mainline kernel. No reboot needed."
+else
+    read -p "A new kernel was installed. Do you want to reboot now? (y/N) " -n 1 -r
+    echo
+    if [[ \(REPLY =~ ^[Yy]\) ]]; then
+        echo "[+] Rebooting system..."
+        reboot
+    else
+        echo "[!] Remember to reboot later for the changes to take effect."
+    fi
+fi
+
+
+
+
