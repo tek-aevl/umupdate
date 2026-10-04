@@ -96,11 +96,15 @@ echo "--------------------------------------------------------"
 echo "[*] Current Running Kernel : $CURRENT_KERNEL"
 echo "--------------------------------------------------------"
 echo "[+] Installed Stock Ubuntu Kernels (OEM):"
-# This perfectly isolates official kernels by filtering out the 'unsigned' mainline ones
-dpkg -l | grep '^ii' | grep -E 'linux-image-[0-9]' | grep -v 'unsigned' | awk '{print $2}' | sed 's/linux-image-//' | sed 's/^/    /'
+# dpkg-query is safer than dpkg -l because it never truncates text on small screens
+dpkg-query -W -f='${Package}\n' | grep -E '^linux-image-[0-9]' | grep -v 'unsigned' | sed 's/linux-image-//' | sed 's/^/    /'
 echo "--------------------------------------------------------"
 echo "[+] Installed Mainline Kernels:"
-if ! mainline list-installed | grep -E '^[0-9]' | sed 's/^/    /'; then
+# Store the output first so the 'sed' pipe doesn't mask the exit code of grep
+MAINLINE_INSTALLED=$(mainline list-installed | grep -E '^[0-9]')
+if [ -n "$MAINLINE_INSTALLED" ]; then
+    echo "$MAINLINE_INSTALLED" | sed 's/^/    /'
+else
     echo "    (No mainline kernels installed yet)"
 fi
 echo "--------------------------------------------------------"
