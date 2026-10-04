@@ -150,7 +150,7 @@ if [ "$CHANGES_MADE" = true ]; then
         echo "[+] Rebooting system..."
         reboot
     else
-        echo "[!] Remember to reboot later for the changes to take effect. If changes were made"
+        echo "[!] Remember to reboot later for the changes to take effect. If changes were made."
     fi
 else
     echo "[*] System is ready."
