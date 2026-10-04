@@ -39,6 +39,11 @@ interactive_kernel_menu() {
             apt install --install-recommends linux-generic linux-headers-generic -y
             CHANGES_MADE=true
             break
+        elif [[ "$choice" == "Restore Default Ubuntu Kernel (OEM/Generic)" ]]; then
+            echo "[+] Restoring standard Ubuntu generic kernel via apt..."
+            apt update && apt install --install-recommends linux-generic linux-headers-generic -y
+            CHANGES_MADE=true
+            break
         elif [[ -n "$choice" ]]; then
             echo "[+] Installing kernel version: $choice"
             mainline install "$choice"
