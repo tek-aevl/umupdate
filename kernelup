@@ -101,7 +101,7 @@ dpkg-query -W -f='${Package}\n' | grep -E '^linux-image-[0-9]' | grep -v 'unsign
 echo "--------------------------------------------------------"
 echo "[+] Installed Mainline Kernels:"
 # Use dpkg directly to perfectly capture installed unsigned (mainline) kernels
-MAINLINE_INSTALLED=\((dpkg-query -W -f='\){Package}\n' 2>/dev/null | grep -E '^linux-image-unsigned-[0-9]' | sed 's/linux-image-unsigned-//')
+MAINLINE_INSTALLED=`dpkg-query -W 2>/dev/null | cut -f1 | grep -E '^linux-image-unsigned-[0-9]' | sed 's/linux-image-unsigned-//'`
 if [ -n "$MAINLINE_INSTALLED" ]; then
     echo "$MAINLINE_INSTALLED" | sed 's/^/    /'
 else
