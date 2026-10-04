@@ -25,7 +25,7 @@ interactive_kernel_menu() {
     mapfile -t KERNELS < <(mainline list | grep -E '^[0-9]' | head -n 10 | awk '{print $1}')
     
     # Add extra management options to the bottom of the list
-    OPTIONS=("${KERNELS[@]}" "Restore Default Ubuntu Kernel (OEM/Generic)" "Cancel / Exit Menu")
+    OPTIONS=("${KERNELS[@]}" "Restore Default Ubuntu Kernel (OEM/Generic)" "Uninstall Old Kernels (Cleanup)" "Exit Only")    
     
     echo "--------------------------------------------------------"
     PS3="Select an option (1-${#OPTIONS[@]}): "
