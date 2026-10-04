@@ -86,55 +86,48 @@ if ! command -v mainline &> /dev/null; then
     fi
 fi
 
-# 2. Capture current running kernel
+# 2. Capture current running kernel and LOCK IT (The "Ignore Thing")
 CURRENT_KERNEL=$(uname -r)
 echo "--------------------------------------------------------"
 echo "[*] Current Running Kernel : $CURRENT_KERNEL"
+echo "[*] Locking active kernel to protect it from cleanup..."
+mainline lock "$CURRENT_KERNEL" &> /dev/null
 echo "--------------------------------------------------------"
 
-# 3. Show top 5 available mainline kernels (filtered to show only version numbers)
+# 3. Show top available kernels
 echo "[+] Top 5 Available Mainline Kernels:"
 echo "--------------------------------------------------------"
 mainline list | grep -E '^[0-9]' | head -n 5
 echo "--------------------------------------------------------"
 
-echo "[+] Checking for updates and installing the latest mainline kernel..."
-# Capture output to check if an update actually happened
-INSTALL_OUTPUT=$(mainline install-latest 2>&1)
-echo "$INSTALL_OUTPUT"
+# Capture the absolute latest version available upstream
+LATEST_AVAILABLE=$(mainline list | grep -E '^[0-9]' | head -n 1 | awk '{print $1}')
 
-# 4. Check if changes were made
-NEW_KERNEL_CHECK=$(uname -r)
+# Track if we actually install anything so we know whether to prompt for reboot
+CHANGES_MADE=false
 
-echo "--------------------------------------------------------"
-echo "[+] Kernel update check complete."
-echo "[*] Previous Kernel : $CURRENT_KERNEL"
-echo "[*] Active Kernel Now: $NEW_KERNEL_CHECK"
-echo "--------------------------------------------------------"
-
-# 5. Handle Reboot & Interactive Prompts
-if echo "$INSTALL_OUTPUT" | grep -q "No updates"; then
-    echo "[*] Your system is already running the latest mainline kernel. No reboot needed."
-    
-    read -p "Do you want to manage/change kernels manually? (y/N) " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy] ]]; then
-        interactive_kernel_menu
-        
-        read -p "Do you want to reboot now? (y/N) " -n 1 -r
-        echo
-        if [[ $REPLY =~ ^[Yy] ]]; then
-            echo "[+] Rebooting system..."
-            reboot
-        fi
-    fi
+# 4. Prompt to install the latest (Defaults to YES on Enter)
+read -p "Install the latest kernel ($LATEST_AVAILABLE)? (Y/n) " -n 1 -r
+echo
+if [[ -z \(REPLY ]] || [[\)REPLY =~ ^[Yy] ]]; then
+    echo "[+] Installing the latest mainline kernel ($LATEST_AVAILABLE)..."
+    mainline install-latest
+    CHANGES_MADE=true
 else
-    read -p "Do you want to manage/change kernels manually? (y/N) " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy] ]]; then
-        interactive_kernel_menu
-    fi
+    # User said No, launch the interactive menu
+    interactive_kernel_menu
+fi
 
+# 5. Cleanup unused kernels
+echo "[+] Cleaning up old unused mainline kernels (keeping active & locked kernels safe)..."
+mainline uninstall-old
+
+echo "--------------------------------------------------------"
+echo "[+] Kernel update & cleanup complete."
+echo "--------------------------------------------------------"
+
+# 6. Only prompt for reboot if a new kernel was actually installed
+if [ "$CHANGES_MADE" = true ]; then
     read -p "A new kernel was installed. Do you want to reboot now? (y/N) " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy] ]]; then
@@ -143,4 +136,6 @@ else
     else
         echo "[!] Remember to reboot later for the changes to take effect."
     fi
+else
+    echo "[*] No new kernel was installed. System is ready."
 fi
