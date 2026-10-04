@@ -63,7 +63,12 @@ curl -sSL https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/ke
 
 if [ $? -eq 0 ]; then
     sudo chmod +x /usr/local/bin/kernelup
-    echo "[+] Successfully installed! You can now run: sudo kernelup"
+    echo "[+] Successfully installed!"
+    echo "--------------------------------------------------------"
+    echo "[-] Please run this script with sudo: sudo kernelup"
+    echo "[-] Or run it directly from remote via:"
+    echo "    rm -f /tmp/kernelup && curl -sSL https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/kernelup -o /tmp/kernelup && sudo bash /tmp/kernelup"    
+    echo "--------------------------------------------------------"
 else
     echo "[-] Download failed. Please check your URL or repository visibility."
     exit 1
