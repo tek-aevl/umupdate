@@ -142,6 +142,7 @@ echo "[+] Kernel update & cleanup complete."
 echo "--------------------------------------------------------"
 
 # 6. Only prompt for reboot if a new kernel was actually installed
+bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/kernel-check)
 if [ "$CHANGES_MADE" = true ]; then
     read -p "A new kernel was installed. Do you want to reboot now? (y/N) " -n 1 -r
     echo
@@ -154,4 +155,3 @@ if [ "$CHANGES_MADE" = true ]; then
 else
     echo "[*] No new kernel was installed. System is ready."
 fi
-bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/kernel-check)
