@@ -9,9 +9,7 @@ if [ "$EUID" -ne 0 ]; then
     echo "--------------------------------------------------------"
     echo "[-] Please run this script with sudo: sudo kernelup"
     echo "[-] Or run it directly from remote via:"
-    echo "
-sudo rm /tmp/kernelup && curl -sSL https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/kernelup -o /tmp/kernelup && sudo bash /tmp/kernelup
-"    
+    echo "    rm -f /tmp/kernelup && curl -sSL https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/kernelup -o /tmp/kernelup && sudo bash /tmp/kernelup"    
     echo "--------------------------------------------------------"
     exit 1
 fi
@@ -27,7 +25,7 @@ interactive_kernel_menu() {
     mapfile -t KERNELS < <(mainline list | grep -E '^[0-9]' | head -n 10 | awk '{print $1}')
     
     # Add extra management options to the bottom of the list
-    OPTIONS=("${KERNELS[@]}" "Uninstall Old Kernels (Cleanup)" "Cancel / Exit Menu")
+    OPTIONS=("${KERNELS[@]}" "Cancel / Exit Menu")
     
     echo "--------------------------------------------------------"
     PS3="Select an option (1-${#OPTIONS[@]}): "
@@ -35,13 +33,10 @@ interactive_kernel_menu() {
         if [[ "$choice" == "Cancel / Exit Menu" ]]; then
             echo "[-] Exiting kernel menu."
             break
-        elif [[ "$choice" == "Uninstall Old Kernels (Cleanup)" ]]; then
-            echo "[+] Uninstalling old kernels..."
-            mainline uninstall-old
-            break
         elif [[ -n "$choice" ]]; then
             echo "[+] Installing kernel version: $choice"
             mainline install "$choice"
+            CHANGES_MADE=true
             break
         else
             echo "[-] Invalid selection. Please pick a valid number."
@@ -65,8 +60,6 @@ if [ $? -eq 0 ]; then
     echo "[+] Successfully installed! You can now run: sudo kernelup"
 else
     echo "[-] Download failed. Please check your URL or repository visibility."
-    # Optional: You could restore the backup here if the download fails
-    # sudo mv /usr/local/bin/kernelup.sh /usr/local/bin/kernelup
     exit 1
 fi
 
