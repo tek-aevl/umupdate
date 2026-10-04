@@ -98,8 +98,9 @@ CHANGES_MADE=false
 # 4. Prompt to install the latest (Defaults to YES on Enter)
 read -p "Install the latest kernel ($LATEST_AVAILABLE)? (Y/n) " -n 1 -r
 echo
+
 if [[ -z \(REPLY ]] || [[\)REPLY =~ ^[Yy] ]]; then
-    echo "[+] Installing the latest mainline kernel ($LATEST_AVAILABLE)..."
+echo "[+] Installing the latest mainline kernel ($LATEST_AVAILABLE)..."
     mainline install-latest
     CHANGES_MADE=true
 else
