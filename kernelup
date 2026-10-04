@@ -16,6 +16,41 @@ sudo rm /tmp/kernelup && curl -sSL https://raw.githubusercontent.com/tek-aevl/um
     exit 1
 fi
 
+# ==========================================
+# INTERACTIVE KERNEL MENU FUNCTION
+# ==========================================
+interactive_kernel_menu() {
+    echo "--------------------------------------------------------"
+    echo "[+] Fetching available kernels for interactive menu..."
+    
+    # Read the top 10 kernels into an array
+    mapfile -t KERNELS < <(mainline list | grep -E '^[0-9]' | head -n 10 | awk '{print $1}')
+    
+    # Add extra management options to the bottom of the list
+    OPTIONS=("${KERNELS[@]}" "Uninstall Old Kernels (Cleanup)" "Cancel / Exit Menu")
+    
+    echo "--------------------------------------------------------"
+    PS3="Select an option (1-${#OPTIONS[@]}): "
+    select choice in "${OPTIONS[@]}"; do
+        if [[ "$choice" == "Cancel / Exit Menu" ]]; then
+            echo "[-] Exiting kernel menu."
+            break
+        elif [[ "$choice" == "Uninstall Old Kernels (Cleanup)" ]]; then
+            echo "[+] Uninstalling old kernels..."
+            mainline uninstall-old
+            break
+        elif [[ -n "$choice" ]]; then
+            echo "[+] Installing kernel version: $choice"
+            mainline install "$choice"
+            break
+        else
+            echo "[-] Invalid selection. Please pick a valid number."
+        fi
+    done
+    echo "--------------------------------------------------------"
+}
+# ==========================================
+
 # Check if an older version exists, and back it up if it does
 if [ -f "/usr/local/bin/kernelup" ]; then
     echo "[*] Existing installation found. Backing up to kernelup.sh..."
@@ -77,20 +112,27 @@ echo "[*] Previous Kernel : $CURRENT_KERNEL"
 echo "[*] Active Kernel Now: $NEW_KERNEL_CHECK"
 echo "--------------------------------------------------------"
 
-# 5. Only prompt for reboot if "No updates" wasn't the result or if the active kernel session differs
+# 5. Handle Reboot & Interactive Prompts
 if echo "$INSTALL_OUTPUT" | grep -q "No updates"; then
     echo "[*] Your system is already running the latest mainline kernel. No reboot needed."
     
-    read -p "Do you want to change kernel? (y/N) " -n 1 -r
+    read -p "Do you want to manage/change kernels manually? (y/N) " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy] ]]; then
-        mainline
+        interactive_kernel_menu
+        
+        read -p "Do you want to reboot now? (y/N) " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy] ]]; then
+            echo "[+] Rebooting system..."
+            reboot
+        fi
     fi
 else
-    read -p "Do you want to change kernel? (y/N) " -n 1 -r
+    read -p "Do you want to manage/change kernels manually? (y/N) " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy] ]]; then
-        mainline
+        interactive_kernel_menu
     fi
 
     read -p "A new kernel was installed. Do you want to reboot now? (y/N) " -n 1 -r
