@@ -80,11 +80,23 @@ echo "--------------------------------------------------------"
 # 5. Only prompt for reboot if "No updates" wasn't the result or if the active kernel session differs
 if echo "$INSTALL_OUTPUT" | grep -q "No updates"; then
     echo "[*] Your system is already running the latest mainline kernel. No reboot needed."
+    
+    read -p "Do you want to change kernel? (y/N) " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy] ]]; then
+        mainline
+    fi
 else
+    read -p "Do you want to change kernel? (y/N) " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy] ]]; then
+        mainline
+    fi
+
     read -p "A new kernel was installed. Do you want to reboot now? (y/N) " -n 1 -r
     echo
-if [[ $REPLY =~ ^[Yy] ]]; then
-    echo "[+] Rebooting system..."
+    if [[ $REPLY =~ ^[Yy] ]]; then
+        echo "[+] Rebooting system..."
         reboot
     else
         echo "[!] Remember to reboot later for the changes to take effect."
