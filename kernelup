@@ -73,8 +73,8 @@ if echo "$INSTALL_OUTPUT" | grep -q "No updates"; then
 else
     read -p "A new kernel was installed. Do you want to reboot now? (y/N) " -n 1 -r
     echo
-    if [[ \(REPLY =~ ^[Yy]\) ]]; then
-        echo "[+] Rebooting system..."
+if [[ $REPLY =~ ^[Yy] ]]; then
+    echo "[+] Rebooting system..."
         reboot
     else
         echo "[!] Remember to reboot later for the changes to take effect."
