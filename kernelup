@@ -90,10 +90,19 @@ if ! command -v mainline &> /dev/null; then
     fi
 fi
 
-# 2. Capture current running kernel
+# 2. Capture current running kernel and list installed kernels
 CURRENT_KERNEL=$(uname -r)
 echo "--------------------------------------------------------"
 echo "[*] Current Running Kernel : $CURRENT_KERNEL"
+echo "--------------------------------------------------------"
+echo "[+] Installed Stock Ubuntu Kernels (OEM):"
+# This perfectly isolates official kernels by filtering out the 'unsigned' mainline ones
+dpkg -l | grep '^ii' | grep -E 'linux-image-[0-9]' | grep -v 'unsigned' | awk '{print $2}' | sed 's/linux-image-//' | sed 's/^/    /'
+echo "--------------------------------------------------------"
+echo "[+] Installed Mainline Kernels:"
+if ! mainline list-installed | grep -E '^[0-9]' | sed 's/^/    /'; then
+    echo "    (No mainline kernels installed yet)"
+fi
 echo "--------------------------------------------------------"
 
 # 3. Show top available kernels
