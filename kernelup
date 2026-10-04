@@ -16,6 +16,12 @@ sudo rm /tmp/kernelup && curl -sSL https://raw.githubusercontent.com/tek-aevl/um
     exit 1
 fi
 
+# Check if an older version exists, and back it up if it does
+if [ -f "/usr/local/bin/kernelup" ]; then
+    echo "[*] Existing installation found. Backing up to kernelup.sh..."
+    sudo mv /usr/local/bin/kernelup /usr/local/bin/kernelup.sh
+fi
+
 echo "[+] Downloading latest kernelup from GitHub..."
 curl -sSL https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/kernelup -o /usr/local/bin/kernelup
 
@@ -24,6 +30,8 @@ if [ $? -eq 0 ]; then
     echo "[+] Successfully installed! You can now run: sudo kernelup"
 else
     echo "[-] Download failed. Please check your URL or repository visibility."
+    # Optional: You could restore the backup here if the download fails
+    # sudo mv /usr/local/bin/kernelup.sh /usr/local/bin/kernelup
     exit 1
 fi
 
@@ -32,7 +40,7 @@ if ! command -v mainline &> /dev/null; then
     echo "[!] The 'mainline' utility is not installed."
     read -p "Would you like to install it now? (y/N) " -n 1 -r
     echo
-    if [[ \(REPLY =~ ^[Yy]\) ]]; then
+    if [[ $REPLY =~ ^[Yy] ]]; then
         echo "[+] Adding PPA and installing mainline..."
         add-apt-repository ppa:cappelikan/ppa -y
         apt update
