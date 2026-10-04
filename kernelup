@@ -79,12 +79,10 @@ if ! command -v mainline &> /dev/null; then
     fi
 fi
 
-# 2. Capture current running kernel and LOCK IT (The "Ignore Thing")
+# 2. Capture current running kernel
 CURRENT_KERNEL=$(uname -r)
 echo "--------------------------------------------------------"
 echo "[*] Current Running Kernel : $CURRENT_KERNEL"
-echo "[*] Locking active kernel to protect it from cleanup..."
-mainline lock "$CURRENT_KERNEL" &> /dev/null
 echo "--------------------------------------------------------"
 
 # 3. Show top available kernels
@@ -92,10 +90,8 @@ echo "[+] Top 5 Available Mainline Kernels:"
 echo "--------------------------------------------------------"
 mainline list | grep -E '^[0-9]' | head -n 5
 echo "--------------------------------------------------------"
-
 # Capture the absolute latest version available upstream
 LATEST_AVAILABLE=$(mainline list | grep -E '^[0-9]' | head -n 1 | awk '{print $1}')
-
 # Track if we actually install anything so we know whether to prompt for reboot
 CHANGES_MADE=false
 
@@ -103,7 +99,7 @@ CHANGES_MADE=false
 read -p "Install the latest kernel ($LATEST_AVAILABLE)? (Y/n) " -n 1 -r
 echo
 if [[ -z \(REPLY ]] || [[\)REPLY =~ ^[Yy] ]]; then
-echo "[+] Installing the latest mainline kernel ($LATEST_AVAILABLE)..."
+    echo "[+] Installing the latest mainline kernel ($LATEST_AVAILABLE)..."
     mainline install-latest
     CHANGES_MADE=true
 else
@@ -112,9 +108,8 @@ else
 fi
 
 # 5. Cleanup unused kernels
-echo "[+] Cleaning up old unused mainline kernels (keeping active & locked kernels safe)..."
+echo "[+] Cleaning up old unused mainline kernels (keeping active kernel safe)..."
 mainline uninstall-old
-
 echo "--------------------------------------------------------"
 echo "[+] Kernel update & cleanup complete."
 echo "--------------------------------------------------------"
