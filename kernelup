@@ -144,14 +144,14 @@ echo "--------------------------------------------------------"
 # 6. Only prompt for reboot if a new kernel was actually installed
 bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/kernel-check)
 if [ "$CHANGES_MADE" = true ]; then
-    read -p "A new kernel was installed. Do you want to reboot now? (y/N) " -n 1 -r
+    read -p "If a new kernel was installed. Do you want to reboot now? (y/N) " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy] ]]; then
         echo "[+] Rebooting system..."
         reboot
     else
-        echo "[!] Remember to reboot later for the changes to take effect."
+        echo "[!] Remember to reboot later for the changes to take effect. If changes were made"
     fi
 else
-    echo "[*] No new kernel was installed. System is ready."
+    echo "[*] System is ready."
 fi
