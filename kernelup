@@ -100,8 +100,8 @@ echo "[+] Installed Stock Ubuntu Kernels (OEM):"
 dpkg-query -W -f='${Package}\n' | grep -E '^linux-image-[0-9]' | grep -v 'unsigned' | sed 's/linux-image-//' | sed 's/^/    /'
 echo "--------------------------------------------------------"
 echo "[+] Installed Mainline Kernels:"
-# Store the output first so the 'sed' pipe doesn't mask the exit code of grep
-MAINLINE_INSTALLED=$(mainline list-installed | grep -E '^[0-9]')
+# Use dpkg directly to perfectly capture installed unsigned (mainline) kernels
+MAINLINE_INSTALLED=\((dpkg-query -W -f='\){Package}\n' 2>/dev/null | grep -E '^linux-image-unsigned-[0-9]' | sed 's/linux-image-unsigned-//')
 if [ -n "$MAINLINE_INSTALLED" ]; then
     echo "$MAINLINE_INSTALLED" | sed 's/^/    /'
 else
