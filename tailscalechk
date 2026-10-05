@@ -44,4 +44,4 @@ if [[ "$installed_version" = "$running_version" ]]; then
  fi
 sudo tailscale status
 echo "tailscalechk complete ;-p"
-sleep 3
+exit;
