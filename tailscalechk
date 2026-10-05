@@ -8,8 +8,8 @@ echo 'bye';
 "
 echo "#To use run"
 echo "bash tailscalechk"
-sleep 2
 echo "This was made for ArchLinux"
+sleep 2
 
 # Function to check if a command executed successfully
 check_command() {
