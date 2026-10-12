@@ -116,7 +116,7 @@ display_profile_art() {
         echo "jp2a is not installed. To see the ASCII art, run: sudo apt install jp2a"
     fi
 }
-display_profile_art
+display_profile_art | lolcat
 
 ##image##^#
 # Display a welcome message
@@ -187,17 +187,22 @@ fi
 echo
 echo
 echo "Running Custom Commands With customup"
-# If the file does NOT exist, ask to create it
+# If the file does NOT exist, ask to create it with a timeout
 if [ ! -f /bin/customup ]; then
-    read -r -p "/bin/customup not found. Create it now with nano? (y/N): " create_resp
-    if [[ "$create_resp" == "Y" || "$create_resp" == "y" ]]; then
-        sudo nano /bin/customup
-        # Ensure it is executable if it was successfully saved
-        if [ -f /bin/customup ]; then
-            sudo chmod +x /bin/customup
+    # -t 10 waits exactly 10 seconds for user input
+    if read -t 10 -r -p "/bin/customup not found. Create it now with nano? (y/N) [Skips in 10s]: " create_resp; then
+        if [[ "$create_resp" == "Y" || "$create_resp" == "y" ]]; then
+            sudo nano /bin/customup
+            # Ensure it is executable if it was successfully saved
+            if [ -f /bin/customup ]; then
+                sudo chmod +x /bin/customup
+            fi
+        else
+            echo "Skipping customup."
         fi
     else
-        echo "Skipping customup."
+        # This triggers if the 10-second timer runs out
+        echo -e "\nTimeout reached. Skipping customup."
     fi
 fi
 # Run customup if it exists (either previously existed, or just created)
