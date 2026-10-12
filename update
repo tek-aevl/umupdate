@@ -98,7 +98,6 @@ run_fetch() {
 
 
 
-# Define this function at the top of your script
 display_profile_art() {
     # Get the IP address of the host
     HOST_IP=$(hostname -I | awk '{print $1}')
@@ -130,10 +129,8 @@ run_fetch
 inxi  
 echo -e "${NC}"
 
-
-# Display information about users currently logged in
+# Display information
 echo "~${HOST_IP} who -a"
-who -a
 echo -e "${YELLOW} Can you ${RED} sudo${NC}?"
 echo -e "${RED} Password $USER@$HOSTNAME ($HOST_IP) "
 # Check if sudo password is needed
@@ -142,7 +139,7 @@ if sudo -v; then
 else
   echo -e "${YELLOW}sudo password is required (or sudo not configured).${NC}"
 fi
-
+sudo who -a
 echo -e " ;-P ${NC} "
 echo -e " ;-P ${NC} "
 
@@ -167,9 +164,6 @@ time_difference=$((current_timestamp - uptime_timestamp))
 uptime_seconds=$(cut -d' ' -f1 /proc/uptime)
 uptime_seconds=$(printf "%.0f" "$uptime_seconds")
 
-#days=$(uptime_seconds / 86400)
-#hours=$(uptime_seconds % 86400 / 3600)
-#minutes=$(uptime_seconds % 3600 / 60)
 days=$(echo "$uptime_seconds / 86400" | bc)
 hours=$(echo "$uptime_seconds % 86400 / 3600" | bc)
 minutes=$(echo "$uptime_seconds % 3600 / 60" | bc)
@@ -180,25 +174,42 @@ echo "Updating Kernel With kernelup"
 if [ -f /bin/kernelup ]; then
     echo -e "${GREEN}Running kernelup...${NC}"
     bash /bin/kernelup
-fi
 echo "End of kernel up"
+fi
 echo
 
 echo "Running prune"
 if [ -f /bin/prune ]; then
     echo -e "${GREEN}Running prune...${NC}"
     bash /bin/prune
-fi
 echo "End of prune"
+fi
 echo
 
 echo "Running Custom Commands With customup"
 if [ -f /bin/customup ]; then
     echo -e "${GREEN}Running customup...${NC}"
     bash /bin/customup
+echo "End of customup"
+fi
+echo
+
+echo "Checking for and Running bash ccleaner"
+# If the file does NOT exist, download it
+if [ ! -f /bin/ccleaner ]; then
+    echo -e "${YELLOW}ccleaner not found. Installing from GitHub...${NC}"
+    sudo curl -fsSL "https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/cclearer" -o /bin/ccleaner
+    sudo chmod +x /bin/ccleaner
+echo
 fi
 
-echo "End of kernel up"
+if [ -f /bin/ccleaner ]; then
+    echo -e "${GREEN}Running ccleaner...${NC}"
+    bash /bin/ccleaner
+    echo "End of ccleaner"
+else
+    echo -e "${RED}Failed to install or locate ccleaner.${NC}"
+fi
 echo
 
 # Define the package manager update/upgrade commands
