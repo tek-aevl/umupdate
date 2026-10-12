@@ -98,20 +98,26 @@ run_fetch() {
 
 
 
-# Get the IP address of the host
-HOST_IP=$(hostname -I | awk '{print $1}')
-##image#\/#
-if command -v jp2a >/dev/null 2>&1; then
-    # 1. Download it silently to a temporary folder
-    curl -sL "https://tek.aevl.us/profile.jpg" -o /tmp/profile_ascii.jpg
+# Define this function at the top of your script
+display_profile_art() {
+    # Get the IP address of the host
+    HOST_IP=$(hostname -I | awk '{print $1}')
     
-    # 2. Draw it to the terminal
-    jp2a --colors /tmp/profile_ascii.jpg
-    # 3. Clean up the temp file
-    rm /tmp/profile_ascii.jpg
-else
-    echo "jp2a is not installed. To see the ASCII art, run: sudo apt install jp2a"
-fi
+    ##image#\/#
+    if command -v jp2a >/dev/null 2>&1; then
+        # 1. Download it silently to a temporary folder
+        curl -sL "https://tek.aevl.us/profile.jpg" -o /tmp/profile_ascii.jpg
+        
+        # 2. Draw it to the terminal
+        jp2a --colors /tmp/profile_ascii.jpg
+        
+        # 3. Clean up the temp file
+        rm -f /tmp/profile_ascii.jpg
+    else
+        echo "jp2a is not installed. To see the ASCII art, run: sudo apt install jp2a"
+    fi
+}
+display_profile_art
 
 ##image##^#
 # Display a welcome message
@@ -456,25 +462,13 @@ sleep 10
     fi
    fi
 echo $USER "@" $HOSTNAME
+##image#\/#
+display_profile_art
+##image##^#
 who -a
 run_fetch
 inxi
 uname -a
 echo -e "Current Running kernel ($CKRUNNING) ; Current Installed kernel ($CKNEWEST)."
 echo -e "${GREEN} Byah.!. $USER@$HOSTNAME ($HOST_IP) ${NC}"
-##image#\/#
-if command -v jp2a >/dev/null 2>&1; then
-    # 1. Download it silently to a temporary folder
-    curl -sL "https://tek.aevl.us/profile.jpg" -o /tmp/profile_ascii.jpg
-    
-    # 2. Draw it to the terminal
-    jp2a --colors /tmp/profile_ascii.jpg
-    
-    # 3. Clean up the temp file
-    rm /tmp/profile_ascii.jpg
-else
-    echo "jp2a is not installed. To see the ASCII art, run: sudo apt install jp2a"
-fi
-
-##image##^#
 exit;
