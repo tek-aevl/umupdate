@@ -82,4 +82,5 @@ else
     sleep 2
     exit 1
 fi
+bash start
         sleep 3
