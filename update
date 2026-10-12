@@ -160,40 +160,54 @@ uptime_timestamp=$(date -d "$uptime" +%s)
 time_difference=$((current_timestamp - uptime_timestamp))
 
 # Convert time difference to days, hours, and minutes
- 
 uptime_seconds=$(cut -d' ' -f1 /proc/uptime)
 uptime_seconds=$(printf "%.0f" "$uptime_seconds")
-
 days=$(echo "$uptime_seconds / 86400" | bc)
 hours=$(echo "$uptime_seconds % 86400 / 3600" | bc)
 minutes=$(echo "$uptime_seconds % 3600 / 60" | bc)
-
 echo -e "${RED} Current Time variables : $days days, $hours hours, $minutes minutes ${NC}"
+
 echo
 echo "Updating Kernel With kernelup"
 if [ -f /bin/kernelup ]; then
     echo -e "${GREEN}Running kernelup...${NC}"
     bash /bin/kernelup
 echo "End of kernel up"
+echo
 fi
 echo
-
+echo
 echo "Running prune"
 if [ -f /bin/prune ]; then
     echo -e "${GREEN}Running prune...${NC}"
     bash /bin/prune
 echo "End of prune"
+echo
 fi
 echo
-
+echo
 echo "Running Custom Commands With customup"
+# If the file does NOT exist, ask to create it
+if [ ! -f /bin/customup ]; then
+    read -r -p "/bin/customup not found. Create it now with nano? (y/N): " create_resp
+    if [[ "$create_resp" == "Y" || "$create_resp" == "y" ]]; then
+        sudo nano /bin/customup
+        # Ensure it is executable if it was successfully saved
+        if [ -f /bin/customup ]; then
+            sudo chmod +x /bin/customup
+        fi
+    else
+        echo "Skipping customup."
+    fi
+fi
+# Run customup if it exists (either previously existed, or just created)
 if [ -f /bin/customup ]; then
     echo -e "${GREEN}Running customup...${NC}"
     bash /bin/customup
-echo "End of customup"
+    echo "End of customup"
 fi
 echo
-
+echo
 echo "Checking for and Running bash cclearer"
 # If the file does NOT exist, download it
 if [ ! -f /bin/cclearer ]; then
