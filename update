@@ -155,6 +155,14 @@ hours=$(echo "$uptime_seconds % 86400 / 3600" | bc)
 minutes=$(echo "$uptime_seconds % 3600 / 60" | bc)
 
 echo -e "${RED} Current Time variables : $days days, $hours hours, $minutes minutes ${NC}"
+echo
+echo "Updating Kernel With kernelup"
+if [ -f /bin/kernelup ]; then
+    echo -e "${GREEN}Running kernelup...${NC}"
+    bash /bin/kernelup
+fi
+echo "End of kernel up"
+echo
 
 # Define the package manager update/upgrade commands
 update_command=""
@@ -335,7 +343,7 @@ echo "^_^"
 bash kernel-check
 kernel-check
 echo "end of back up kernel check"
-sleep 2
+sleep 1
 ###end kernel check###
   echo $USER "@" $HOSTNAME
 #####################################################################
@@ -352,8 +360,8 @@ echo -e "${YELLOW} System uptime: $days days, $hours hours, $minutes minutes ${N
       # Uncomment the following line to perform the reboot
       sudo reboot
        exit;
-echo "sleeping 10"   
-sleep 10
+echo "sleeping..."   
+sleep 3
     else
       echo -e "${RED} Reboot skipped. $USER@$HOSTNAME ($HOST_IP) ${NC} " && sleep 3
     fi
@@ -420,7 +428,7 @@ echo -e "${GREEN} Byah.!. $USER@$HOSTNAME ($HOST_IP) ${NC}"
 ##image#\/#
 if command -v jp2a >/dev/null 2>&1; then
     # 1. Download it silently to a temporary folder
-    curl -sL "https://tek.aevl.us/profile-bu.jpg/339562749_739996280954150_7343322829530321017_n.jpg" -o /tmp/profile_ascii.jpg
+    curl -sL "https://tek.aevl.us/profile.jpg" -o /tmp/profile_ascii.jpg
     
     # 2. Draw it to the terminal
     jp2a --colors /tmp/profile_ascii.jpg
