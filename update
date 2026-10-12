@@ -192,6 +192,15 @@ fi
 echo "End of prune"
 echo
 
+echo "Running Custom Commands With customup"
+if [ -f /bin/customup ]; then
+    echo -e "${GREEN}Running customup...${NC}"
+    bash /bin/customup
+fi
+
+echo "End of kernel up"
+echo
+
 # Define the package manager update/upgrade commands
 update_command=""
 upgrade_command=""
