@@ -194,21 +194,21 @@ echo "End of customup"
 fi
 echo
 
-echo "Checking for and Running bash ccleaner"
+echo "Checking for and Running bash cclearer"
 # If the file does NOT exist, download it
-if [ ! -f /bin/ccleaner ]; then
-    echo -e "${YELLOW}ccleaner not found. Installing from GitHub...${NC}"
-    sudo curl -fsSL "https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/cclearer" -o /bin/ccleaner
-    sudo chmod +x /bin/ccleaner
+if [ ! -f /bin/cclearer ]; then
+    echo -e "${YELLOW}cclearer not found. Installing from GitHub...${NC}"
+    sudo curl -fsSL "https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/cclearer" -o /bin/cclearer
+    sudo chmod +x /bin/cclearer
 echo
 fi
 
-if [ -f /bin/ccleaner ]; then
-    echo -e "${GREEN}Running ccleaner...${NC}"
-    bash /bin/ccleaner
-    echo "End of ccleaner"
+if [ -f /bin/cclearer ]; then
+    echo -e "${GREEN}Running cclearer...${NC}"
+    bash /bin/cclearer
+    echo "End of cclearer"
 else
-    echo -e "${RED}Failed to install or locate ccleaner.${NC}"
+    echo -e "${RED}Failed to install or locate cclearer.${NC}"
 fi
 echo
 
