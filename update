@@ -439,17 +439,31 @@ echo "$USER@$HOSTNAME $HOST_IP"
 read -r -p "Run Speedtest? (y/N): " response
 if [[ "$response" == "Y" || "$response" == "y" ]]; then
     echo "$USER@$HOSTNAME speedtest"
-    # Try with --secure first and capture output/exit status
-    output=$(speedtest --secure 2>&1)
-    # If it failed due to an unknown option or error, fallback to running without --secure
-    if [[ "$output" == *"Unknown option"* ]] || [[ $? -ne 0 ]]; then
-        output=$(speedtest 2>&1)
+    
+    # Check if speedtest exists, if not, execute the URL as a bash script
+    if ! command -v speedtest &> /dev/null && [ ! -f /bin/speedtest ]; then
+        bash <(curl -fsSL "https://github.com/tek-aevl/umupdate/raw/refs/heads/main/speedtest")
     fi
-    if command -v lolcat &> /dev/null; then
-        echo "$output" | lolcat
+
+    # Verify it exists before trying to run the command
+    if command -v speedtest &> /dev/null || [ -f /bin/speedtest ]; then
+        # Try with --secure first and capture output/exit status
+        output=$(speedtest --secure 2>&1)
+        
+        # If it failed due to an unknown option or error, fallback to running without --secure
+        if [[ "$output" == *"Unknown option"* ]] || [[ $? -ne 0 ]]; then
+            output=$(speedtest 2>&1)
+        fi
+        
+        if command -v lolcat &> /dev/null; then
+            echo "$output" | lolcat
+        else
+            echo "$output"
+        fi
     else
-        echo "$output"
+        echo "Speedtest command still not found after running the script."
     fi
+
 elif [[ -z "$response" || "$response" == "N" || "$response" == "n" ]]; then
     echo "Not running speedtest : System uptime: $(uptime)"
 else
