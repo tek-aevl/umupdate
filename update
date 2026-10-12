@@ -497,7 +497,7 @@ sleep 10
    fi
 echo $USER "@" $HOSTNAME
 ##image#\/#
-display_profile_art
+display_profile_art | lolcat
 ##image##^#
 who -a
 run_fetch
