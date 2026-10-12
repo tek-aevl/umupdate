@@ -164,6 +164,14 @@ fi
 echo "End of kernel up"
 echo
 
+echo "Running prune"
+if [ -f /bin/prune ]; then
+    echo -e "${GREEN}Running prune...${NC}"
+    bash /bin/prune
+fi
+echo "End of prune"
+echo
+
 # Define the package manager update/upgrade commands
 update_command=""
 upgrade_command=""
