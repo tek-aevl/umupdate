@@ -489,13 +489,6 @@ else
     echo "Invalid input."
 fi
 
-set -e
-echo "[*] Syncing disks (flush dirty pages to disk)..."
-sync
-echo "[*] Dropping page cache + dentries + inodes"
-sudo sh -c "echo 3 > /proc/sys/vm/drop_caches"
-echo "[+] Done."
-
 echo $USER "@" $HOSTNAME "($HOST_IP)"
     # Default to "no" if running for less than three days
     read -p "Reboot Anyway? (y/N): " choice
@@ -515,13 +508,13 @@ sleep 10
     fi
    fi
 echo $USER "@" $HOSTNAME
-##image#\/#
-display_profile_art | lolcat
-##image##^#
-who -a
+sudo who -a
 run_fetch
 inxi
 uname -a
 echo -e "Current Running kernel ($CKRUNNING) ; Current Installed kernel ($CKNEWEST)."
 echo -e "${GREEN} Byah.!. $USER@$HOSTNAME ($HOST_IP) ${NC}"
+##image#\/#
+display_profile_art | lolcat
+##image##^#
 exit;
