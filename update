@@ -1,5 +1,5 @@
 #!/bin/bash
-version="1.619.1"
+version="1.629.1"
 echo "Hello $USER! #v"$version"#"
 echo "Info at https://github.com/tek-aevl/umupdate/ #To use run # bash update or bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update)"
 if [ -f "/bin/update" ]; then
@@ -343,23 +343,35 @@ else
     echo -e "${YELLOW}Invalid input.${NC}"
 fi
 fi
-###end of pihole tasks###
-###########################################################################################
-###########################################################################################
+echo
+echo "End of Pi-Hole Tasks"
+echo
+###End of pihole tasks###
 
-echo "kernel-check"
-##needed##
-bash <(curl -s "https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/kernel-check")
+echo "###########################################################################################"
+echo "###############################   Running Kernel-Check   ##################################"
+echo "###########################################################################################"
+
+if command -v kernel-check &> /dev/null; then
+    # Runs if installed in your PATH
+    kernel-check 2>/dev/null
+elif [[ -f "kernel-check" ]]; then
+    # Runs if the file is in the current working directory
+    bash kernel-check 2>/dev/null
+else
+    # Fallback to the remote GitHub script if locals are missing
+    bash <(curl -fsSL "https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/kernel-check") 2>/dev/null
+fi
+
 echo "^_^"
-bash kernel-check
-kernel-check
 echo "end of back up kernel check"
 sleep 1
 ###end kernel check###
-  echo $USER "@" $HOSTNAME
-#####################################################################
-########################################### uptime
-####################################################################
+echo "$USER @ $HOSTNAME"
+
+echo "############################################################################################"
+echo "######################################### uptime ###########################################"
+echo "############################################################################################"
 
 if [[ $uptime_seconds -ge $((3 * 24 * 3600)) ]]; then
 
