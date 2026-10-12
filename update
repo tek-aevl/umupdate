@@ -84,6 +84,20 @@ echo -e "This ${RED}text${NC} is ${RED}red.${NC}"
 echo -e "This ${YELLOW}text${NC} is ${YELLOW}yellow.${NC}"
 echo -e "This ${GREEN}text${NC} is ${GREEN}green.${NC}"
 
+
+# Function to put at the top of your script
+run_fetch() {
+    if command -v fastfetch &> /dev/null; then
+        fastfetch
+    elif command -v screenfetch &> /dev/null; then
+        screenfetch
+    else
+        echo -e "${YELLOW}Neither fastfetch nor screenfetch is installed.${NC}"
+    fi
+}
+
+
+
 # Get the IP address of the host
 HOST_IP=$(hostname -I | awk '{print $1}')
 ##image#\/#
@@ -106,7 +120,7 @@ echo -e "${GREEN}Welcome $USER@$HOSTNAME ($HOST_IP)"
 # Display system information
 echo ":~${HOST_IP} uname -a"
 uname -a
-screenfetch
+run_fetch
 inxi  
 echo -e "${NC}"
 
@@ -443,7 +457,7 @@ sleep 10
    fi
 echo $USER "@" $HOSTNAME
 who -a
-screenfetch
+run_fetch
 inxi
 uname -a
 echo -e "Current Running kernel ($CKRUNNING) ; Current Installed kernel ($CKNEWEST)."
