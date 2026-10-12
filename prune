@@ -83,4 +83,4 @@ else
     exit 1
 fi
 bash start
-        sleep 3
+sleep 3
