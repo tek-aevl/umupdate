@@ -60,14 +60,14 @@ interactive_kernel_menu() {
 # Check if an older version exists, and back it up if it does
 if [ -f "/usr/local/bin/kernelup" ]; then
     echo "[*] Existing installation found. Backing up to kernelup.sh..."
-    sudo mv /usr/local/bin/kernelup /usr/local/bin/kernelup.sh
+    sudo mv /bin/kernelup /bin/kernelup.sh
 fi
 
 echo "[+] Downloading latest kernelup from GitHub..."
 curl -sSL https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/kernelup -o /bin/kernelup
 
 if [ $? -eq 0 ]; then
-    sudo chmod +x /usr/local/bin/kernelup
+    sudo chmod +x /bin/kernelup
     echo "[+] Successfully installed!"
     echo "--------------------------------------------------------"
     echo "[-] Please run this script with sudo: sudo kernelup"
