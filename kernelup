@@ -9,7 +9,7 @@ if [ "$EUID" -ne 0 ]; then
     echo "--------------------------------------------------------"
     echo "[-] Please run this script with sudo: sudo kernelup"
     echo "[-] Or run it directly from remote via:"
-    echo "    rm -f /tmp/kernelup && curl -sSL https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/kernelup -o /tmp/kernelup && sudo bash /tmp/kernelup"    
+    echo "rm -f /tmp/kernelup && curl -sSL https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/kernelup -o /tmp/kernelup && sudo bash /tmp/kernelup && sudo cp /tmp/kernelup /bin/kernelup"
     echo "--------------------------------------------------------"
     exit 1
 fi
