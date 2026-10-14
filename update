@@ -96,13 +96,10 @@ run_fetch() {
     fi
 }
 
+# Get the IP address of the host
+HOST_IP=$(hostname -I | awk '{print $1}')
 
-
-display_profile_art() {
-    # Get the IP address of the host
-    HOST_IP=$(hostname -I | awk '{print $1}')
-    
-    ##image#\/#
+display_profile_art() {  
     if command -v jp2a >/dev/null 2>&1; then
         # 1. Download it silently to a temporary folder
         curl -sL "https://tek.aevl.us/profile.jpg" -o /tmp/profile_ascii.jpg
@@ -116,9 +113,10 @@ display_profile_art() {
         echo "jp2a is not installed. To see the ASCII art, run: sudo apt install jp2a"
     fi
 }
+##image#\/#
 display_profile_art | lolcat
-
 ##image##^#
+
 # Display a welcome message
 echo -e "${GREEN}Welcome $USER@$HOSTNAME ($HOST_IP)"
 
@@ -453,18 +451,19 @@ echo -e "${GREEN} So good news! ${NC} $USER@$HOSTNAME ($HOST_IP)"
 echo -e " The system has ${GREEN}not${NC} been running for longer than ${YELLOW}three${NC} days. ${YELLOW}No reboot required. ${NC}"
 echo -e "${GREEN} System uptime: $days days, $hours hours, $minutes minutes ${NC}"
 echo "uptime $USER@$HOSTNAME ($HOST_IP)"
+##image#\/#
+display_profile_art | lolcat
+##image##^#
 uptime
 echo "$USER@$HOSTNAME $HOST_IP"
 read -r -p "Run Speedtest? (y/N): " response
 if [[ "$response" == "Y" || "$response" == "y" ]]; then
     echo "$USER@$HOSTNAME speedtest"
-    
     # Check if speedtest exists, if not, execute the URL as a bash script
     if ! command -v speedtest &> /dev/null && [ ! -f /bin/speedtest ]; then
         bash <(curl -fsSL '"https://github.com/tek-aevl/umupdate/raw/refs/heads/main/speedtest.sh" -o /tmp/speedtest.sh')
         bash /tmp/speedtest.sh
     fi
-
     # Verify it exists before trying to run the command
     if command -v speedtest &> /dev/null || [ -f /bin/speedtest ]; then
         # Try with --secure first and capture output/exit status
@@ -474,8 +473,7 @@ if [[ "$response" == "Y" || "$response" == "y" ]]; then
         if [[ "$output" == *"Unknown option"* ]] || [[ $? -ne 0 ]]; then
             output=$(speedtest 2>&1)
         fi
-        
-        if command -v lolcat &> /dev/null; then
+       if command -v lolcat &> /dev/null; then
             echo "$output" | lolcat
         else
             echo "$output"
@@ -483,7 +481,6 @@ if [[ "$response" == "Y" || "$response" == "y" ]]; then
     else
         echo "Speedtest command still not found after running the script."
     fi
-
 elif [[ -z "$response" || "$response" == "N" || "$response" == "n" ]]; then
     echo "Not running speedtest : System uptime: $(uptime)"
 else
@@ -515,7 +512,4 @@ inxi
 uname -a
 echo -e "Current Running kernel ($CKRUNNING) ; Current Installed kernel ($CKNEWEST)."
 echo -e "${GREEN} Byah.!. $USER@$HOSTNAME ($HOST_IP) ${NC}"
-##image#\/#
-display_profile_art | lolcat
-##image##^#
 exit;
