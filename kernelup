@@ -64,7 +64,7 @@ if [ -f "/usr/local/bin/kernelup" ]; then
 fi
 
 echo "[+] Downloading latest kernelup from GitHub..."
-curl -sSL https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/kernelup -o /usr/local/bin/kernelup
+curl -sSL https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/kernelup -o /bin/kernelup
 
 if [ $? -eq 0 ]; then
     sudo chmod +x /usr/local/bin/kernelup
@@ -72,7 +72,7 @@ if [ $? -eq 0 ]; then
     echo "--------------------------------------------------------"
     echo "[-] Please run this script with sudo: sudo kernelup"
     echo "[-] Or run it directly from remote via:"
-    echo "    rm -f /tmp/kernelup && curl -sSL https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/kernelup -o /tmp/kernelup && sudo bash /tmp/kernelup"    
+    echo "rm -f /tmp/kernelup && curl -sSL https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/kernelup -o /tmp/kernelup && sudo bash /tmp/kernelup && sudo cp /tmp/kernelup /bin/kernelup"    
     echo "--------------------------------------------------------"
 else
     echo "[-] Download failed. Please check your URL or repository visibility."
