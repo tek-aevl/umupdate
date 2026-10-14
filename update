@@ -461,7 +461,8 @@ if [[ "$response" == "Y" || "$response" == "y" ]]; then
     
     # Check if speedtest exists, if not, execute the URL as a bash script
     if ! command -v speedtest &> /dev/null && [ ! -f /bin/speedtest ]; then
-        bash <(curl -fsSL "https://github.com/tek-aevl/umupdate/raw/refs/heads/main/speedtest")
+        bash <(curl -fsSL '"https://github.com/tek-aevl/umupdate/raw/refs/heads/main/speedtest.sh" -o /tmp/speedtest.sh')
+      sudo bash /tmp/speedtest.sh
     fi
 
     # Verify it exists before trying to run the command
