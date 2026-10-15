@@ -42,7 +42,26 @@ if [ -f "/bin/update" ]; then
         fi
     fi
 else
-    # ... rest of the installation block
+echo "The file /bin/update does not exist."
+    read -p "Do you want to install it? (Y/n): " choice
+    choice="${choice:-y}" # Default to yes
+    
+    if [[ "$choice" =~ ^[Yy]$ ]]; then
+        echo "Fetching the script from GitHub..."
+        # Download the whole file directly to /bin/update
+        sudo curl -sL -o /bin/update "$UPDATE_URL"
+        sudo chmod +x /bin/update
+        
+        if [ -f "/bin/update" ]; then
+            echo "✅ Installed /bin/update successfully."
+        else
+            echo "❌ Failed to install /bin/update."
+        fi
+        sleep 2
+    else
+        echo "Installation cancelled."
+    fi
+fi
 
 # ==========================================
 # 2. GLOBAL VARIABLES & COLORS
