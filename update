@@ -201,7 +201,7 @@ run_custom_scripts() {
 
 echo -e "\nRunning bash cclearer remotely..."
     echo -e "${GREEN}Running cclearer...${NC}"
-    sudo bash <(curl -fsSL "https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/cclearer")
+    bash <(curl -fsSL "https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/cclearer")
     echo "End of cclearer"
     echo
 }
