@@ -7,54 +7,54 @@ reset && clear
 echo "Hello $USER! #v$version#"
 echo "Info at https://github.com/tek-aevl/umupdate/ #To use run # bash update or bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/update.v2/update)"
 
+UPDATE_URL="https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/update.v2/update"
+
 if [ -f "/bin/update" ]; then
     installed_version=$(grep -oP '(?<=#)\S+(?=#)' /bin/update | head -n 1)
     echo "Installed Version is $installed_version"
+    
     if [ "$installed_version" == "$version" ]; then
         echo "Version matches!"
     else
         echo "Version mismatch! Installed version: $installed_version"
-        echo "The file /bin/update already exists."
-        read -p "Do you update to a new version? (Y/n): " choice 
-        choice="${choice:-y}"
-        if [[ "$choice" == "y" || "$choice" == "Y" ]]; then
-            echo "Removing old"
+        read -p "Do you want to update to the new version? (Y/n): " choice 
+        choice="${choice:-y}" # Default to yes
+        
+        if [[ "$choice" =~ ^[Yy]$ ]]; then
+            echo "Backing up old version..."
             sudo mkdir -p /bin/update.old
             sudo mv /bin/update "/bin/update.old/$(date '+%Y%m%d%H%M%S').update"
-            echo "$USER@$HOSTNAME"
-            echo "Fetching the new bash script"
-            curl -sO "bash <(curl -sL https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/update.v2/update)" && chmod +x update && ./update
+            
+            echo "Fetching the new script from GitHub..."
+            # Download the whole file directly to /bin/update
+            sudo curl -sL -o /bin/update "$UPDATE_URL"
+            sudo chmod +x /bin/update
+            
+            echo "Update complete. Executing new version..."
             echo "Bye! $USER@$HOSTNAME"
+            /bin/update
             exit 0
         else
-            echo "Cancelled."
+            echo "Update cancelled."
         fi
     fi
 else
     echo "The file /bin/update does not exist."
-    read -p "Do you want to install it? (y/n): " -e choice
-    if [[ "$choice" == "y" || "$choice" == "Y" ]]; then
-        #/ START SECTION/
-        echo -e '#!/bin/bash\n echo "#'$version'#"\n echo "Hello! $USER@$HOSTNAME "\n echo "Assistance at https://github.com/tek-aevl/umupdate/" #To use run\n echo "bash update"\n bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/update.v2/update)\n echo $USER "bye! XD "' | sudo tee /bin/update > /dev/null
-        #/ END SECTION/
-        
-        echo "Verifying contents of /bin/update..."
-        curl -s -o /tmp/github_update "https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/update.v2/update"
-        sed -n '/# START SECTION/,/# END SECTION/p' /bin/update > /tmp/local_section
-        sed -n '/# START SECTION/,/# END SECTION/p' /tmp/github_update > /tmp/github_section
-        
-        cat /bin/update
-        if diff -q /tmp/local_section /tmp/github_section > /dev/null; then
-            echo "✅ The section in /bin/update matches the latest version from GitHub."
-        else
-            echo "❌ Warning: The section in /bin/update does not match the latest version from GitHub!"
-            diff -u /tmp/local_section /tmp/github_section
-        fi
-
-        sudo chmod 644 /bin/update
+    read -p "Do you want to install it? (Y/n): " choice
+    choice="${choice:-y}" # Default to yes
+    
+    if [[ "$choice" =~ ^[Yy]$ ]]; then
+        echo "Fetching the script from GitHub..."
+        # Download the whole file directly to /bin/update
+        sudo curl -sL -o /bin/update "$UPDATE_URL"
         sudo chmod +x /bin/update
-        echo "Installed /bin/update successfully."
-        sleep 3
+        
+        if [ -f "/bin/update" ]; then
+            echo "✅ Installed /bin/update successfully."
+        else
+            echo "❌ Failed to install /bin/update."
+        fi
+        sleep 2
     else
         echo "Installation cancelled."
     fi
