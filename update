@@ -499,11 +499,10 @@ close_out_script() {
     echo "End of cclearer"
     echo
     user_info
-    sudo who -a
     run_fetch
     if command -v inxi &> /dev/null; then inxi; fi
     uname -a
-    
+    users
     # Grab the current kernel values cleanly 
     CKRUNNING=$(uname -r)
     # Finding the newest installed kernel safely across OSs can be complex, fallback to listing string format requested
