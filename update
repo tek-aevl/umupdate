@@ -77,9 +77,9 @@ if [ -f "/bin/update" ]; then
                 else
                     echo "Directory $updolds does not exist."
                 fi
-            fi # <-- MISSING CLOSURE 1: closes if [[ "$choice" =~ ^[Yy]$ ]]
-        fi # <-- MISSING CLOSURE 2: closes if read -t 10...
-    fi # <-- MISSING CLOSURE 3: closes if [ "$installed_version" == "$version" ]
+            fi # <--  1: closes if [[ "$choice" =~ ^[Yy]$ ]]
+        fi # <-- 2: closes if read -t 10...
+    fi # <--  3: closes if [ "$installed_version" == "$version" ]
 
 else
     echo "The file /bin/update does not exist."
