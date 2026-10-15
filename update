@@ -119,9 +119,6 @@ calculate_uptime() {
 }
 
 show_intro_and_art() {
-    echo -e "This ${RED}text${NC} is ${RED}red.${NC}"
-    echo -e "This ${YELLOW}text${NC} is ${YELLOW}yellow.${NC}"
-    echo -e "This ${GREEN}text${NC} is ${GREEN}green.${NC}"
 
     if command -v lolcat >/dev/null 2>&1; then
         display_profile_art | lolcat
@@ -147,7 +144,6 @@ show_intro_and_art() {
     fi
     sudo who -a
     echo -e " ;-P ${NC} "
-    echo -e " ;-P ${NC} "
 
     echo "get-time $USER@$HOSTNAME ($HOST_IP)"
     calculate_uptime
@@ -155,9 +151,7 @@ show_intro_and_art() {
     echo "uptime $USER@$HOSTNAME ($HOST_IP)"
     
     echo -e "${RED} Current Time variables : $days days, $hours hours, $minutes minutes ${NC}"
-    
-    # The short delay requested before showing the update stuff
-    sleep 2 
+        sleep 2 
 }
 
 run_custom_scripts() {
@@ -177,7 +171,7 @@ run_custom_scripts() {
 
     echo -e "\nRunning Custom Commands With customup"
     if [ ! -f /bin/customup ]; then
-        if read -t 10 -r -p "/bin/customup not found. Create it now with nano? (y/N) [Skips in 10s]: " create_resp; then
+        if read -t 5 -r -p "/bin/customup not found. Create it now with nano? (y/N) [Skips in 5s]: " create_resp; then
             if [[ "$create_resp" =~ ^[Yy]$ ]]; then
                 sudo nano /bin/customup
                 if [ -f /bin/customup ]; then sudo chmod +x /bin/customup; fi
