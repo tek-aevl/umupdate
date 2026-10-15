@@ -49,11 +49,11 @@ if [ -f "/bin/update" ]; then
                     ITEM_COUNT=$(ls -1A "$updolds" | wc -l)
                 
                     # Check if the folder size is greater than 10MB (10240 KB)
-                    if [ "$SIZE_KB" -gt 10240 ]; then
+                    if [ "$SIZE_KB" -gt 50 ]; then
                         # Check if there are actually more than 2 versions to clean up
                         if [ "$ITEM_COUNT" -gt 2 ]; then
                             # Prompt the user for cleanup
-                            read -p "The folder is over 10MB. Would you like to free up space by keeping only the latest TWO versions? (y/n): " choice
+                            read -p "The folder is over 50KB. Would you like to free up space by keeping only the latest TWO versions? (y/n): " choice
                             
                             case "$choice" in 
                                 y|Y|yes|Yes ) 
