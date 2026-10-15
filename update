@@ -444,7 +444,7 @@ handle_reboot_and_speedtest() {
         fi
 
         user_info
-        if read -t 10 -p "Reboot Anyway? (y/N) [Skips in 10s]: " choice; then
+        if read -t 5 -p "Reboot Anyway? (y/N) [Skips in 5s]: " choice; then
             if [[ "$choice" =~ ^[Yy]$ ]]; then
                 echo -e "${RED} Rebooting... after 7 sec $USER@$HOSTNAME ($HOST_IP) ${NC}"
                 run_fetch
