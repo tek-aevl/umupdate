@@ -1,6 +1,5 @@
 #!/bin/bash
 version="1.2.4"
-reset && clear
 UPDATE_URL="https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/update.v2/update"
 
 # ==========================================
