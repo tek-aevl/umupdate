@@ -1,5 +1,5 @@
 #!/bin/bash
-version="1.2.6"
+version="1.2.7"
 UPDATE_URL="https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update"
 echo
 echo
@@ -30,56 +30,51 @@ if [ -f "/bin/update" ]; then
                 echo "Backing up old version..."
                 sudo mkdir -p /bin/update.old
                 sudo mv /bin/update "/bin/update.old/$(date '+%Y%m%d%H%M%S').update"
-                            
+                                            
                 updolds="/bin/update.old"
-               # Check if the directory exists
+                #check if the directory exists
                 if [ -d "$updolds" ]; then
-                    # Calculate and display the total size of the folder
-                    SIZE=$(sudo du -sh "$updolds" | awk '{print $1}')
-                    echo "The backup folder ($updolds) is currently using $SIZE of space."
+                    # Get human-readable size for display
+                    SIZE_HUMAN=$(sudo du -sh "$updolds" | awk '{print $1}')
+                    
+                    # Get size in kilobytes for math comparison (10MB = 10240 KB)
+                    SIZE_KB=$(sudo du -sk "$updolds" | awk '{print $1}')
+                    
+                    # Show the size before offering anything
+                    echo "The backup folder ($updolds) is currently using $SIZE_HUMAN of space."
                 
                     # Count how many items are in the directory
                     ITEM_COUNT=$(ls -1A "$updolds" | wc -l)
                 
-                    # Check if there are more than 2 versions
-                    if [ "$ITEM_COUNT" -gt 3 ]; then
-                        # Prompt the user for cleanup
-                        read -p "Would you like to free up space by keeping only the latest TWO versions and removing the rest? (y/n): " choice
-                        
-                        case "$choice" in 
-                            y|Y|yes|Yes ) 
-                                echo "Cleaning up older versions..."
-                                # Navigate to the directory, sort by time (newest first), skip the first TWO items, and remove the rest
-                                sudo bash -c "cd $updolds && ls -t | tail -n +3 | xargs rm -rf"
-                                
-                                NEW_SIZE=$(sudo du -sh "$updolds" | awk '{print $1}')
-                                echo "Cleanup complete! The folder is now using $NEW_SIZE of space."
-                                ;;
-                            * )
-                                echo "Skipping cleanup."
-                                ;;
-                        esac
-                    elif [ "$ITEM_COUNT" -gt 0 ]; then
-                        echo "Only $ITEM_COUNT version(s) exist. Nothing to clean up."
+                    # Check if the folder size is greater than 10MB (10240 KB)
+                    if [ "$SIZE_KB" -gt 10240 ]; then
+                        # Check if there are actually more than 2 versions to clean up
+                        if [ "$ITEM_COUNT" -gt 2 ]; then
+                            # Prompt the user for cleanup
+                            read -p "The folder is over 10MB. Would you like to free up space by keeping only the latest TWO versions? (y/n): " choice
+                            
+                            case "$choice" in 
+                                y|Y|yes|Yes ) 
+                                    echo "Cleaning up older versions..."
+                                    # Navigate to the directory, sort by time (newest first), skip the first TWO items, and remove the rest
+                                    sudo bash -c "cd $updolds && ls -t | tail -n +3 | xargs rm -rf"
+                                    
+                                    NEW_SIZE=$(sudo du -sh "$updolds" | awk '{print $1}')
+                                    echo "Cleanup complete! The folder is now using $NEW_SIZE of space."
+                                    ;;
+                                * )
+                                    echo "Skipping cleanup."
+                                    ;;
+                            esac
+                        else
+                            echo "The folder is over 10MB, but only $ITEM_COUNT version(s) exist. Nothing to clean up."
+                        fi
                     else
-                        echo "The folder is empty."
+                        echo "The folder is under 10MB. No cleanup required."
                     fi
                 else
                     echo "Directory $updolds does not exist."
                 fi
-                echo "Fetching the new script from GitHub..."
-                sudo curl -sL -o /bin/update "$UPDATE_URL"
-                sudo chmod +x /bin/update
-                echo "Update complete. Executing new version..."
-                echo "Bye! $USER@$HOSTNAME"
-                exec /bin/update # Replace the current process with the new script
-            else
-                echo "Update cancelled."
-            fi
-        else
-            echo -e "\nTimeout reached. Skipping update."
-        fi
-    fi
 else
     echo "The file /bin/update does not exist."
     read -p "Do you want to install it? (Y/n): " choice
