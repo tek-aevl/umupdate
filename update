@@ -430,7 +430,7 @@ handle_reboot_and_speedtest() {
         read -r -p "Run Speedtest? (y/N): " response
         if [[ "$response" =~ ^[Yy]$ ]]; then
             user_info
-            echo "speedtest"
+            echo "Running speedtest"
             if ! command -v speedtest &> /dev/null && [ ! -f /bin/speedtest ]; then
                 bash <(curl -fsSL "https://github.com/tek-aevl/umupdate/raw/refs/heads/main/speedtest.sh" -o /tmp/speedtest.sh)
                 bash /tmp/speedtest.sh
