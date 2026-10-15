@@ -297,7 +297,7 @@ run_pihole_tasks() {
         echo "reload list" && sudo pihole reloadlists
         echo "sudo pihole -up" && sudo pihole -up
         echo "complete"
-        echo "$USER @ $HOSTNAME"
+        echo "$USER@$HOSTNAME ($HOST_IP)"
 
         echo -e "${CYAN} Automatically selected $force_log_reset ${NC}"
         echo -e "${RED}Reset logs anyway? ( $force_log_reset ) ${NC}"
@@ -380,7 +380,7 @@ run_kernel_check() {
     echo "^_^"
     echo "end of back up kernel check"
     sleep 1
-    echo "$USER @ $HOSTNAME"
+    echo "$USER@$HOSTNAME ($HOST_IP)"
 }
 
 handle_reboot_and_speedtest() {
@@ -393,7 +393,7 @@ handle_reboot_and_speedtest() {
         echo -e "${YELLOW} System uptime: $days days, $hours hours, $minutes minutes ${NC}"
         read -p "Would you like to reboot now? (Y/n): " choice
         if [[ "$choice" != [Nn]* ]]; then
-            echo -e "${RED} Rebooting... $USER @ $HOSTNAME ($HOST_IP) ${NC}"
+            echo -e "${RED} Rebooting... $USER@$HOSTNAME ($HOST_IP) ${NC}"
             sudo reboot
             exit 0
         else
@@ -417,7 +417,7 @@ handle_reboot_and_speedtest() {
         
         read -r -p "Run Speedtest? (y/N): " response
         if [[ "$response" =~ ^[Yy]$ ]]; then
-            echo "$USER@$HOSTNAME speedtest"
+            echo "$USER @ $HOSTNAME ($HOST_IP) speedtest"
             if ! command -v speedtest &> /dev/null && [ ! -f /bin/speedtest ]; then
                 bash <(curl -fsSL "https://github.com/tek-aevl/umupdate/raw/refs/heads/main/speedtest.sh" -o /tmp/speedtest.sh)
                 bash /tmp/speedtest.sh
@@ -458,7 +458,7 @@ handle_reboot_and_speedtest() {
 }
 
 close_out_script() {
-    echo "$USER @ $HOSTNAME"
+    echo "$USER @ $HOSTNAME ($HOST_IP)"
     sudo who -a
     run_fetch
     if command -v inxi &> /dev/null; then inxi; fi
