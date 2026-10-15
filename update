@@ -1,5 +1,5 @@
 #!/bin/bash
-version="1.3.0"
+version="1.3.01"
 UPDATE_URL="https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update"
 echo
 echo
@@ -207,13 +207,12 @@ run_custom_scripts() {
         bash /bin/kernelup
         echo "End of kernel up"
     fi
-
-    if [ -f /bin/prune ]; then
+        if [ -f /bin/prune ] || command -v docker &> /dev/null || command -v podman &> /dev/null; then
         if read -t 10 -p "Run prune? (y/N) [Skips in 10s]: " prune_resp; then
            echo -e "\nChecking for prune..."      
             if [[ "$prune_resp" =~ ^[Yy]$ ]]; then
                 echo -e "${GREEN}Running prune...${NC}"
-                bash /bin/prune
+                bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/prune)
                 echo "End of prune"
             else
                 echo "Skipping prune."
