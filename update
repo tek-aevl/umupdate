@@ -80,7 +80,9 @@ ORANGE='\033[0;33m' # Fallback for orange
 NC='\033[0m'
 
 HOST_IP=$(hostname -I | awk '{print $1}')
-
+user_info() {
+    echo -e "${CYAN}$USER${NC}@${LIGHT_BLUE}$HOSTNAME${NC} (${YELLOW}$HOST_IP${NC})"
+}
 # ==========================================
 # 3. CORE FUNCTIONS
 # ==========================================
@@ -127,7 +129,7 @@ show_intro_and_art() {
     fi
 
     echo -e "${GREEN}Welcome $USER@$HOSTNAME ($HOST_IP)${NC}"
-    echo ":~${HOST_IP} uname -a"
+    user_info
     uname -a
     
     run_fetch
@@ -297,7 +299,7 @@ run_pihole_tasks() {
         echo "reload list" && sudo pihole reloadlists
         echo "sudo pihole -up" && sudo pihole -up
         echo "complete"
-        echo "$USER@$HOSTNAME ($HOST_IP)"
+        user_info
 
         echo -e "${CYAN} Automatically selected $force_log_reset ${NC}"
         echo -e "${RED}Reset logs anyway? ( $force_log_reset ) ${NC}"
@@ -378,9 +380,9 @@ run_kernel_check() {
     fi
 
     echo "^_^"
-    echo "end of back up kernel check"
+    echo "End of Kernel check"
     sleep 1
-    echo "$USER@$HOSTNAME ($HOST_IP)"
+    user_info
 }
 
 handle_reboot_and_speedtest() {
@@ -404,7 +406,8 @@ handle_reboot_and_speedtest() {
         echo -e "${GREEN} So good news! ${NC} $USER@$HOSTNAME ($HOST_IP)"   
         echo -e " The system has ${GREEN}not${NC} been running for longer than ${YELLOW}three${NC} days. ${YELLOW}No reboot required. ${NC}"
         echo -e "${GREEN} System uptime: $days days, $hours hours, $minutes minutes ${NC}"
-        echo "uptime $USER@$HOSTNAME ($HOST_IP)"
+        uptime 
+        user_info
         
         if command -v lolcat >/dev/null 2>&1; then
             display_profile_art | lolcat
@@ -413,11 +416,12 @@ handle_reboot_and_speedtest() {
         fi
         
         uptime
-        echo "$USER@$HOSTNAME $HOST_IP"
+        user_info
         
         read -r -p "Run Speedtest? (y/N): " response
         if [[ "$response" =~ ^[Yy]$ ]]; then
-            echo "$USER @ $HOSTNAME ($HOST_IP) speedtest"
+            user_info
+            echo "speedtest"
             if ! command -v speedtest &> /dev/null && [ ! -f /bin/speedtest ]; then
                 bash <(curl -fsSL "https://github.com/tek-aevl/umupdate/raw/refs/heads/main/speedtest.sh" -o /tmp/speedtest.sh)
                 bash /tmp/speedtest.sh
@@ -439,7 +443,7 @@ handle_reboot_and_speedtest() {
             echo "Not running speedtest : System uptime: $(uptime)"
         fi
 
-        echo "$USER @ $HOSTNAME ($HOST_IP)"
+        user_info
         if read -t 10 -p "Reboot Anyway? (y/N) [Skips in 10s]: " choice; then
             if [[ "$choice" =~ ^[Yy]$ ]]; then
                 echo -e "${RED} Rebooting... after 7 sec $USER@$HOSTNAME ($HOST_IP) ${NC}"
@@ -462,7 +466,7 @@ handle_reboot_and_speedtest() {
 }
 
 close_out_script() {
-    echo "$USER @ $HOSTNAME ($HOST_IP)"
+    user_info
     sudo who -a
     run_fetch
     if command -v inxi &> /dev/null; then inxi; fi
