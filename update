@@ -494,12 +494,17 @@ close_out_script() {
 # ==========================================
 # 4. MAIN EXECUTION FLOW
 # ==========================================
-
 show_intro_and_art
+sleep 1
 run_custom_scripts
+sleep 1
 update_packages
+sleep 1
 update_rpi_firmware
+sleep 1
 run_pihole_tasks
+sleep 1
 run_kernel_check
+sleep 1
 handle_reboot_and_speedtest
 close_out_script
