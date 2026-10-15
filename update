@@ -356,9 +356,9 @@ run_pihole_tasks() {
             echo -e "${GREEN}System uptime: $days days, $hours hours, $minutes minutes ${NC}" 
             sleep 4
         fi
+           echo -e "\nEnd of Pi-Hole Tasks\n"
     fi
-    echo -e "\nEnd of Pi-Hole Tasks\n"
-}
+ }
 
 run_kernel_check() {
     echo "###########################################################################################"
