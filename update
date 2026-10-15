@@ -294,7 +294,6 @@ run_pihole_tasks() {
         echo "sudo pihole -up" && sudo pihole -up
         echo "complete"
         user_info
-
         echo -e "${CYAN} Automatically selected $force_log_reset ${NC}"
         echo -e "${RED}Reset logs anyway? ( $force_log_reset ) ${NC}"
         read -p "Force log reset? (y/n): " override
