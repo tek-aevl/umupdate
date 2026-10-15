@@ -1,5 +1,5 @@
 #!/bin/bash
-version="1.2.8"
+version="1.2.9"
 UPDATE_URL="https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update"
 echo
 echo
@@ -122,7 +122,7 @@ DARK_GRAY='\033[0;30m'
 ORANGE='\033[0;33m' # Fallback for orange
 NC='\033[0m'
 
-HOST_IP=$(hostname -I | awk '{print $1}')
+HOST_IP=$(hostname -i | awk '{print $1}')
 user_info() {
     echo -e "${CYAN}$USER${NC}@${LIGHT_BLUE}$HOSTNAME${NC} (${YELLOW}$HOST_IP${NC})"
 }
@@ -144,6 +144,7 @@ display_profile_art() {
     if command -v jp2a >/dev/null 2>&1; then
         curl -sL "https://tek.aevl.us/profile.jpg" -o /tmp/profile_ascii.jpg
         jp2a --colors /tmp/profile_ascii.jpg
+        user_info
         rm -f /tmp/profile_ascii.jpg
     else
         echo "jp2a is not installed. To see the ASCII art, run: sudo apt install jp2a"
