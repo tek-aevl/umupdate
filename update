@@ -1,5 +1,5 @@
 #!/bin/bash
-version="1.2.7"
+version="1.2.8"
 UPDATE_URL="https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update"
 echo
 echo
@@ -17,20 +17,22 @@ if [ -f "/bin/update" ]; then
     if [ -z "$installed_version" ]; then
         installed_version="UNKNOWN"
     fi
- 
-   echo "Installed Version is $installed_version"
-   if [ "$installed_version" == "$version" ]; then
+
+    echo "Installed Version is $installed_version"
+    
+    if [ "$installed_version" == "$version" ]; then
         echo "Version matches!"
     else
         echo "Version mismatch! Installed version: $installed_version"
         # -t 10 adds a 10 second timeout so it won't hang forever if unattended
         if read -t 10 -p "Do you want to update to the new version? (Y/n) [Skips in 10s]: " choice; then
             choice="${choice:-y}" # Default to yes
-             if [[ "$choice" =~ ^[Yy]$ ]]; then
+            
+            if [[ "$choice" =~ ^[Yy]$ ]]; then
                 echo "Backing up old version..."
                 sudo mkdir -p /bin/update.old
                 sudo mv /bin/update "/bin/update.old/$(date '+%Y%m%d%H%M%S').update"
-                                            
+                                                            
                 updolds="/bin/update.old"
                 #check if the directory exists
                 if [ -d "$updolds" ]; then
@@ -75,6 +77,10 @@ if [ -f "/bin/update" ]; then
                 else
                     echo "Directory $updolds does not exist."
                 fi
+            fi # <-- MISSING CLOSURE 1: closes if [[ "$choice" =~ ^[Yy]$ ]]
+        fi # <-- MISSING CLOSURE 2: closes if read -t 10...
+    fi # <-- MISSING CLOSURE 3: closes if [ "$installed_version" == "$version" ]
+
 else
     echo "The file /bin/update does not exist."
     read -p "Do you want to install it? (Y/n): " choice
