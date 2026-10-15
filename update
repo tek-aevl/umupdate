@@ -1,5 +1,5 @@
 #!/bin/bash
-version="1.2.4"
+version="1.2.5"
 UPDATE_URL="https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update"
 echo
 echo
@@ -166,15 +166,16 @@ show_intro_and_art() {
 }
 
 run_custom_scripts() {
-    echo -e "\nUpdating Kernel With kernelup"
     if [ -f /bin/kernelup ]; then
+        echo -e "\nUpdating Kernel With kernelup"
         echo -e "${GREEN}Running kernelup...${NC}"
         bash /bin/kernelup
         echo "End of kernel up"
     fi
 
-    echo -e "\nRunning prune"
+    
     if [ -f /bin/prune ]; then
+        echo -e "\nRunning prune"
         echo -e "${GREEN}Running prune...${NC}"
         bash /bin/prune
         echo "End of prune"
@@ -399,9 +400,7 @@ handle_reboot_and_speedtest() {
         echo -e "${GREEN} So good news! ${NC} $USER@$HOSTNAME ($HOST_IP)"   
         echo -e " The system has ${GREEN}not${NC} been running for longer than ${YELLOW}three${NC} days. ${YELLOW}No reboot required. ${NC}"
         echo -e "${GREEN} System uptime: $days days, $hours hours, $minutes minutes ${NC}"
-        uptime 
-        user_info
-        
+
         if command -v lolcat >/dev/null 2>&1; then
             display_profile_art | lolcat
         else
