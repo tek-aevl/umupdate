@@ -1,17 +1,16 @@
 #!/bin/bash
 version="1.2.3"
 reset && clear
+UPDATE_URL="https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/update.v2/update"
+
 # ==========================================
 # 1. SELF-UPDATE CHECK
 # ==========================================
 echo "Hello $USER! #v$version#"
-echo "Info at https://github.com/tek-aevl/umupdate/ #To use run # bash update or bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/update.v2/update)"
-
-UPDATE_URL="https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/update.v2/update"
+echo "Info at https://github.com/tek-aevl/umupdate/ #To use run # bash update or bash <(curl -s $UPDATE_URL)"
 
 if [ -f "/bin/update" ]; then
     # Grab the exact version number from the variable declaration
-    # Added \s* to allow for accidental spaces before 'version='
     installed_version=$(grep -m 1 -oP '^\s*version="\K[^"]+' /bin/update)
     
     # Failsafe: If grep fails, avoid an infinite loop
@@ -55,14 +54,12 @@ else
     
     if [[ "$choice" =~ ^[Yy]$ ]]; then
         echo "Fetching the script from GitHub..."
-        # Download the whole file directly to /bin/update
         sudo curl -sL -o /bin/update "$UPDATE_URL"
         sudo chmod +x /bin/update
         
         if [ -f "/bin/update" ]; then
             echo "✅ Installed /bin/update successfully."
             sleep 2
-            # Added exec here so a fresh install immediately launches the new environment
             exec /bin/update 
         else
             echo "❌ Failed to install /bin/update."
