@@ -1,91 +1,90 @@
 #!/bin/bash
 version="1.629.1"
-echo "Hello $USER! #v"$version"#"
+
+# ==========================================
+# 1. SELF-UPDATE CHECK
+# ==========================================
+echo "Hello $USER! #v$version#"
 echo "Info at https://github.com/tek-aevl/umupdate/ #To use run # bash update or bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update)"
+
 if [ -f "/bin/update" ]; then
-   installed_version=$(grep -oP '(?<=#)\S+(?=#)' /bin/update)
-   echo "Installed Version is "$installed_version
-   if [ "$installed_version" == "$version" ]; then
-       echo "Version matches!"
-   else
-       echo "Version mismatch! Installed version: $installed_version"
-       echo "The file /bin/update already exists."
-       read -p "Do you update to a new version? (Y/n): " choice 
-       choice="${choice:-y}"
-       if [ "$choice" == "y" ]; then
-           echo "Removing old"
-           sudo mkdir /bin/update.old
-           sudo mv /bin/update "/bin/update.old/$(date '+%Y%m%d%H%M%S').update"
-           echo $USER"@"$HOSTNAME
-           echo "Fetching the new bash script"
-           curl -sO "https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update" && chmod +x update && ./update
-           echo "Bye! $USER@$HOSTNAME "
-           exit;
-       else
-           echo "Cancelled."
-       fi
-   fi
+    installed_version=$(grep -oP '(?<=#)\S+(?=#)' /bin/update | head -n 1)
+    echo "Installed Version is $installed_version"
+    if [ "$installed_version" == "$version" ]; then
+        echo "Version matches!"
+    else
+        echo "Version mismatch! Installed version: $installed_version"
+        echo "The file /bin/update already exists."
+        read -p "Do you update to a new version? (Y/n): " choice 
+        choice="${choice:-y}"
+        if [[ "$choice" == "y" || "$choice" == "Y" ]]; then
+            echo "Removing old"
+            sudo mkdir -p /bin/update.old
+            sudo mv /bin/update "/bin/update.old/$(date '+%Y%m%d%H%M%S').update"
+            echo "$USER@$HOSTNAME"
+            echo "Fetching the new bash script"
+            curl -sO "https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update" && chmod +x update && ./update
+            echo "Bye! $USER@$HOSTNAME"
+            exit 0
+        else
+            echo "Cancelled."
+        fi
+    fi
 else
     echo "The file /bin/update does not exist."
     read -p "Do you want to install it? (y/n): " -e choice
-    if [ "$choice" == "y" ]; then
-#/ START SECTION/
-echo -e '#!/bin/bash\n echo "#'$version'#"\n echo "Hello! $USER@$HOSTNAME "\n echo "Assistance at https://github.com/tek-aevl/umupdate/" #To use run\n echo "bash update"\n bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update)\n echo $USER "bye! XD "' | sudo tee /bin/update > /dev/null
-#/ END SECTION/
-echo "Verifying contents of /bin/update..."
-# Fetch the latest update script from GitHub
-curl -s -o /tmp/github_update "https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update"
+    if [[ "$choice" == "y" || "$choice" == "Y" ]]; then
+        #/ START SECTION/
+        echo -e '#!/bin/bash\n echo "#'$version'#"\n echo "Hello! $USER@$HOSTNAME "\n echo "Assistance at https://github.com/tek-aevl/umupdate/" #To use run\n echo "bash update"\n bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update)\n echo $USER "bye! XD "' | sudo tee /bin/update > /dev/null
+        #/ END SECTION/
+        
+        echo "Verifying contents of /bin/update..."
+        curl -s -o /tmp/github_update "https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update"
+        sed -n '/# START SECTION/,/# END SECTION/p' /bin/update > /tmp/local_section
+        sed -n '/# START SECTION/,/# END SECTION/p' /tmp/github_update > /tmp/github_section
+        
+        cat /bin/update
+        if diff -q /tmp/local_section /tmp/github_section > /dev/null; then
+            echo "✅ The section in /bin/update matches the latest version from GitHub."
+        else
+            echo "❌ Warning: The section in /bin/update does not match the latest version from GitHub!"
+            diff -u /tmp/local_section /tmp/github_section
+        fi
 
-# Extract the relevant section from local file
-sed -n '/# START SECTION/,/# END SECTION/p' /bin/update > /tmp/local_section
-
-# Extract the relevant section from the downloaded GitHub file
-sed -n '/# START SECTION/,/# END SECTION/p' /tmp/github_update > /tmp/github_section
-
-# Show the full contents of /bin/update (for reference)
-cat /bin/update
-
-# Compare the extracted sections
-if diff -q /tmp/local_section /tmp/github_section > /dev/null; then
-    echo "✅ The section in /bin/update matches the latest version from GitHub."
-else
-    echo "❌ Warning: The section in /bin/update does not match the latest version from GitHub!"
-    diff -u /tmp/local_section /tmp/github_section  # Show differences
-fi
-
-# If the content is verified, apply permissions
-sudo chmod 644 /bin/update
-sudo chmod +x /bin/update
-
-echo "Installed /bin/update successfully."
-
+        sudo chmod 644 /bin/update
+        sudo chmod +x /bin/update
+        echo "Installed /bin/update successfully."
         sleep 3
     else
         echo "Installation cancelled."
     fi
 fi
 
-# Set the colors
-RED='\033[0;31m'       # Red color
-LIGHT_RED='\033[0;91m'    # Light red color
-YELLOW='\033[0;33m'    # Yellow color
-LIGHT_YELLOW='\033[0;93m' # Light yellow color
-GREEN='\033[0;32m'     # Green color
-LIGHT_GREEN='\033[0;92m'  # Light green color
-BLUE='\033[0;34m'         # Blue color
-LIGHT_BLUE='\033[0;94m'   # Light blue color
-MAGENTA='\033[0;35m'      # Magenta color
-CYAN='\033[0;36m'         # Cyan color
-WHITE='\033[0;37m'        # White color
-LIGHT_GRAY='\033[0;90m'   # Light gray color
-DARK_GRAY='\033[0;30m'    # Dark gray color
-NC='\033[0m'           # No color
-echo -e "This ${RED}text${NC} is ${RED}red.${NC}"
-echo -e "This ${YELLOW}text${NC} is ${YELLOW}yellow.${NC}"
-echo -e "This ${GREEN}text${NC} is ${GREEN}green.${NC}"
+# ==========================================
+# 2. GLOBAL VARIABLES & COLORS
+# ==========================================
+RED='\033[0;31m'
+LIGHT_RED='\033[0;91m'
+YELLOW='\033[0;33m'
+LIGHT_YELLOW='\033[0;93m'
+GREEN='\033[0;32m'
+LIGHT_GREEN='\033[0;92m'
+BLUE='\033[0;34m'
+LIGHT_BLUE='\033[0;94m'
+MAGENTA='\033[0;35m'
+CYAN='\033[0;36m'
+WHITE='\033[0;37m'
+LIGHT_GRAY='\033[0;90m'
+DARK_GRAY='\033[0;30m'
+ORANGE='\033[0;33m' # Fallback for orange
+NC='\033[0m'
 
+HOST_IP=$(hostname -I | awk '{print $1}')
 
-# Function to put at the top of your script
+# ==========================================
+# 3. CORE FUNCTIONS
+# ==========================================
+
 run_fetch() {
     if command -v fastfetch &> /dev/null; then
         fastfetch
@@ -96,420 +95,400 @@ run_fetch() {
     fi
 }
 
-# Get the IP address of the host
-HOST_IP=$(hostname -I | awk '{print $1}')
-
 display_profile_art() {  
     if command -v jp2a >/dev/null 2>&1; then
-        # 1. Download it silently to a temporary folder
         curl -sL "https://tek.aevl.us/profile.jpg" -o /tmp/profile_ascii.jpg
-        
-        # 2. Draw it to the terminal
         jp2a --colors /tmp/profile_ascii.jpg
-        
-        # 3. Clean up the temp file
         rm -f /tmp/profile_ascii.jpg
     else
         echo "jp2a is not installed. To see the ASCII art, run: sudo apt install jp2a"
     fi
 }
-##image#\/#
-display_profile_art | lolcat
-##image##^#
 
-# Display a welcome message
-echo -e "${GREEN}Welcome $USER@$HOSTNAME ($HOST_IP)"
+calculate_uptime() {
+    current_timestamp=$(date +%s)
+    uptime_raw=$(uptime -s)
+    uptime_timestamp=$(date -d "$uptime_raw" +%s)
+    time_difference=$((current_timestamp - uptime_timestamp))
 
-# Display system information
-echo ":~${HOST_IP} uname -a"
-uname -a
-run_fetch
-inxi  
-echo -e "${NC}"
+    uptime_seconds=$(cut -d' ' -f1 /proc/uptime)
+    uptime_seconds=$(printf "%.0f" "$uptime_seconds")
+    days=$(echo "$uptime_seconds / 86400" | bc)
+    hours=$(echo "$uptime_seconds % 86400 / 3600" | bc)
+    minutes=$(echo "$uptime_seconds % 3600 / 60" | bc)
+}
 
-# Display information
-echo "~${HOST_IP} who -a"
-echo -e "${YELLOW} Can you ${RED} sudo${NC}?"
-echo -e "${RED} Password $USER@$HOSTNAME ($HOST_IP) "
-# Check if sudo password is needed
-if sudo -v; then
-  echo -e "${GREEN}sudo works.${NC}"
-else
-  echo -e "${YELLOW}sudo password is required (or sudo not configured).${NC}"
-fi
-sudo who -a
-echo -e " ;-P ${NC} "
-echo -e " ;-P ${NC} "
+show_intro_and_art() {
+    echo -e "This ${RED}text${NC} is ${RED}red.${NC}"
+    echo -e "This ${YELLOW}text${NC} is ${YELLOW}yellow.${NC}"
+    echo -e "This ${GREEN}text${NC} is ${GREEN}green.${NC}"
 
-echo "get-time $USER@$HOSTNAME ($HOST_IP)"
-# Get the current timestamp
-current_timestamp=$(date +%s)
-echo "do-math $USER@$HOSTNAME ($HOST_IP)"
-# Get the timestamp of three days ago
-three_days_ago=$(date -d '3 days ago' +%s)
+    if command -v lolcat >/dev/null 2>&1; then
+        display_profile_art | lolcat
+    else
+        display_profile_art
+    fi
 
-# Get the uptime of the system
-echo "uptime $USER@$HOSTNAME ($HOST_IP)"
-uptime=$(uptime -s)
-# Convert uptime to timestamp
-uptime_timestamp=$(date -d "$uptime" +%s)
+    echo -e "${GREEN}Welcome $USER@$HOSTNAME ($HOST_IP)${NC}"
+    echo ":~${HOST_IP} uname -a"
+    uname -a
+    
+    run_fetch
+    if command -v inxi &> /dev/null; then inxi; fi
+    
+    echo "~${HOST_IP} who -a"
+    echo -e "${YELLOW} Can you ${RED} sudo${NC}?"
+    echo -e "${RED} Password $USER@$HOSTNAME ($HOST_IP) ${NC}"
+    
+    if sudo -v; then
+        echo -e "${GREEN}sudo works.${NC}"
+    else
+        echo -e "${YELLOW}sudo password is required (or sudo not configured).${NC}"
+    fi
+    sudo who -a
+    echo -e " ;-P ${NC} "
+    echo -e " ;-P ${NC} "
 
-# Calculate the time difference in seconds
-time_difference=$((current_timestamp - uptime_timestamp))
+    echo "get-time $USER@$HOSTNAME ($HOST_IP)"
+    calculate_uptime
+    echo "do-math $USER@$HOSTNAME ($HOST_IP)"
+    echo "uptime $USER@$HOSTNAME ($HOST_IP)"
+    
+    echo -e "${RED} Current Time variables : $days days, $hours hours, $minutes minutes ${NC}"
+    
+    # The short delay requested before showing the update stuff
+    sleep 2 
+}
 
-# Convert time difference to days, hours, and minutes
-uptime_seconds=$(cut -d' ' -f1 /proc/uptime)
-uptime_seconds=$(printf "%.0f" "$uptime_seconds")
-days=$(echo "$uptime_seconds / 86400" | bc)
-hours=$(echo "$uptime_seconds % 86400 / 3600" | bc)
-minutes=$(echo "$uptime_seconds % 3600 / 60" | bc)
-echo -e "${RED} Current Time variables : $days days, $hours hours, $minutes minutes ${NC}"
+run_custom_scripts() {
+    echo -e "\nUpdating Kernel With kernelup"
+    if [ -f /bin/kernelup ]; then
+        echo -e "${GREEN}Running kernelup...${NC}"
+        bash /bin/kernelup
+        echo "End of kernel up"
+    fi
 
-echo
-echo "Updating Kernel With kernelup"
-if [ -f /bin/kernelup ]; then
-    echo -e "${GREEN}Running kernelup...${NC}"
-    bash /bin/kernelup
-echo "End of kernel up"
-echo
-fi
-echo
-echo
-echo "Running prune"
-if [ -f /bin/prune ]; then
-    echo -e "${GREEN}Running prune...${NC}"
-    bash /bin/prune
-echo "End of prune"
-echo
-fi
-echo
-echo
-echo "Running Custom Commands With customup"
-# If the file does NOT exist, ask to create it with a timeout
-if [ ! -f /bin/customup ]; then
-    # -t 10 waits exactly 10 seconds for user input
-    if read -t 10 -r -p "/bin/customup not found. Create it now with nano? (y/N) [Skips in 10s]: " create_resp; then
-        if [[ "$create_resp" == "Y" || "$create_resp" == "y" ]]; then
-            sudo nano /bin/customup
-            # Ensure it is executable if it was successfully saved
-            if [ -f /bin/customup ]; then
-                sudo chmod +x /bin/customup
+    echo -e "\nRunning prune"
+    if [ -f /bin/prune ]; then
+        echo -e "${GREEN}Running prune...${NC}"
+        bash /bin/prune
+        echo "End of prune"
+    fi
+
+    echo -e "\nRunning Custom Commands With customup"
+    if [ ! -f /bin/customup ]; then
+        if read -t 10 -r -p "/bin/customup not found. Create it now with nano? (y/N) [Skips in 10s]: " create_resp; then
+            if [[ "$create_resp" =~ ^[Yy]$ ]]; then
+                sudo nano /bin/customup
+                if [ -f /bin/customup ]; then sudo chmod +x /bin/customup; fi
+            else
+                echo "Skipping customup."
             fi
         else
-            echo "Skipping customup."
+            echo -e "\nTimeout reached. Skipping customup."
         fi
-    else
-        # This triggers if the 10-second timer runs out
-        echo -e "\nTimeout reached. Skipping customup."
     fi
-fi
-# Run customup if it exists (either previously existed, or just created)
-if [ -f /bin/customup ]; then
-    echo -e "${GREEN}Running customup...${NC}"
-    bash /bin/customup
-    echo "End of customup"
-fi
-echo
-echo
-echo "Checking for and Running bash cclearer"
-# If the file does NOT exist, download it
-if [ ! -f /bin/cclearer ]; then
-    echo -e "${YELLOW}cclearer not found. Installing from GitHub...${NC}"
-    sudo curl -fsSL "https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/cclearer" -o /bin/cclearer
-    sudo chmod +x /bin/cclearer
-echo
-fi
-
-if [ -f /bin/cclearer ]; then
-    echo -e "${GREEN}Running cclearer...${NC}"
-    bash /bin/cclearer
-    echo "End of cclearer"
-else
-    echo -e "${RED}Failed to install or locate cclearer.${NC}"
-fi
-echo
-
-# Define the package manager update/upgrade commands
-update_command=""
-upgrade_command=""
-PKG_MANAGER=""
-
-# Check which package manager is available
-if command -v pacman &> /dev/null; then
-    PKG_MANAGER="pacman"
-    update_command="sudo pacman -Syyu --noconfirm"
-    upgrade_command="sudo pacman -Syyu --noconfirm"
-elif command -v apt &> /dev/null; then
-    PKG_MANAGER="apt"
-    update_command="sudo apt update"
-    upgrade_command="sudo apt -o APT::Get::Always-Include-Phased-Updates=true upgrade -y"
-elif command -v dnf &> /dev/null; then
-    PKG_MANAGER="dnf"
-    update_command="sudo dnf check-update"
-    upgrade_command="sudo dnf upgrade -y"
-elif command -v pkg &> /dev/null; then
-    PKG_MANAGER="pkg"
-    update_command="sudo pkg update"
-    upgrade_command="sudo pkg upgrade -y"
-elif command -v zypper &> /dev/null; then
-    PKG_MANAGER="zypper"
-    update_command="sudo zypper refresh"
-    upgrade_command="sudo zypper update -y"
-else
-    echo "Unable to determine the package manager. Please update and upgrade manually."
-    exit 1
-fi
-
-# Update the system
-echo "Updating packages..."
-$update_command
-
-# Upgrade the system
-echo "Upgrading packages..."
-$upgrade_command
-
-# Run apt maintenance AFTER the upgrade finishes
-if [[ "$PKG_MANAGER" == "apt" ]]; then
-    #secret#
-    sudo update-ca-certificates
-    echo -e  "${YELLOW}Autoremove"
-    sudo apt autoremove -y
-    echo -e  "${NC}"
-    echo -e "${CYAN}Fix broken updates"
-    sudo dpkg --configure -a
-    sudo apt --fix-broken install
-    echo -e  "${NC}"
-    echo -e "${GREEN}Running apt autoremove..."
-    sudo apt autoremove
-    echo -e "${NC}"
-fi
-
-echo -e " ${GREEN} Updates and Upgrades completed on ${HOST_IP}.${NC} "
-
-echo "sudo rpi-update"
-# Add SKIP_WARNING=1 right after sudo
-update_output=$(sudo SKIP_WARNING=1 rpi-update 2>&1)
-update_rc=$?
-
-echo "$update_output"
-
-if [[ $update_rc -ne 0 ]]; then
-    echo -e "${RED}Firmware update failed.${NC}"
-elif echo "$update_output" | grep -qiE "already.*up.to.date|up.to.date"; then
-    echo -e "${GREEN}Firmware already up to date. No reboot required.${NC}"
-else
-    echo -e "${GREEN}Firmware update completed successfully.${NC}"
-    read -p "Reboot now? (y/n): " reboot_now
-    if [[ "$reboot_now" =~ ^([yY]|yes)$ ]]; then
-        echo -e "${ORANGE}Firmware Changed.. Rebooting...${NC}"
-        sudo reboot
-    else
-        echo -e "${RED}Firmware changed.. Reboot skipped...${NC}"
+    if [ -f /bin/customup ]; then
+        echo -e "${GREEN}Running customup...${NC}"
+        bash /bin/customup
+        echo "End of customup"
     fi
-fi
 
-###pihole tasks###
-# Set threshold for the number of days before running this 
-waitfor=1  # Change this value as needed
-
-if [[ "$days" -ge "$waitfor" ]]; then
-   force_log_reset="yes"
-    echo -e "${RED}System uptime: $days days, $hours hours, $minutes minutes ${NC}" 
-    else
-    force_log_reset="no"
-    echo -e "${YELLOW}System uptime: $days days, $hours hours, $minutes minutes ${NC}" 
-fi
-
-if pihole -v &> /dev/null; then 
-echo -e "${GREEN}Pihole Updates!${NC}"
-
-    # Pi-hole is installed, run the commands
-echo "sudo pihole updatechecker"    
-   sudo pihole updatechecker
-echo "sudo pihole networkflush"
-    sudo pihole networkflush
-echo "sudo pihole flush"
-    sudo pihole flush
-echo "sudo pihole reloaddns"
-    sudo pihole  reloaddns 
-echo "sudo pihole updateGravity"
-    sudo pihole -g
-echo "reload list"
-    sudo pihole reloadlists
-echo "sudo pihole -up"
-    sudo pihole -up
-echo "complete"
-echo $USER "@" $HOSTNAME
-
-echo -e "${CYAN} Automatically selected $force_log_reset ${NC}"
-echo -e "${RED}Reset logs anyway? ( $force_log_reset ) ${NC}"
-read -p "Force log reset? (y/n): " override
-
-if [[ -n $override ]]; then
-    force_log_reset=$override
-else
-    echo -e "${YELLOW}No input received. Using default value $force_log_reset .${NC}"
-fi
-
-if [[ $force_log_reset != "no" && $force_log_reset != "n" ]]; then
-   echo -e "${RED} $force_log_reset was selected.${NC}"
-   echo -e "${YELLOW}Flushing Logs${NC}"
-   echo "# output current pihole db size"
-      sudo du -h /etc/pihole/pihole-FTL.db
-         
-   FILE="/tmp/pihole-FTL-old.db"
-         if [[ -e "$FILE" ]]; then
-             sudo du -h "$FILE"
-         else
-             sudo touch "$FILE"
-             sudo du -h "$FILE"
-         fi
-  
-   echo "# current old db size"
-         sudo du -h /etc/pihole/pihole-FTL.db 
-         sudo du -h /etc/pihole/pihole-FTL-old.db
-         sudo du -h /tmp/pihole-FTL-old.db  
-   echo "#pihole flush"
-        sudo pihole flush
-   echo "# Output pihole db size"
-         sudo du -h /etc/pihole/pihole-FTL.db 
-         sudo du -h /etc/pihole/pihole-FTL-old.db
-         sudo du -h /tmp/pihole-FTL-old.db
-         sudo rm /tmp/pihole-FTL-old.db 
-      sleep 3
-    echo "# Stop pihole FTL service"
-        sudo systemctl stop pihole-FTL
-    echo "# Delete the FTL database file"
-        sudo service pihole-FTL stop
-    echo "moving current db to old db"
-         sudo mv /etc/pihole/pihole-FTL-old.db /tmp/pihole-FTL-old.db
-         sudo mv /etc/pihole/pihole-FTL.db /etc/pihole/pihole-FTL-old.db
-         sudo service pihole-FTL start
-    echo "# Start pihole FTL service"
-        sudo systemctl start pihole-FTL
-    echo "# Output reduced pihole db size"
-        sudo du -h /etc/pihole/pihole-FTL.db 
-        sudo du -h /etc/pihole/pihole-FTL-old.db
-        sudo du -h /tmp/pihole-FTL-old.db 
-    sleep 2
-elif [[ $force_log_reset != "yes" && $force_log_reset != "y" ]]; then
-  echo -e "The system has ${RED}not${NC} been running for longer than three days. ${GREEN}No db operations required.${NC}"
-  echo -e "${GREEN}System uptime: $days days, $hours hours, $minutes minutes ${NC}" 
-  sleep 4
-else
-    echo -e "${YELLOW}Invalid input.${NC}"
-fi
-fi
-echo
-echo "End of Pi-Hole Tasks"
-echo
-###End of pihole tasks###
-
-echo "###########################################################################################"
-echo "###############################   Running Kernel-Check   ##################################"
-echo "###########################################################################################"
-
-if command -v kernel-check &> /dev/null; then
-    # Runs if installed in your PATH
-    kernel-check 2>/dev/null
-elif [[ -f "kernel-check" ]]; then
-    # Runs if the file is in the current working directory
-    bash kernel-check 2>/dev/null
-else
-    # Fallback to the remote GitHub script if locals are missing
-    bash <(curl -fsSL "https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/kernel-check") 2>/dev/null
-fi
-
-echo "^_^"
-echo "end of back up kernel check"
-sleep 1
-###end kernel check###
-echo "$USER @ $HOSTNAME"
-
-echo "############################################################################################"
-echo "######################################### uptime ###########################################"
-echo "############################################################################################"
-
-if [[ $uptime_seconds -ge $((3 * 24 * 3600)) ]]; then
-
-echo -e "${RED} The system has been running for longer than three days. ${NC}"  
-echo -e "${YELLOW} System uptime: $days days, $hours hours, $minutes minutes ${NC}"
-    read -p "Would you like to reboot now? (Y/n): " choice
-    if [[ $choice != [Nn] ]]; then
-      echo -e "${RED} Rebooting... $USER @ $HOSTNAME ($HOST_IP) ${NC}"
-      # Uncomment the following line to perform the reboot
-      sudo reboot
-       exit;
-echo "sleeping..."   
-sleep 3
-    else
-      echo -e "${RED} Reboot skipped. $USER@$HOSTNAME ($HOST_IP) ${NC} " && sleep 3
+    echo -e "\nChecking for and Running bash cclearer"
+    if [ ! -f /bin/cclearer ]; then
+        echo -e "${YELLOW}cclearer not found. Installing from GitHub...${NC}"
+        sudo curl -fsSL "https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/cclearer" -o /bin/cclearer
+        sudo chmod +x /bin/cclearer
     fi
-  else
-
-echo -e "${GREEN} So good news! ${NC} $USER@$HOSTNAME ($HOST_IP)"   
-echo -e " The system has ${GREEN}not${NC} been running for longer than ${YELLOW}three${NC} days. ${YELLOW}No reboot required. ${NC}"
-echo -e "${GREEN} System uptime: $days days, $hours hours, $minutes minutes ${NC}"
-echo "uptime $USER@$HOSTNAME ($HOST_IP)"
-##image#\/#
-display_profile_art | lolcat
-##image##^#
-uptime
-echo "$USER@$HOSTNAME $HOST_IP"
-read -r -p "Run Speedtest? (y/N): " response
-if [[ "$response" == "Y" || "$response" == "y" ]]; then
-    echo "$USER@$HOSTNAME speedtest"
-    # Check if speedtest exists, if not, execute the URL as a bash script
-    if ! command -v speedtest &> /dev/null && [ ! -f /bin/speedtest ]; then
-        bash <(curl -fsSL '"https://github.com/tek-aevl/umupdate/raw/refs/heads/main/speedtest.sh" -o /tmp/speedtest.sh')
-        bash /tmp/speedtest.sh
+    if [ -f /bin/cclearer ]; then
+        echo -e "${GREEN}Running cclearer...${NC}"
+        bash /bin/cclearer
+        echo "End of cclearer"
+    else
+        echo -e "${RED}Failed to install or locate cclearer.${NC}"
     fi
-    # Verify it exists before trying to run the command
-    if command -v speedtest &> /dev/null || [ -f /bin/speedtest ]; then
-        # Try with --secure first and capture output/exit status
-        output=$(speedtest --secure 2>&1)
-        
-        # If it failed due to an unknown option or error, fallback to running without --secure
-        if [[ "$output" == *"Unknown option"* ]] || [[ $? -ne 0 ]]; then
-            output=$(speedtest 2>&1)
-        fi
-       if command -v lolcat &> /dev/null; then
-            echo "$output" | lolcat
+    echo
+}
+
+update_packages() {
+    update_command=""
+    upgrade_command=""
+    PKG_MANAGER=""
+
+    if command -v pacman &> /dev/null; then
+        PKG_MANAGER="pacman"
+        update_command="sudo pacman -Syyu --noconfirm"
+        upgrade_command="sudo pacman -Syyu --noconfirm"
+    elif command -v apt &> /dev/null; then
+        PKG_MANAGER="apt"
+        update_command="sudo apt update"
+        upgrade_command="sudo apt -o APT::Get::Always-Include-Phased-Updates=true upgrade -y"
+    elif command -v dnf &> /dev/null; then
+        PKG_MANAGER="dnf"
+        update_command="sudo dnf check-update"
+        upgrade_command="sudo dnf upgrade -y"
+    elif command -v pkg &> /dev/null; then
+        PKG_MANAGER="pkg"
+        update_command="sudo pkg update"
+        upgrade_command="sudo pkg upgrade -y"
+    elif command -v zypper &> /dev/null; then
+        PKG_MANAGER="zypper"
+        update_command="sudo zypper refresh"
+        upgrade_command="sudo zypper update -y"
+    else
+        echo "Unable to determine the package manager. Please update and upgrade manually."
+        exit 1
+    fi
+
+    echo "Updating packages..."
+    $update_command
+    echo "Upgrading packages..."
+    $upgrade_command
+
+    if [[ "$PKG_MANAGER" == "apt" ]]; then
+        sudo update-ca-certificates
+        echo -e "${YELLOW}Autoremove${NC}"
+        sudo apt autoremove -y
+        echo -e "${CYAN}Fix broken updates${NC}"
+        sudo dpkg --configure -a
+        sudo apt --fix-broken install
+        echo -e "${GREEN}Running apt autoremove...${NC}"
+        sudo apt autoremove -y
+    fi
+
+    echo -e " ${GREEN} Updates and Upgrades completed on ${HOST_IP}.${NC} "
+}
+
+update_rpi_firmware() {
+    if command -v rpi-update &> /dev/null; then
+        echo "sudo rpi-update"
+        update_output=$(sudo SKIP_WARNING=1 rpi-update 2>&1)
+        update_rc=$?
+        echo "$update_output"
+
+        if [[ $update_rc -ne 0 ]]; then
+            echo -e "${RED}Firmware update failed.${NC}"
+        elif echo "$update_output" | grep -qiE "already.*up.to.date|up.to.date"; then
+            echo -e "${GREEN}Firmware already up to date. No reboot required.${NC}"
         else
-            echo "$output"
+            echo -e "${GREEN}Firmware update completed successfully.${NC}"
+            read -p "Reboot now? (y/n): " reboot_now
+            if [[ "$reboot_now" =~ ^([yY]|yes)$ ]]; then
+                echo -e "${ORANGE}Firmware Changed.. Rebooting...${NC}"
+                sudo reboot
+            else
+                echo -e "${RED}Firmware changed.. Reboot skipped...${NC}"
+            fi
+        fi
+    fi
+}
+
+run_pihole_tasks() {
+    waitfor=1
+    if [[ "$days" -ge "$waitfor" ]]; then
+        force_log_reset="yes"
+        echo -e "${RED}System uptime: $days days, $hours hours, $minutes minutes ${NC}" 
+    else
+        force_log_reset="no"
+        echo -e "${YELLOW}System uptime: $days days, $hours hours, $minutes minutes ${NC}" 
+    fi
+
+    if pihole -v &> /dev/null; then 
+        echo -e "${GREEN}Pihole Updates!${NC}"
+        echo "sudo pihole updatechecker" && sudo pihole updatechecker
+        echo "sudo pihole networkflush" && sudo pihole networkflush
+        echo "sudo pihole flush" && sudo pihole flush
+        echo "sudo pihole reloaddns" && sudo pihole reloaddns 
+        echo "sudo pihole updateGravity" && sudo pihole -g
+        echo "reload list" && sudo pihole reloadlists
+        echo "sudo pihole -up" && sudo pihole -up
+        echo "complete"
+        echo "$USER @ $HOSTNAME"
+
+        echo -e "${CYAN} Automatically selected $force_log_reset ${NC}"
+        echo -e "${RED}Reset logs anyway? ( $force_log_reset ) ${NC}"
+        read -p "Force log reset? (y/n): " override
+
+        if [[ -n $override ]]; then
+            force_log_reset=$override
+        else
+            echo -e "${YELLOW}No input received. Using default value $force_log_reset .${NC}"
+        fi
+
+        if [[ "$force_log_reset" =~ ^[Yy]es$|^[Yy]$ ]]; then
+            echo -e "${RED} $force_log_reset was selected.${NC}"
+            echo -e "${YELLOW}Flushing Logs${NC}"
+            echo "# output current pihole db size"
+            sudo du -h /etc/pihole/pihole-FTL.db 2>/dev/null
+            
+            FILE="/tmp/pihole-FTL-old.db"
+            if [[ -e "$FILE" ]]; then
+                sudo du -h "$FILE"
+            else
+                sudo touch "$FILE"
+                sudo du -h "$FILE"
+            fi
+            
+            echo "# current old db size"
+            sudo du -h /etc/pihole/pihole-FTL.db 2>/dev/null
+            sudo du -h /etc/pihole/pihole-FTL-old.db 2>/dev/null
+            sudo du -h /tmp/pihole-FTL-old.db 2>/dev/null
+            
+            echo "#pihole flush"
+            sudo pihole flush
+            
+            echo "# Output pihole db size"
+            sudo du -h /etc/pihole/pihole-FTL.db 2>/dev/null
+            sudo du -h /etc/pihole/pihole-FTL-old.db 2>/dev/null
+            sudo du -h /tmp/pihole-FTL-old.db 2>/dev/null
+            sudo rm -f /tmp/pihole-FTL-old.db 
+            sleep 3
+            
+            echo "# Stop pihole FTL service"
+            sudo systemctl stop pihole-FTL
+            sudo service pihole-FTL stop
+            
+            echo "moving current db to old db"
+            sudo mv /etc/pihole/pihole-FTL-old.db /tmp/pihole-FTL-old.db 2>/dev/null
+            sudo mv /etc/pihole/pihole-FTL.db /etc/pihole/pihole-FTL-old.db 2>/dev/null
+            sudo service pihole-FTL start
+            
+            echo "# Start pihole FTL service"
+            sudo systemctl start pihole-FTL
+            
+            echo "# Output reduced pihole db size"
+            sudo du -h /etc/pihole/pihole-FTL.db 2>/dev/null
+            sudo du -h /etc/pihole/pihole-FTL-old.db 2>/dev/null
+            sudo du -h /tmp/pihole-FTL-old.db 2>/dev/null
+            sleep 2
+        else
+            echo -e "The system has ${RED}not${NC} been running for longer than expected. ${GREEN}No db operations required.${NC}"
+            echo -e "${GREEN}System uptime: $days days, $hours hours, $minutes minutes ${NC}" 
+            sleep 4
+        fi
+    fi
+    echo -e "\nEnd of Pi-Hole Tasks\n"
+}
+
+run_kernel_check() {
+    echo "###########################################################################################"
+    echo "###############################   Running Kernel-Check   ##################################"
+    echo "###########################################################################################"
+
+    if command -v kernel-check &> /dev/null; then
+        kernel-check 2>/dev/null
+    elif [[ -f "kernel-check" ]]; then
+        bash kernel-check 2>/dev/null
+    else
+        bash <(curl -fsSL "https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/kernel-check") 2>/dev/null
+    fi
+
+    echo "^_^"
+    echo "end of back up kernel check"
+    sleep 1
+    echo "$USER @ $HOSTNAME"
+}
+
+handle_reboot_and_speedtest() {
+    echo "############################################################################################"
+    echo "######################################### uptime ###########################################"
+    echo "############################################################################################"
+
+    if [[ $uptime_seconds -ge $((3 * 24 * 3600)) ]]; then
+        echo -e "${RED} The system has been running for longer than three days. ${NC}"  
+        echo -e "${YELLOW} System uptime: $days days, $hours hours, $minutes minutes ${NC}"
+        read -p "Would you like to reboot now? (Y/n): " choice
+        if [[ "$choice" != [Nn]* ]]; then
+            echo -e "${RED} Rebooting... $USER @ $HOSTNAME ($HOST_IP) ${NC}"
+            sudo reboot
+            exit 0
+        else
+            echo -e "${RED} Reboot skipped. $USER@$HOSTNAME ($HOST_IP) ${NC} "
+            sleep 3
         fi
     else
-        echo "Speedtest command still not found after running the script."
-    fi
-elif [[ -z "$response" || "$response" == "N" || "$response" == "n" ]]; then
-    echo "Not running speedtest : System uptime: $(uptime)"
-else
-    echo "Invalid input."
-fi
+        echo -e "${GREEN} So good news! ${NC} $USER@$HOSTNAME ($HOST_IP)"   
+        echo -e " The system has ${GREEN}not${NC} been running for longer than ${YELLOW}three${NC} days. ${YELLOW}No reboot required. ${NC}"
+        echo -e "${GREEN} System uptime: $days days, $hours hours, $minutes minutes ${NC}"
+        echo "uptime $USER@$HOSTNAME ($HOST_IP)"
+        
+        if command -v lolcat >/dev/null 2>&1; then
+            display_profile_art | lolcat
+        else
+            display_profile_art
+        fi
+        
+        uptime
+        echo "$USER@$HOSTNAME $HOST_IP"
+        
+        read -r -p "Run Speedtest? (y/N): " response
+        if [[ "$response" =~ ^[Yy]$ ]]; then
+            echo "$USER@$HOSTNAME speedtest"
+            if ! command -v speedtest &> /dev/null && [ ! -f /bin/speedtest ]; then
+                bash <(curl -fsSL "https://github.com/tek-aevl/umupdate/raw/refs/heads/main/speedtest.sh" -o /tmp/speedtest.sh)
+                bash /tmp/speedtest.sh
+            fi
+            if command -v speedtest &> /dev/null || [ -f /bin/speedtest ]; then
+                output=$(speedtest --secure 2>&1)
+                if [[ "$output" == *"Unknown option"* ]] || [[ $? -ne 0 ]]; then
+                    output=$(speedtest 2>&1)
+                fi
+                if command -v lolcat &> /dev/null; then
+                    echo "$output" | lolcat
+                else
+                    echo "$output"
+                fi
+            else
+                echo "Speedtest command still not found after running the script."
+            fi
+        else
+            echo "Not running speedtest : System uptime: $(uptime)"
+        fi
 
-echo $USER "@" $HOSTNAME "($HOST_IP)"
-    # Default to "no" if running for less than three days
-    read -p "Reboot Anyway? (y/N): " choice
-    if [[ $choice == [Yy] ]]; then
-      echo -e "${RED} Rebooting... after 7 sec $USER@$HOSTNAME ($HOST_IP) ${NC}"
-       screenfetch
-       inxi  
-       uname -a
-      echo -e " ${RED} byah $USER@$HOSTNAME $HOST_IP ${NC} "
-       sudo reboot
-echo "rebooting..."
-       exit;
-echo "sleeping 10"   
-sleep 10
-    else
-      echo -e "${GREEN} Reboot Skipped. $USER@$HOSTNAME ($HOST_IP) ${NC}"
+        echo "$USER @ $HOSTNAME ($HOST_IP)"
+        read -p "Reboot Anyway? (y/N): " choice
+        if [[ "$choice" =~ ^[Yy]$ ]]; then
+            echo -e "${RED} Rebooting... after 7 sec $USER@$HOSTNAME ($HOST_IP) ${NC}"
+            run_fetch
+            if command -v inxi &> /dev/null; then inxi; fi
+            uname -a
+            echo -e " ${RED} byah $USER@$HOSTNAME $HOST_IP ${NC} "
+            echo "rebooting..."
+            sleep 7
+            sudo reboot
+            exit 0
+        else
+            echo -e "${GREEN} Reboot Skipped. $USER@$HOSTNAME ($HOST_IP) ${NC}"
+        fi
     fi
-   fi
-echo $USER "@" $HOSTNAME
-sudo who -a
-run_fetch
-inxi
-uname -a
-echo -e "Current Running kernel ($CKRUNNING) ; Current Installed kernel ($CKNEWEST)."
-echo -e "${GREEN} Byah.!. $USER@$HOSTNAME ($HOST_IP) ${NC}"
-exit;
+}
+
+close_out_script() {
+    echo "$USER @ $HOSTNAME"
+    sudo who -a
+    run_fetch
+    if command -v inxi &> /dev/null; then inxi; fi
+    uname -a
+    
+    # Grab the current kernel values cleanly 
+    CKRUNNING=$(uname -r)
+    # Finding the newest installed kernel safely across OSs can be complex, fallback to listing string format requested
+    CKNEWEST=${CKNEWEST:-"Unknown/Check manually"} 
+    
+    echo -e "Current Running kernel ($CKRUNNING) ; Current Installed kernel ($CKNEWEST)."
+    echo -e "${GREEN} Byah.!. $USER@$HOSTNAME ($HOST_IP) ${NC}"
+    exit 0
+}
+
+# ==========================================
+# 4. MAIN EXECUTION FLOW
+# ==========================================
+
+show_intro_and_art
+run_custom_scripts
+update_packages
+update_rpi_firmware
+run_pihole_tasks
+run_kernel_check
+handle_reboot_and_speedtest
+close_out_script
