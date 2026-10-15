@@ -17,26 +17,58 @@ if [ -f "/bin/update" ]; then
     if [ -z "$installed_version" ]; then
         installed_version="UNKNOWN"
     fi
-    
-    echo "Installed Version is $installed_version"
-    
-    if [ "$installed_version" == "$version" ]; then
+ 
+   echo "Installed Version is $installed_version"
+   if [ "$installed_version" == "$version" ]; then
         echo "Version matches!"
     else
         echo "Version mismatch! Installed version: $installed_version"
         # -t 10 adds a 10 second timeout so it won't hang forever if unattended
         if read -t 10 -p "Do you want to update to the new version? (Y/n) [Skips in 10s]: " choice; then
             choice="${choice:-y}" # Default to yes
-            
-            if [[ "$choice" =~ ^[Yy]$ ]]; then
+             if [[ "$choice" =~ ^[Yy]$ ]]; then
                 echo "Backing up old version..."
                 sudo mkdir -p /bin/update.old
                 sudo mv /bin/update "/bin/update.old/$(date '+%Y%m%d%H%M%S').update"
+                updolds="/bin/update.old"
                 
+                # Check if the directory exists
+                if [ -d "$updolds" ]; then
+                # Calculate and display the total size of the folder
+                SIZE=$(sudo du -sh "$updolds" | awk '{print $1}')
+                echo "The backup folder ($updolds) is currently using $SIZE of space."
+                
+                # Count how many items are in the directory
+                ITEM_COUNT=$(ls -1A "$updolds" | wc -l)
+                
+                if [ "$ITEM_COUNT" -gt 1 ]; then
+                # Prompt the user for cleanup
+                read -p "Would you like to free up space by keeping only the latest version and removing the rest? (y/n): " choice
+                
+                case "$choice" in 
+                    y|Y|yes|Yes ) 
+                        echo "Cleaning up older versions..."
+                        # Navigate to the directory, sort by time (newest first), skip the first item, and remove the rest
+                        sudo bash -c "cd $updolds && ls -t | tail -n +2 | xargs rm -rf"
+                        
+                        NEW_SIZE=$(sudo du -sh "$updolds" | awk '{print $1}')
+                        echo "Cleanup complete! The folder is now using $NEW_SIZE of space."
+                        ;;
+                    * )
+                        echo "Skipping cleanup."
+                        ;;
+                esac
+                elif [ "$ITEM_COUNT" -eq 1 ]; then
+                echo "Only one version exists. Nothing to clean up."
+                else
+                echo "The folder is empty."
+                fi
+                else
+                echo "Directory $updolds does not exist."
+                fi
                 echo "Fetching the new script from GitHub..."
                 sudo curl -sL -o /bin/update "$UPDATE_URL"
                 sudo chmod +x /bin/update
-                
                 echo "Update complete. Executing new version..."
                 echo "Bye! $USER@$HOSTNAME"
                 exec /bin/update # Replace the current process with the new script
