@@ -103,6 +103,8 @@ else
     fi
 fi
 
+echo "Hello $USER! #v$version#"
+
 # ==========================================
 # 2. GLOBAL VARIABLES & COLORS
 # ==========================================
