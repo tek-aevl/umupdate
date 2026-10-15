@@ -1,5 +1,5 @@
 #!/bin/bash
-version="1.2.3"
+version="1.2.4"
 reset && clear
 UPDATE_URL="https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/update.v2/update"
 
@@ -198,12 +198,6 @@ run_custom_scripts() {
         bash /bin/customup
         echo "End of customup"
     fi
-
-echo -e "\nRunning bash cclearer remotely..."
-    echo -e "${GREEN}Running cclearer...${NC}"
-    bash <(curl -fsSL "https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/cclearer")
-    echo "End of cclearer"
-    echo
 }
 
 update_packages() {
@@ -466,6 +460,11 @@ handle_reboot_and_speedtest() {
 }
 
 close_out_script() {
+    echo -e "\nRunning bash cclearer remotely..."
+    echo -e "${GREEN}Running cclearer...${NC}"
+    bash <(curl -fsSL "https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/cclearer")
+    echo "End of cclearer"
+    echo
     user_info
     sudo who -a
     run_fetch
