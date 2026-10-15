@@ -10,55 +10,39 @@ echo "Info at https://github.com/tek-aevl/umupdate/ #To use run # bash update or
 UPDATE_URL="https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/update.v2/update"
 
 if [ -f "/bin/update" ]; then
-    installed_version=$(grep -oP '(?<=#)\S+(?=#)' /bin/update | head -n 1)
+    # Grab the exact version number from the variable declaration
+    installed_version=$(grep -m 1 -oP '^version="\K[^"]+' /bin/update)
     echo "Installed Version is $installed_version"
     
     if [ "$installed_version" == "$version" ]; then
         echo "Version matches!"
     else
         echo "Version mismatch! Installed version: $installed_version"
-        read -p "Do you want to update to the new version? (Y/n): " choice 
-        choice="${choice:-y}" # Default to yes
-        
-        if [[ "$choice" =~ ^[Yy]$ ]]; then
-            echo "Backing up old version..."
-            sudo mkdir -p /bin/update.old
-            sudo mv /bin/update "/bin/update.old/$(date '+%Y%m%d%H%M%S').update"
+        # -t 10 adds a 10 second timeout so it won't hang forever if unattended
+        if read -t 10 -p "Do you want to update to the new version? (Y/n) [Skips in 10s]: " choice; then
+            choice="${choice:-y}" # Default to yes
             
-            echo "Fetching the new script from GitHub..."
-            # Download the whole file directly to /bin/update
-            sudo curl -sL -o /bin/update "$UPDATE_URL"
-            sudo chmod +x /bin/update
-            
-            echo "Update complete. Executing new version..."
-            echo "Bye! $USER@$HOSTNAME"
-            /bin/update
-            exit 0
+            if [[ "$choice" =~ ^[Yy]$ ]]; then
+                echo "Backing up old version..."
+                sudo mkdir -p /bin/update.old
+                sudo mv /bin/update "/bin/update.old/$(date '+%Y%m%d%H%M%S').update"
+                
+                echo "Fetching the new script from GitHub..."
+                sudo curl -sL -o /bin/update "$UPDATE_URL"
+                sudo chmod +x /bin/update
+                
+                echo "Update complete. Executing new version..."
+                echo "Bye! $USER@$HOSTNAME"
+                exec /bin/update # Use exec to replace the current process instead of stacking them
+            else
+                echo "Update cancelled."
+            fi
         else
-            echo "Update cancelled."
+            echo -e "\nTimeout reached. Skipping update."
         fi
     fi
 else
-    echo "The file /bin/update does not exist."
-    read -p "Do you want to install it? (Y/n): " choice
-    choice="${choice:-y}" # Default to yes
-    
-    if [[ "$choice" =~ ^[Yy]$ ]]; then
-        echo "Fetching the script from GitHub..."
-        # Download the whole file directly to /bin/update
-        sudo curl -sL -o /bin/update "$UPDATE_URL"
-        sudo chmod +x /bin/update
-        
-        if [ -f "/bin/update" ]; then
-            echo "✅ Installed /bin/update successfully."
-        else
-            echo "❌ Failed to install /bin/update."
-        fi
-        sleep 2
-    else
-        echo "Installation cancelled."
-    fi
-fi
+    # ... rest of the installation block
 
 # ==========================================
 # 2. GLOBAL VARIABLES & COLORS
