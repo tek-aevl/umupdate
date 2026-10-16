@@ -290,7 +290,19 @@ update_packages() {
         echo -e "${GREEN}Running apt autoremove...${NC}"
         sudo apt autoremove -y
     fi
+    # Check and update Flatpak if installed
+    if command -v flatpak &> /dev/null; then
+        echo -e "${CYAN}Updating Flatpak packages...${NC}"
+        flatpak update -y
+        # Optional: remove unused flatpak runtimes
+        # flatpak uninstall --unused -y 
+    fi
 
+    # Check and update Snap if installed
+    if command -v snap &> /dev/null; then
+        echo -e "${CYAN}Updating Snap packages...${NC}"
+        sudo snap refresh
+    fi
     echo -e " ${GREEN} Updates and Upgrades completed on ${HOST_IP}.${NC} "
 }
 
