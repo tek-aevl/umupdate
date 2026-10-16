@@ -2,6 +2,9 @@
 version="1.3.25"
 UPDATE_URL="https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update"
 echo
+#config
+qdel='10'
+
 echo
 # ==========================================
 # 1. SELF-UPDATE CHECK
@@ -50,7 +53,7 @@ if [ -f "/bin/update" ]; then
                         # Check if there are actually more than 2 versions to clean up
                         if [ "$ITEM_COUNT" -gt 2 ]; then
                             # Prompt the user for cleanup
-                            read -p "The folder is over 50KB. Would you like to free up space by keeping only the latest TWO versions? (y/n): " choice
+                            read -t "$qdel" -p "The folder is over 50KB. Would you like to free up space by keeping only the latest TWO versions? (y/n): " choice
                             
                             case "$choice" in 
                                 y|Y|yes|Yes ) 
@@ -80,7 +83,7 @@ if [ -f "/bin/update" ]; then
 
 else
     echo "The file /bin/update does not exist."
-    read -t 10 -p "Do you want to install it? (Y/n): " choice
+    read -t "$qdel" -p "Do you want to install it? (Y/n): " choice
     choice="${choice:-y}" # Default to yes
     
     if [[ "$choice" =~ ^[Yy]$ ]]; then
@@ -352,7 +355,7 @@ run_pihole_tasks() {
         user_info
         echo -e "${CYAN} Automatically selected $force_log_reset ${NC}"
         echo -e "${RED}Reset logs anyway? ( $force_log_reset ) ${NC}"
-        read -p "Force log reset? (y/n): " override
+        read -t "$qdel" -p "Force log reset? (y/n): " override
 
         if [[ -n $override ]]; then
             force_log_reset=$override
@@ -464,7 +467,7 @@ handle_reboot_and_speedtest() {
             
         user_info
         
-        read -t 5 -r -p "Run Speedtest? (y/N) [Skips in 5s]: " response
+        read -t "$qdel" -r -p "Run Speedtest? (y/N) [Skips in '${qdel}'s]: " response
         if [[ "$response" =~ ^[Yy]$ ]]; then
             user_info
             echo "Running speedtest"
@@ -490,7 +493,7 @@ handle_reboot_and_speedtest() {
         fi
 
         user_info
-        if read -t 5 -p "Reboot Anyway? (y/N) [Skips in 5s]: " choice; then
+        if read -t "$qdel" -p "Reboot Anyway? (y/N) [Skips in '${qdel}'s]: " choice; then
             if [[ "$choice" =~ ^[Yy]$ ]]; then
                 echo -e "${RED} Rebooting... after 7 sec $USER@$HOSTNAME ($HOST_IP) ${NC}"
                 run_fetch
