@@ -1,5 +1,5 @@
 #!/bin/bash
-version="1.3.241"
+version="1.3.25"
 UPDATE_URL="https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update"
 echo
 echo
@@ -103,6 +103,8 @@ echo
 HOST_IP=$(ip route get 1.1.1.1 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i=="src") print $(i+1); exit}')
 user_info() {
     echo -e "${CYAN}$USER${NC}@${LIGHT_BLUE}$HOSTNAME${NC} (${YELLOW}$HOST_IP${NC})"
+    uname -a
+    uptime
 }
 user_info
 echo
@@ -174,10 +176,8 @@ show_intro_and_art() {
     fi
 
     echo -e "${GREEN}Welcome $USER@$HOSTNAME ($HOST_IP)${NC}"
-    echo "$USER! this is update #v$version#"
+    echo "$USER! this is update version $version#"
     user_info
-    uname -a
-    
     run_fetch
     if command -v inxi &> /dev/null; then inxi; fi
     
@@ -461,8 +461,7 @@ handle_reboot_and_speedtest() {
         else
             display_profile_art
         fi
-        
-        uptime
+            
         user_info
         
         read -t 5 -r -p "Run Speedtest? (y/N) [Skips in 5s]: " response
@@ -496,7 +495,6 @@ handle_reboot_and_speedtest() {
                 echo -e "${RED} Rebooting... after 7 sec $USER@$HOSTNAME ($HOST_IP) ${NC}"
                 run_fetch
                 if command -v inxi &> /dev/null; then inxi; fi
-                uname -a
                 echo -e " ${RED} byah $USER@$HOSTNAME $HOST_IP ${NC} "
                 echo "rebooting..."
                 sleep 7
@@ -521,13 +519,11 @@ close_out_script() {
     user_info
     run_fetch
     if command -v inxi &> /dev/null; then inxi; fi
-    uname -a
     users
     # Grab the current kernel values cleanly 
     CKRUNNING=$(uname -r)
     # Finding the newest installed kernel safely across OSs can be complex, fallback to listing string format requested
     CKNEWEST=${CKNEWEST:-"Unknown/Check manually"} 
-    
     echo -e "Current Running kernel ($CKRUNNING) ; Current Installed kernel ($CKNEWEST)."
     echo -e "${GREEN} Byah.!. $USER@$HOSTNAME ($HOST_IP) ${NC}"
     exit 0
