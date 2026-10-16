@@ -174,7 +174,7 @@ show_intro_and_art() {
     fi
 
     echo -e "${GREEN}Welcome $USER@$HOSTNAME ($HOST_IP)${NC}"
-    echo "$USER! #v$version#"
+    echo "$USER! this is update #v$version#"
     user_info
     uname -a
     
