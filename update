@@ -1,5 +1,5 @@
 #!/bin/bash
-version="1.3.21"
+version="1.3.22"
 UPDATE_URL="https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update"
 echo
 echo
@@ -145,6 +145,7 @@ display_profile_art() {
        curl -sL "https://tek.aevl.us/profile.jpg" -o /tmp/profile_ascii.jpg
        user_info
        jp2a --colors /tmp/profile_ascii.jpg
+        
        rm -f /tmp/profile_ascii.jpg
     else
         echo "jp2a is not installed. To see the ASCII art, run: sudo apt install jp2a"
