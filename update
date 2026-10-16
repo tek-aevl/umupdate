@@ -210,19 +210,19 @@ run_custom_scripts() {
         sudo bash /tmp/kernelup && sudo cp /tmp/kernelup /bin/kernelup        
         echo "End of kernel up"
     fi
-        if [ -f /bin/prune ] || command -v docker &> /dev/null || command -v podman &> /dev/null; then
-            # Prompt the user, defaulting to Yes on empty input or timeout
-            read -t 10 -p "Run prune? (Y/n) [Runs in 10s]: " prune_resp
-            
-            # If the user explicitly types 'n' or 'N', skip it. Otherwise, run it.
-            if [[ "$prune_resp" =~ ^[Nn]$ ]]; then
-                echo -e "\nSkipping prune."
-            else
-                echo -e "\n${GREEN}Running prune...${NC}"
-                bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/prune)
-                echo "Prune complete."
-            fi
-        fi
+            if [ -f /bin/prune ] || command -v docker &> /dev/null || command -v podman &> /dev/null; then
+                        # Prompt the user, defaulting to No on empty input or timeout
+                        read -t 10 -p "Run prune? (y/N) [Skips in 10s]: " prune_resp
+                        
+                        # If the user explicitly types 'y' or 'Y', run it. Otherwise, skip it.
+                        if [[ "$prune_resp" =~ ^[Yy]$ ]]; then
+                            echo -e "\n${GREEN}Running prune...${NC}"
+                            bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/prune)
+                            echo "Prune complete."
+                        else
+                            echo -e "\nSkipping prune."
+                        fi
+                    fi
 
     echo -e "\nRunning Custom Commands With customup"
     if [ ! -f /bin/customup ]; then
