@@ -102,9 +102,14 @@ else
         echo "Installation cancelled."
     fi
 fi
-
+echo
+HOST_IP=$(ip route get 1.1.1.1 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i=="src") print $(i+1); exit}')
+user_info() {
+    echo -e "${CYAN}$USER${NC}@${LIGHT_BLUE}$HOSTNAME${NC} (${YELLOW}$HOST_IP${NC})"
+}
 echo "Hello $USER! #v$version#"
-
+user_info
+echo
 # ==========================================
 # 2. GLOBAL VARIABLES & COLORS
 # ==========================================
@@ -124,10 +129,7 @@ DARK_GRAY='\033[0;30m'
 ORANGE='\033[0;33m' # Fallback for orange
 NC='\033[0m'
 
-HOST_IP=$(ip route get 1.1.1.1 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i=="src") print $(i+1); exit}')
-user_info() {
-    echo -e "${CYAN}$USER${NC}@${LIGHT_BLUE}$HOSTNAME${NC} (${YELLOW}$HOST_IP${NC})"
-}
+
 # ==========================================
 # 3. CORE FUNCTIONS
 # ==========================================
