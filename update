@@ -107,7 +107,6 @@ HOST_IP=$(ip route get 1.1.1.1 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i=="sr
 user_info() {
     echo -e "${CYAN}$USER${NC}@${LIGHT_BLUE}$HOSTNAME${NC} (${YELLOW}$HOST_IP${NC})"
 }
-echo "Hello $USER! #v$version#"
 user_info
 echo
 # ==========================================
@@ -146,10 +145,10 @@ run_fetch() {
 
 display_profile_art() {  
     if command -v jp2a >/dev/null 2>&1; then
-        curl -sL "https://tek.aevl.us/profile.jpg" -o /tmp/profile_ascii.jpg
-        jp2a --colors /tmp/profile_ascii.jpg
-        user_info
-        rm -f /tmp/profile_ascii.jpg
+       curl -sL "https://tek.aevl.us/profile.jpg" -o /tmp/profile_ascii.jpg
+       user_info
+       jp2a --colors /tmp/profile_ascii.jpg
+       rm -f /tmp/profile_ascii.jpg
     else
         echo "jp2a is not installed. To see the ASCII art, run: sudo apt install jp2a"
     fi
@@ -177,6 +176,7 @@ show_intro_and_art() {
     fi
 
     echo -e "${GREEN}Welcome $USER@$HOSTNAME ($HOST_IP)${NC}"
+    echo "$USER! #v$version#"
     user_info
     uname -a
     
