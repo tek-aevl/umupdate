@@ -1,5 +1,5 @@
 #!/bin/bash
-version="1.3.23"
+version="1.3.24"
 UPDATE_URL="https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update"
 echo
 echo
@@ -91,7 +91,7 @@ else
         if [ -f "/bin/update" ]; then
             echo "✅ Installed /bin/update successfully."
             sleep 2
-            bash /bin/update 
+            exec /bin/update 
         else
             echo "❌ Failed to install /bin/update."
         fi
