@@ -1,5 +1,5 @@
 #!/bin/bash
-version="1.3.278"
+version="1.3.279"
 echo
 # ==========================================
 # 1. GLOBAL VARIABLES & COLORS
@@ -549,7 +549,9 @@ close_out_script() {
             # This triggers if the timer runs out
             echo -e "\n${GREEN}Timeout reached. Reboot Skipped. $USER@$HOSTNAME ($HOST_IP) ${NC}"
         fi
-    echo -e "${GREEN} Byah.!. 'user_info' ${NC}"
+    echo -e "${GREEN} Byah.!. "
+    user_info 
+    echo -e " ${NC}"
     exit 0
 }
 
