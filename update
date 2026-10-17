@@ -458,8 +458,6 @@ run_kernel_check() {
 
     echo "^_^"
     echo "End of Kernel check"
-   user_info
-   inxic 
    sleep $ss
 }
 
