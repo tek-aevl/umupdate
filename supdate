@@ -314,7 +314,7 @@ echo
 }
 
 export -f run_host
-export -f check_pihole
+#export -f check_pihole
 export -f show_progress
 export TOTAL
 
