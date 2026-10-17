@@ -1,5 +1,5 @@
 #!/bin/bash
-version="1.3.273"
+version="1.3.274"
 UPDATE_URL="https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update"
 echo
 #config
@@ -514,8 +514,8 @@ handle_reboot_and_speedtest() {
         else
             echo "Not running speedtest : System uptime: $(uptime)"
         fi
-
         user_info
+        fi
 }
 
 close_out_script() {
@@ -550,7 +550,6 @@ close_out_script() {
             # This triggers if the timer runs out
             echo -e "\n${GREEN}Timeout reached. Reboot Skipped. $USER@$HOSTNAME ($HOST_IP) ${NC}"
         fi
-    fi
     echo -e "${GREEN} Byah.!. 'user_info' ${NC}"
     exit 0
 }
