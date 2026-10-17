@@ -1,5 +1,5 @@
 #!/bin/bash
-version="1.3.293"
+version="1.3.294"
 echo
 # ==========================================
 # 1. GLOBAL VARIABLES & COLORS
@@ -639,8 +639,9 @@ run_pihole_tasks
 sleep $ss
 handle_uptime_and_speedtest
 sleep $ss
+run_fortune_cowsay
+sleep $ss 
 run_kernel_check
 sleep $ss 
-run_fortune_cowsay
 close_out_script
 sleep $sl
