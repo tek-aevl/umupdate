@@ -198,9 +198,6 @@ show_intro_and_art() {
     else
         display_profile_art
     fi
-
-    echo -e "${GREEN}Welcome $USER@$HOSTNAME ($HOST_IP)${NC}"
-    echo "$USER! this is update version $version#"
     user_info
     sysnfo
     calculate_uptime
