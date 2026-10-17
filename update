@@ -1,9 +1,10 @@
 #!/bin/bash
-version="1.3.274"
+version="1.3.275"
 UPDATE_URL="https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update"
 echo
 #config
 qdel='5'
+ss='1'
 HOST_IP=$(ip route get 1.1.1.1 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i=="src") print $(i+1); exit}')
 echo
 echo
@@ -206,7 +207,7 @@ show_intro_and_art() {
     echo "uptime $USER@$HOSTNAME ($HOST_IP)"
     
     echo -e "${RED} Current Time variables : $days days, $hours hours, $minutes minutes ${NC}"
-        sleep 2 
+        sleep $ss 
 }
 
 run_custom_scripts() {
@@ -431,11 +432,11 @@ run_pihole_tasks() {
             sudo du -h /etc/pihole/pihole-FTL.db 2>/dev/null
             sudo du -h /etc/pihole/pihole-FTL-old.db 2>/dev/null
             sudo du -h /tmp/pihole-FTL-old.db 2>/dev/null
-            sleep 2
+            sleep 3
         else
             echo -e "The system has ${RED}not${NC} been running for longer than expected. ${GREEN}No db operations required.${NC}"
             echo -e "${GREEN}System uptime: $days days, $hours hours, $minutes minutes ${NC}" 
-            sleep 4
+            sleep 3
         fi
            echo -e "\nEnd of Pi-Hole Tasks\n"
     fi
@@ -456,7 +457,7 @@ run_kernel_check() {
 
     echo "^_^"
     echo "End of Kernel check"
-    sleep 1
+    sleep $ss
     user_info
 }
 
@@ -475,7 +476,7 @@ handle_reboot_and_speedtest() {
             exit 0
         else
             echo -e "${RED} Reboot skipped. $USER@$HOSTNAME ($HOST_IP) ${NC} "
-            sleep 3
+            sleep $ss
         fi
     else
         echo -e "${GREEN} So good news! ${NC} $USER@$HOSTNAME ($HOST_IP)"   
@@ -557,18 +558,19 @@ close_out_script() {
 # 4. MAIN EXECUTION FLOW
 # ==========================================
 show_intro_and_art
-sleep 1
+sleep $ss
 run_custom_scripts
-sleep 1
+sleep $ss
 update_packages
-sleep 1
+sleep $ss
 update_rpi_firmware
-sleep 1
+sleep $ss
 update_technitium
-sleep 1
+sleep $ss
 run_pihole_tasks
-sleep 1
-run_kernel_check
-sleep 1
+sleep $ss
 handle_reboot_and_speedtest
+sleep $ss
+run_kernel_check
+sleep $ss 
 close_out_script
