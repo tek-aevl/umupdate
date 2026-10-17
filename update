@@ -1,5 +1,5 @@
 #!/bin/bash
-version="1.3.283"
+version="1.3.284"
 echo
 # ==========================================
 # 1. GLOBAL VARIABLES & COLORS
@@ -31,12 +31,12 @@ echo -e "${WHITE}$USER${NC}@${BLUE}$HOSTNAME${NC} (${GREEN}$HOST_IP${NC})"
 echo -e "${ORANGE}###########################################################################################"
 echo -e "###########################################################################################${NC}"
     echo -e "${YELLOW} Can you ${RED} sudo${NC}?"
-    echo -e "${RED} Password $USER@$HOSTNAME ($HOST_IP) ${NC}"
+    echo -e "${WHITE} Password $USER@$HOSTNAME ($HOST_IP) ${NC}"
     echo -e " ;-P ${NC} "
 if sudo -v; then
         echo -e "${GREEN}sudo works.${NC}"
     else
-        echo -e "${YELLOW}sudo password is required (or sudo not configured).${NC}"
+        echo -e "${RED}sudo password is required (or sudo not configured).${NC}"
     fi
 echo "###########################################################################################"
 echo "###########################################################################################"
@@ -63,7 +63,7 @@ if [ -f "/bin/update" ]; then
     else
         echo "Version mismatch! Installed version: $installed_version"
         # -t 10 adds a 10 second timeout so it won't hang forever if unattended
-        if read -t 10 -p "Do you want to update to the new version? (Y/n) [Installs in 10s]: " choice; then
+        if read -t "$qdell" -p "Do you want to update to the new version? (Y/n) [Installs in '${qdell}'s]: " choice; then
             choice="${choice:-y}" # Default to yes
             
             if [[ "$choice" =~ ^[Yy]$ ]]; then
@@ -93,7 +93,7 @@ if [ -f "/bin/update" ]; then
                             case "$choice" in 
                                 y|Y|yes|Yes ) 
                                     echo "Cleaning up older versions..."
-                                    # Navigate to the directory, sort by time (newest first), skip the first TWO items, and remove the rest
+                                    # Navigate to the directory, sort by time (newest first), skip the first items, and remove the rest
                                     sudo bash -c "cd $updolds && ls -t | tail -n +3 | xargs rm -rf"
                                     
                                     NEW_SIZE=$(sudo du -sh "$updolds" | awk '{print $1}')
@@ -182,7 +182,6 @@ calculate_uptime() {
     uptime_raw=$(uptime -s)
     uptime_timestamp=$(date -d "$uptime_raw" +%s)
     time_difference=$((current_timestamp - uptime_timestamp))
-
     uptime_seconds=$(cut -d' ' -f1 /proc/uptime)
     uptime_seconds=$(printf "%.0f" "$uptime_seconds")
     days=$(echo "$uptime_seconds / 86400" | bc)
@@ -222,7 +221,7 @@ run_custom_scripts() {
     fi
             if [ -f /bin/prune ] || command -v docker &> /dev/null || command -v podman &> /dev/null; then
                         # Prompt the user, defaulting to No on empty input or timeout
-                        read -t 10 -p "Run prune? (y/N) [Skips in 10s]: " prune_resp
+                        read -t "$qdel" -p "Run prune? (y/N) [Skips in '${qdel}'s]: " prune_resp
                         
                         # If the user explicitly types 'y' or 'Y', run it. Otherwise, skip it.
                         if [[ "$prune_resp" =~ ^[Yy]$ ]]; then
@@ -236,7 +235,7 @@ run_custom_scripts() {
 
     echo -e "\nRunning Custom Commands With customup"
     if [ ! -f /bin/customup ]; then
-        if read -t 5 -r -p "/bin/customup not found. Create it now with nano? (y/N) [Skips in 5s]: " create_resp; then
+        if read -t "$qdel" -r -p "/bin/customup not found. Create it now with nano? (y/N) [Skips in '${qdel}'s]: " create_resp; then
             if [[ "$create_resp" =~ ^[Yy]$ ]]; then
                 sudo nano /bin/customup
                 if [ -f /bin/customup ]; then sudo chmod +x /bin/customup; fi
@@ -321,7 +320,6 @@ update_rpi_firmware() {
         update_output=$(sudo SKIP_WARNING=1 rpi-update 2>&1)
         update_rc=$?
         echo "$update_output"
-
         if [[ $update_rc -ne 0 ]]; then
             echo -e "${RED}Firmware update failed.${NC}"
         elif echo "$update_output" | grep -qiE "already.*up.to.date|up.to.date"; then
@@ -490,12 +488,9 @@ handle_uptime_and_speedtest() {
         else
             display_profile_art
         fi
-            
         user_info
-        
         read -t "$qdel" -r -p "Run Speedtest? (y/N) [Skips in '${qdel}'s]: " response
         if [[ "$response" =~ ^[Yy]$ ]]; then
-            user_info
             echo "Running speedtest"
             if ! command -v speedtest &> /dev/null && [ ! -f /bin/speedtest ]; then
                 bash <(curl -fsSL "https://github.com/tek-aevl/umupdate/raw/refs/heads/main/speedtest.sh" -o /tmp/speedtest.sh)
@@ -517,8 +512,10 @@ handle_uptime_and_speedtest() {
         else
             echo "Not running speedtest : System uptime: $(uptime)"
         fi
+    fi
         user_info
-        fi
+        sudo who -a
+        sudo users
 }
 
 close_out_script() {
@@ -536,14 +533,14 @@ close_out_script() {
     CKNEWEST=${CKNEWEST:-"Unknown/Check manually"} 
     echo -e "Current Running kernel ($CKRUNNING) ; Current Installed kernel ($CKNEWEST)."
     
-    if read -t "$qdell" -p "Reboot Anyway? (y/N) [Skips in '${qdell}'s]: " choice; then
+    if read -t "$qdell" -p "Reboot Anyway? (y/N) [Skips in ${qdell}s]: " choice; then
             if [[ "$choice" =~ ^[Yy]$ ]]; then
-                echo -e "${RED} Rebooting... after 7 sec $USER@$HOSTNAME ($HOST_IP) ${NC}"
+                echo -e "${RED} Rebooting... after  '${qdell}' sec $USER@$HOSTNAME ($HOST_IP) ${NC}"
                 run_fetch
                 if command -v inxi &> /dev/null; then inxi; fi
                 echo -e " ${RED} byah $USER@$HOSTNAME $HOST_IP ${NC} "
                 echo "rebooting..."
-                  sleep 7 && sudo reboot
+                  sleep $qdell && sudo reboot
                 exit 0
             else
                 echo -e "${GREEN} Reboot Skipped. $USER@$HOSTNAME ($HOST_IP) ${NC}"
@@ -578,3 +575,4 @@ sleep $ss
 run_kernel_check
 sleep $ss 
 close_out_script
+sleep $sl
