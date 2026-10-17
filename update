@@ -1,5 +1,5 @@
 #!/bin/bash
-version="1.3.2852"
+version="1.3.2853"
 echo
 # ==========================================
 # 1. GLOBAL VARIABLES & COLORS
@@ -202,15 +202,10 @@ show_intro_and_art() {
     echo -e "${GREEN}Welcome $USER@$HOSTNAME ($HOST_IP)${NC}"
     echo "$USER! this is update version $version#"
     user_info
-    run_fetch
     sysnfo
-    echo "get-time $USER@$HOSTNAME ($HOST_IP)"
     calculate_uptime
-    echo "do-math $USER@$HOSTNAME ($HOST_IP)"
-    echo "uptime $USER@$HOSTNAME ($HOST_IP)"
-    
     echo -e "${RED} Current Time variables : $days days, $hours hours, $minutes minutes ${NC}"
-        sleep $ss 
+    sleep $sl 
 }
 
 run_custom_scripts() {
@@ -470,8 +465,9 @@ run_kernel_check() {
 
     echo "^_^"
     echo "End of Kernel check"
-    sleep $ss
-    user_info
+   user_info
+   inxic 
+   sleep $ss
 }
 
 handle_uptime_and_speedtest() {
@@ -527,8 +523,11 @@ handle_uptime_and_speedtest() {
         fi
     fi
         user_info
+    echo "sudo who -a"
         sudo who -a
+    echo "sudo users"
         sudo users
+    inxic
 }
 
 close_out_script() {
