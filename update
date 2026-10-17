@@ -1,5 +1,5 @@
 #!/bin/bash
-version="1.3.288"
+version="1.3.29"
 echo
 # ==========================================
 # 1. GLOBAL VARIABLES & COLORS
@@ -146,7 +146,6 @@ if command -v inxi &> /dev/null; then inxi; fi
 }
 sysnfo() {
     user_info
-    echo "Script Version '$version'"
     uname -a
     uptime
     inxic
@@ -166,7 +165,6 @@ run_fetch() {
         echo -e "${YELLOW}Neither fastfetch nor screenfetch is installed.${NC}"
     fi
 }
-
 display_profile_art() {  
     if command -v jp2a >/dev/null 2>&1; then
        curl -sL "https://tek.aevl.us/profile.jpg" -o /tmp/profile_ascii.jpg
@@ -198,8 +196,7 @@ show_intro_and_art() {
     else
         display_profile_art
     fi
-    user_info
-    sysnfo
+    echo "Script Version '$version'"
     calculate_uptime
     echo -e "${RED} Current Time variables : $days days, $hours hours, $minutes minutes ${NC}"
     sleep $sl 
@@ -208,7 +205,7 @@ show_intro_and_art() {
 run_custom_scripts() {
         if [ -f /usr/bin/mainline ]; then
                 echo -e "\nMainline Kernel tool found."
-                
+                user_info
                 # Prompt the user, defaulting to No on empty input or timeout
                 if read -t "$qdel" -p "Update Kernel with kernelup? (y/N) [Skips in '${qdel}'s]: " choice; then
                     if [[ "$choice" =~ ^[Yy]$ ]]; then
@@ -237,7 +234,7 @@ run_custom_scripts() {
                             echo -e "\nSkipping prune."
                         fi
                     fi
-
+    user_info
     echo -e "\nRunning Custom Commands With customup"
     if [ ! -f /bin/customup ]; then
         if read -t "$qdel" -r -p "/bin/customup not found. Create it now with nano? (y/N) [Skips in '${qdel}'s]: " create_resp; then
@@ -331,6 +328,7 @@ update_rpi_firmware() {
             echo -e "${GREEN}Firmware already up to date. No reboot required.${NC}"
         else
             echo -e "${GREEN}Firmware update completed successfully.${NC}"
+            user_info
             read -p "Reboot now? (y/n): " reboot_now
             if [[ "$reboot_now" =~ ^([yY]|yes)$ ]]; then
                 echo -e "${ORANGE}Firmware Changed.. Rebooting...${NC}"
@@ -358,7 +356,7 @@ update_technitium() {
             echo -e "${GREEN}Technitium update completed successfully.${NC}"
         fi
     else
-        echo -e "${ORANGE}Technitium is not running on this system. Skipping...${NC}"
+        echo -e "${ORANGE}:-) ${NC}"
     fi
 }
 run_pihole_tasks() {
@@ -451,7 +449,6 @@ run_kernel_check() {
     echo "###########################################################################################"
     echo "###############################   Running Kernel-Check   ##################################"
     echo "###########################################################################################"
-
     if command -v kernel-check &> /dev/null; then
         kernel-check 2>/dev/null
     elif [[ -f "kernel-check" ]]; then
@@ -513,12 +510,13 @@ handle_uptime_and_speedtest() {
             echo "Not running speedtest : System uptime: $(uptime)"
         fi
     fi
-        user_info
-    echo "sudo who -a"
+    echo
+        inixc
+    echo && echo "sudo who -a"
         sudo who -a
-    echo "sudo users"
+    echo && echo "sudo users"
         sudo users
-    inxic
+    echo 
 }
 
 close_out_script() {
@@ -528,6 +526,8 @@ close_out_script() {
     echo "End of cclearer"
     echo
     run_fetch
+    user_info
+    inxic
     # Grab the current kernel values cleanly 
     CKRUNNING=$(uname -r)
     # Finding the newest installed kernel safely across OSs can be complex, fallback to listing string format requested
@@ -581,7 +581,7 @@ run_fortune_cowsay() {
     else
         echo -e "\n${YELLOW}Fun fact: 'fortune' and 'cowsay' are not installed.${NC}"
         
-if read -t "$qdel" -p "Would you like to install them now? (y/N) [Skips in '${qdel}'s]: " choice; then
+if read -t "$qdell" -p "Would you like to install them now? (y/N) [Skips in '${qdell}'s]: " choice; then
             if [[ "$choice" =~ ^[Yy]$ ]]; then
                 echo -e "\n${GREEN}Installing fortune and cowsay via $PKG_MANAGER...${NC}"
                 
