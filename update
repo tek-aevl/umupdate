@@ -1,5 +1,5 @@
 #!/bin/bash
-version="1.3.2851"
+version="1.3.2852"
 echo
 # ==========================================
 # 1. GLOBAL VARIABLES & COLORS
@@ -27,10 +27,10 @@ sl='3'
 HOST_IP=$(ip route get 1.1.1.1 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i=="src") print $(i+1); exit}')
 echo -e "###########################################################################################"
 echo -e "###########################################################################################"
-echo -e "${WHITE}$USER${NC}@${BLUE}$HOSTNAME${NC} (${GREEN}$HOST_IP${NC})"
+echo -e "${WHITE}$USER${NC}@${LIGHT_BLUE}$HOSTNAME${NC} (${GREEN}$HOST_IP${NC})"
 echo -e "###########################################################################################"
 echo -e "###########################################################################################"
-    echo -e "${NC} Can you ${RED} sudo${NC}?"
+    echo -e "${NC} Can you ${GREEN} sudo${NC}?"
     echo -e "${NC} $USER@$HOSTNAME ($HOST_IP) ${NC}"
     echo -e "${GREEN} ;-P ${NC} "
 if sudo -v; then
@@ -140,16 +140,18 @@ fi
 echo
 user_info() {
     echo -e "${CYAN}$USER${NC}@${LIGHT_BLUE}$HOSTNAME${NC} (${YELLOW}$HOST_IP${NC})"
+} 
+inxic() {
+if command -v inxi &> /dev/null; then inxi; fi
 }
 sysnfo() {
     user_info
     echo "Script Version '$version'"
     uname -a
     uptime
-    if command -v inxi &> /dev/null; then inxi; fi
+    inxic
 }
 echo
-
 
 # ==========================================
 # 3. CORE FUNCTIONS
@@ -212,13 +214,24 @@ show_intro_and_art() {
 }
 
 run_custom_scripts() {
-    if [ -f /usr/bin/mainline ]; then
-        echo -e "Updating Kernel"
-        echo -e "${GREEN}Running kernelup...${NC}"
-        rm -f /tmp/kernelup && curl -sSL https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/kernelup -o /tmp/kernelup 
-        sudo bash /tmp/kernelup && sudo cp /tmp/kernelup /bin/kernelup        
-        echo "End of kernel up"
-    fi
+        if [ -f /usr/bin/mainline ]; then
+                echo -e "\nMainline Kernel tool found."
+                
+                # Prompt the user, defaulting to No on empty input or timeout
+                if read -t "$qdel" -p "Update Kernel with kernelup? (y/N) [Skips in '${qdel}'s]: " choice; then
+                    if [[ "$choice" =~ ^[Yy]$ ]]; then
+                        echo -e "\n${GREEN}Running kernelup...${NC}"
+                        rm -f /tmp/kernelup && curl -sSL https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/kernelup -o /tmp/kernelup 
+                        sudo bash /tmp/kernelup      
+                        echo "End of kernel up"
+                    else
+                        echo -e "\nSkipping Kernel update."
+                    fi
+                else
+                    # This triggers if the timer runs out
+                    echo -e "\n${GREEN}Timeout reached. Skipping Kernel update.${NC}"
+                fi
+            fi
             if [ -f /bin/prune ] || command -v docker &> /dev/null || command -v podman &> /dev/null; then
                         # Prompt the user, defaulting to No on empty input or timeout
                         read -t "$qdel" -p "Run prune? (y/N) [Skips in '${qdel}'s]: " prune_resp
@@ -524,9 +537,7 @@ close_out_script() {
     bash <(curl -fsSL "https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/cclearer")
     echo "End of cclearer"
     echo
-    user_info
     run_fetch
-    sysnfo
     # Grab the current kernel values cleanly 
     CKRUNNING=$(uname -r)
     # Finding the newest installed kernel safely across OSs can be complex, fallback to listing string format requested
@@ -535,9 +546,8 @@ close_out_script() {
     
     if read -t "$qdell" -p "Reboot Anyway? (y/N) [Skips in ${qdell}s]: " choice; then
             if [[ "$choice" =~ ^[Yy]$ ]]; then
-                echo -e "${RED} Rebooting... after  '${qdell}' sec $USER@$HOSTNAME ($HOST_IP) ${NC}"
+                echo -e "${RED} Rebooting... after  '${qdell}'sec $USER@$HOSTNAME ($HOST_IP) ${NC}"
                 run_fetch
-                if command -v inxi &> /dev/null; then inxi; fi
                 echo -e " ${RED} byah $USER@$HOSTNAME $HOST_IP ${NC} "
                 echo "rebooting..."
                   sleep $qdell && sudo reboot
@@ -551,6 +561,7 @@ close_out_script() {
         fi
     echo -e "${GREEN} Byah.!. "
     user_info 
+    sysnfo
     echo -e " ${NC}"
     exit 0
 }
