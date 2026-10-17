@@ -540,8 +540,7 @@ close_out_script() {
                 if command -v inxi &> /dev/null; then inxi; fi
                 echo -e " ${RED} byah $USER@$HOSTNAME $HOST_IP ${NC} "
                 echo "rebooting..."
-                sleep 7
-                sudo reboot
+                  sudo reboot && sleep 7
                 exit 0
             else
                 echo -e "${GREEN} Reboot Skipped. $USER@$HOSTNAME ($HOST_IP) ${NC}"
