@@ -24,6 +24,7 @@ qdel='5'
 ss='1'
 HOST_IP=$(ip route get 1.1.1.1 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i=="src") print $(i+1); exit}')
 echo "###########################################################################################"
+ echo -e "${CYAN}$USER${NC}@${LIGHT_BLUE}$HOSTNAME${NC} (${YELLOW}$HOST_IP${NC})"
 echo "###########################################################################################"
 if sudo -v; then
         echo -e "${GREEN}sudo works.${NC}"
