@@ -108,7 +108,7 @@ user_info() {
 }
 sysnfo() {
     user_info
-    echo $version
+    echo "Script Version '$version'"
     uname -a
     uptime
     if command -v inxi &> /dev/null; then inxi; fi
