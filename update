@@ -649,6 +649,6 @@ handle_uptime_and_speedtest
 sleep $ss
 run_kernel_check
 sleep $ss 
-close_out_script
 run_fortune_cowsay
+close_out_script
 sleep $sl
