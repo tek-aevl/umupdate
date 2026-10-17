@@ -494,7 +494,6 @@ handle_uptime_and_speedtest() {
         else
             display_profile_art
         fi
-        user_info
         read -t "$qdel" -r -p "Run Speedtest? (y/N) [Skips in '${qdel}'s]: " response
         if [[ "$response" =~ ^[Yy]$ ]]; then
             echo "Running speedtest"
