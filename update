@@ -1,5 +1,5 @@
 #!/bin/bash
-version="1.3.287"
+version="1.3.288"
 echo
 # ==========================================
 # 1. GLOBAL VARIABLES & COLORS
@@ -487,13 +487,8 @@ handle_uptime_and_speedtest() {
     else
         echo -e "${GREEN} So good news! ${NC} $USER@$HOSTNAME ($HOST_IP)"   
         echo -e " The system has ${GREEN}not${NC} been running for longer than ${YELLOW}three${NC} days. ${YELLOW}No reboot required. ${NC}"
+        
         echo -e "${GREEN} System uptime: $days days, $hours hours, $minutes minutes ${NC}"
-
-        if command -v lolcat >/dev/null 2>&1; then
-            display_profile_art | lolcat
-        else
-            display_profile_art
-        fi
         read -t "$qdel" -r -p "Run Speedtest? (y/N) [Skips in '${qdel}'s]: " response
         if [[ "$response" =~ ^[Yy]$ ]]; then
             echo "Running speedtest"
