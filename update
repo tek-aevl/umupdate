@@ -23,12 +23,16 @@ UPDATE_URL="https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/
 qdel='5'
 qdell='10'
 ss='1'
+sl='3'
 HOST_IP=$(ip route get 1.1.1.1 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i=="src") print $(i+1); exit}')
 echo -e "${ORANGE}###########################################################################################"
 echo -e "###########################################################################################${NC}"
 echo -e "${WHITE}$USER${NC}@${BLUE}$HOSTNAME${NC} (${GREEN}$HOST_IP${NC})"
 echo -e "${ORANGE}###########################################################################################"
 echo -e "###########################################################################################${NC}"
+    echo -e "${YELLOW} Can you ${RED} sudo${NC}?"
+    echo -e "${RED} Password $USER@$HOSTNAME ($HOST_IP) ${NC}"
+    echo -e " ;-P ${NC} "
 if sudo -v; then
         echo -e "${GREEN}sudo works.${NC}"
     else
@@ -199,9 +203,6 @@ show_intro_and_art() {
     user_info
     run_fetch
     sysnfo
-    echo -e "${YELLOW} Can you ${RED} sudo${NC}?"
-    echo -e "${RED} Password $USER@$HOSTNAME ($HOST_IP) ${NC}"
-    echo -e " ;-P ${NC} "
     echo "get-time $USER@$HOSTNAME ($HOST_IP)"
     calculate_uptime
     echo "do-math $USER@$HOSTNAME ($HOST_IP)"
@@ -415,7 +416,7 @@ run_pihole_tasks() {
             sudo du -h /etc/pihole/pihole-FTL-old.db 2>/dev/null
             sudo du -h /tmp/pihole-FTL-old.db 2>/dev/null
             sudo rm -f /tmp/pihole-FTL-old.db 
-            sleep 3
+            sleep $sl
             
             echo "# Stop pihole FTL service"
             sudo systemctl stop pihole-FTL
@@ -433,11 +434,11 @@ run_pihole_tasks() {
             sudo du -h /etc/pihole/pihole-FTL.db 2>/dev/null
             sudo du -h /etc/pihole/pihole-FTL-old.db 2>/dev/null
             sudo du -h /tmp/pihole-FTL-old.db 2>/dev/null
-            sleep 3
+            sleep $sl
         else
             echo -e "The system has ${RED}not${NC} been running for longer than expected. ${GREEN}No db operations required.${NC}"
             echo -e "${GREEN}System uptime: $days days, $hours hours, $minutes minutes ${NC}" 
-            sleep 3
+            sleep $sl
         fi
            echo -e "\nEnd of Pi-Hole Tasks\n"
     fi
