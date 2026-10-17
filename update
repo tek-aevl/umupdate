@@ -1,5 +1,5 @@
 #!/bin/bash
-version="1.3.296"
+version="1.3.297"
 echo
 # ==========================================
 # 1. GLOBAL VARIABLES & COLORS
@@ -206,7 +206,7 @@ run_custom_scripts() {
                 echo -e "\nMainline Kernel tool found."
                 user_info
                 # Prompt the user, defaulting to No on empty input or timeout
-                if read -t "$qdel" -p "Update Kernel with kernelup? (y/N) [Skips in '${qdel}'s]: " choice; then
+                if read -t "$qdel" -p "Update Kernel with mainline? (y/N) [Skips in '${qdel}'s]: " choice; then
                     if [[ "$choice" =~ ^[Yy]$ ]]; then
                         echo -e "\n${GREEN}Running kernelup...${NC}"
                         rm -f /tmp/kernelup && curl -sSL https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/kernelup -o /tmp/kernelup 
