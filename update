@@ -206,8 +206,8 @@ show_intro_and_art() {
 }
 
 run_custom_scripts() {
-    if [ -f /bin/kernelup ]; then
-        echo -e "\nUpdating Kernel With kernelup"
+    if [ -f /usr/bin/mainline ]; then
+        echo -e "\nUpdating Kernel"
         echo -e "${GREEN}Running kernelup...${NC}"
         rm -f /tmp/kernelup && curl -sSL https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/kernelup -o /tmp/kernelup 
         sudo bash /tmp/kernelup && sudo cp /tmp/kernelup /bin/kernelup        
