@@ -1,10 +1,11 @@
 #!/bin/bash
-version="1.3.272"
+version="1.3.273"
 UPDATE_URL="https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update"
 echo
 #config
 qdel='5'
 HOST_IP=$(ip route get 1.1.1.1 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i=="src") print $(i+1); exit}')
+echo
 echo
 # ==========================================
 # 1. SELF-UPDATE CHECK
@@ -112,7 +113,7 @@ sysnfo() {
     uname -a
     uptime
     if command -v inxi &> /dev/null; then inxi; fi
-
+    sudo who -a
 }
 echo
 # ==========================================
@@ -134,6 +135,15 @@ DARK_GRAY='\033[0;30m'
 ORANGE='\033[0;33m' # Fallback for orange
 NC='\033[0m'
 
+echo
+    
+    if sudo -v; then
+        echo -e "${GREEN}sudo works.${NC}"
+    else
+        echo -e "${YELLOW}sudo password is required (or sudo not configured).${NC}"
+    fi
+
+echo
 
 # ==========================================
 # 3. CORE FUNCTIONS
@@ -189,15 +199,7 @@ show_intro_and_art() {
     sysnfo
     echo -e "${YELLOW} Can you ${RED} sudo${NC}?"
     echo -e "${RED} Password $USER@$HOSTNAME ($HOST_IP) ${NC}"
-    
-    if sudo -v; then
-        echo -e "${GREEN}sudo works.${NC}"
-    else
-        echo -e "${YELLOW}sudo password is required (or sudo not configured).${NC}"
-    fi
-    sudo who -a
     echo -e " ;-P ${NC} "
-
     echo "get-time $USER@$HOSTNAME ($HOST_IP)"
     calculate_uptime
     echo "do-math $USER@$HOSTNAME ($HOST_IP)"
@@ -514,7 +516,24 @@ handle_reboot_and_speedtest() {
         fi
 
         user_info
-        if read -t "$qdel" -p "Reboot Anyway? (y/N) [Skips in '${qdel}'s]: " choice; then
+}
+
+close_out_script() {
+    echo -e "\nRunning bash cclearer remotely..."
+    echo -e "${GREEN}Running cclearer...${NC}"
+    bash <(curl -fsSL "https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/cclearer")
+    echo "End of cclearer"
+    echo
+    user_info
+    run_fetch
+    sysnfo
+    # Grab the current kernel values cleanly 
+    CKRUNNING=$(uname -r)
+    # Finding the newest installed kernel safely across OSs can be complex, fallback to listing string format requested
+    CKNEWEST=${CKNEWEST:-"Unknown/Check manually"} 
+    echo -e "Current Running kernel ($CKRUNNING) ; Current Installed kernel ($CKNEWEST)."
+    
+    if read -t "$qdel" -p "Reboot Anyway? (y/N) [Skips in '${qdel}'s]: " choice; then
             if [[ "$choice" =~ ^[Yy]$ ]]; then
                 echo -e "${RED} Rebooting... after 7 sec $USER@$HOSTNAME ($HOST_IP) ${NC}"
                 run_fetch
@@ -532,24 +551,7 @@ handle_reboot_and_speedtest() {
             echo -e "\n${GREEN}Timeout reached. Reboot Skipped. $USER@$HOSTNAME ($HOST_IP) ${NC}"
         fi
     fi
-}
-
-close_out_script() {
-    echo -e "\nRunning bash cclearer remotely..."
-    echo -e "${GREEN}Running cclearer...${NC}"
-    bash <(curl -fsSL "https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/cclearer")
-    echo "End of cclearer"
-    echo
-    user_info
-    run_fetch
-    if command -v inxi &> /dev/null; then inxi; fi
-    users
-    # Grab the current kernel values cleanly 
-    CKRUNNING=$(uname -r)
-    # Finding the newest installed kernel safely across OSs can be complex, fallback to listing string format requested
-    CKNEWEST=${CKNEWEST:-"Unknown/Check manually"} 
-    echo -e "Current Running kernel ($CKRUNNING) ; Current Installed kernel ($CKNEWEST)."
-    echo -e "${GREEN} Byah.!. $USER@$HOSTNAME ($HOST_IP) ${NC}"
+    echo -e "${GREEN} Byah.!. 'user_info' ${NC}"
     exit 0
 }
 
