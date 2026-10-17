@@ -625,10 +625,14 @@ if read -t "$qdel" -p "Would you like to install them now? (y/N) [Skips in '${qd
                     echo -e "\n${RED}Installation attempted, but commands are still missing.${NC}"
                 fi
             else
+                # This triggers if you type 'n' or anything other than 'y'
+                echo -e "\nSkipping fortune/cowsay installation."
+            fi  # <--- Closes the [[ "$choice" =~ ^[Yy]$ ]] check
+        else
             # This triggers if the timer runs out
             echo -e "\n${GREEN}Timeout reached. Skipping installation.${NC}"
-        fi
-    fi
+        fi      # <--- Closes the read -t "$qdel" prompt
+    fi          # <--- Closes the outermost command -v check
 }
 # ==========================================
 # 4. MAIN EXECUTION FLOW
