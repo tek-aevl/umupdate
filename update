@@ -1,5 +1,5 @@
 #!/bin/bash
-version="1.3.294"
+version="1.3.295"
 echo
 # ==========================================
 # 1. GLOBAL VARIABLES & COLORS
@@ -524,7 +524,6 @@ close_out_script() {
     echo
     run_fetch
     user_info
-    inxic
     # Grab the current kernel values cleanly 
     CKRUNNING=$(uname -r)
     # Finding the newest installed kernel safely across OSs can be complex, fallback to listing string format requested
@@ -546,9 +545,8 @@ close_out_script() {
             # This triggers if the timer runs out
             echo -e "\n${GREEN}Timeout reached. Reboot Skipped. $USER@$HOSTNAME ($HOST_IP) ${NC}"
         fi
-    echo -e "${GREEN} Byah.!. "
     user_info 
-    sysnfo
+    echo -e "${GREEN} Byah.!. "
     echo -e " ${NC}"
     exit 0
 }
