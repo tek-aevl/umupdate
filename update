@@ -1,5 +1,5 @@
 #!/bin/bash
-version="1.3.28"
+version="1.3.281"
 echo
 # ==========================================
 # 1. GLOBAL VARIABLES & COLORS
@@ -21,11 +21,14 @@ ORANGE='\033[0;33m' # Fallback for orange
 NC='\033[0m'
 UPDATE_URL="https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/update"
 qdel='5'
+qdell='10'
 ss='1'
 HOST_IP=$(ip route get 1.1.1.1 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i=="src") print $(i+1); exit}')
-echo "###########################################################################################"
+echo "${ORANGE}###########################################################################################"
+echo "###########################################################################################${NC}"
  echo -e "${CYAN}$USER${NC}@${LIGHT_BLUE}$HOSTNAME${NC} (${YELLOW}$HOST_IP${NC})"
-echo "###########################################################################################"
+echo "${ORANGE}###########################################################################################"
+echo "###########################################################################################${NC}"
 if sudo -v; then
         echo -e "${GREEN}sudo works.${NC}"
     else
@@ -140,7 +143,6 @@ sysnfo() {
     uname -a
     uptime
     if command -v inxi &> /dev/null; then inxi; fi
-    sudo who -a
 }
 echo
 
@@ -460,7 +462,7 @@ run_kernel_check() {
     user_info
 }
 
-handle_reboot_and_speedtest() {
+handle_uptime_and_speedtest() {
     echo "############################################################################################"
     echo "######################################### uptime ###########################################"
     echo "############################################################################################"
@@ -533,7 +535,7 @@ close_out_script() {
     CKNEWEST=${CKNEWEST:-"Unknown/Check manually"} 
     echo -e "Current Running kernel ($CKRUNNING) ; Current Installed kernel ($CKNEWEST)."
     
-    if read -t "$qdel" -p "Reboot Anyway? (y/N) [Skips in '${qdel}'s]: " choice; then
+    if read -t "$qdell" -p "Reboot Anyway? (y/N) [Skips in '${qdell}'s]: " choice; then
             if [[ "$choice" =~ ^[Yy]$ ]]; then
                 echo -e "${RED} Rebooting... after 7 sec $USER@$HOSTNAME ($HOST_IP) ${NC}"
                 run_fetch
@@ -570,7 +572,7 @@ update_technitium
 sleep $ss
 run_pihole_tasks
 sleep $ss
-handle_reboot_and_speedtest
+handle_uptime_and_speedtest
 sleep $ss
 run_kernel_check
 sleep $ss 
