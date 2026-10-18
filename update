@@ -234,23 +234,31 @@ run_custom_scripts() {
                         fi
                     fi
     user_info
-    echo -e "\nRunning Custom Commands With customup"
+    echo -e "\nRunning Custom Commands with customup"
     if [ ! -f /bin/customup ]; then
         if read -t "$qdel" -r -p "/bin/customup not found. Create it now with nano? (y/N) [Skips in '${qdel}'s]: " create_resp; then
             if [[ "$create_resp" =~ ^[Yy]$ ]]; then
                 sudo nano /bin/customup
                 if [ -f /bin/customup ]; then sudo chmod +x /bin/customup; fi
             else
-                echo "Skipping customup."
+                echo "Skipping customup creation."
             fi
         else
-            echo -e "\nTimeout reached. Skipping customup."
+            echo -e "\nTimeout reached. Skipping customup creation."
         fi
     fi
     if [ -f /bin/customup ]; then
-        echo -e "${GREEN}Running customup...${NC}"
-        bash /bin/customup
-        echo "End of customup"
+        if read -t "$qdel" -r -p "Do you want to run /bin/customup now? (y/N) [Skips in '${qdel}'s]: " run_resp; then
+            if [[ "$run_resp" =~ ^[Yy]$ ]]; then
+                echo -e "${GREEN}Running customup...${NC}"
+                bash /bin/customup
+                echo "End of customup."
+            else
+                echo "Skipping customup execution."
+            fi
+        else
+            echo -e "\nTimeout reached. Skipping customup execution."
+        fi
     fi
 }
 
