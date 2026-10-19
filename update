@@ -1,5 +1,5 @@
 #!/bin/bash
-version="1.3.301"
+version="1.3.302"
 echo
 # ==========================================
 # 1. GLOBAL VARIABLES & COLORS
@@ -28,7 +28,7 @@ HOST_IP=$(ip route get 1.1.1.1 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i=="sr
 echo -e "###########################################################################################"
 echo -e "${WHITE}$USER${NC}@${LIGHT_BLUE}$HOSTNAME${NC} (${GREEN}$HOST_IP${NC})"
 echo -e "###########################################################################################"
-echo -e "Hello $USER! #v$version#"
+echo -e "Hello $USER! ${GREEN}#v$version#${NC}"
 echo -e "Info at https://github.com/tek-aevl/umupdate/ #To use run # bash update or bash <(curl -s $UPDATE_URL)"
 echo -e "${NC} Can you ${GREEN} sudo${NC}?"
 echo -e "${NC} $USER@$HOSTNAME ($HOST_IP) ${NC}"
