@@ -1,5 +1,5 @@
 #!/bin/bash
-version="1.3.298"
+version="1.3.299"
 echo
 # ==========================================
 # 1. GLOBAL VARIABLES & COLORS
@@ -525,6 +525,7 @@ handle_uptime_and_speedtest() {
 }
 
 close_out_script() {
+    user_info
     echo -e "\nRunning bash cclearer remotely..."
     echo -e "${GREEN}Running cclearer...${NC}"
     bash <(curl -fsSL "https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/cclearer")
