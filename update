@@ -1,5 +1,5 @@
 #!/bin/bash
-version="1.3.302"
+version="1.3.303"
 echo
 # ==========================================
 # 1. GLOBAL VARIABLES & COLORS
@@ -145,6 +145,8 @@ sysnfo() {
     user_info
     uname -a
     uptime
+         sudo ps axjf 
+sleep $sl
 }
 echo
 
