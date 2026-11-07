@@ -1,6 +1,7 @@
 #!/bin/bash
-#reset terminal
+# Reset terminal
 reset
+
 # Cache sudo
 sudo -v
 
@@ -30,18 +31,17 @@ interactive_kernel_menu() {
     echo "--------------------------------------------------------"
     PS3="Select an option (1-${#OPTIONS[@]}): "
     select choice in "${OPTIONS[@]}"; do
-        if [[ "$choice" == "Cancel / Exit Menu" ]]; then
+        if [[ "$choice" == "Exit Only" ]]; then
             echo "[-] Exiting kernel menu."
             break
         elif [[ "$choice" == "Restore Default Ubuntu Kernel (OEM/Generic)" ]]; then
             echo "[+] Restoring standard Ubuntu generic kernel via apt..."
-            apt update
-            apt install --install-recommends linux-generic linux-headers-generic -y
+            apt update && apt install --install-recommends linux-generic linux-headers-generic -y
             CHANGES_MADE=true
             break
-        elif [[ "$choice" == "Restore Default Ubuntu Kernel (OEM/Generic)" ]]; then
-            echo "[+] Restoring standard Ubuntu generic kernel via apt..."
-            apt update && apt install --install-recommends linux-generic linux-headers-generic -y
+        elif [[ "$choice" == "Uninstall Old Kernels (Cleanup)" ]]; then
+            echo "[+] Cleaning up old unused mainline kernels..."
+            mainline uninstall-old
             CHANGES_MADE=true
             break
         elif [[ -n "$choice" ]]; then
@@ -58,7 +58,7 @@ interactive_kernel_menu() {
 # ==========================================
 
 # Check if an older version exists, and back it up if it does
-if [ -f "/usr/local/bin/kernelup" ]; then
+if [ -f "/bin/kernelup" ]; then
     echo "[*] Existing installation found. Backing up to kernelup.sh..."
     sudo mv /bin/kernelup /bin/kernelup.sh
 fi
@@ -84,7 +84,7 @@ if ! command -v mainline &> /dev/null; then
     echo "[!] The 'mainline' utility is not installed."
     read -p "Would you like to install it now? (y/N) " -n 1 -r
     echo
-    if [[ -z \(REPLY ]] || [[\)REPLY =~ ^[Yy] ]]; then
+    if [[ -z $REPLY ]] || [[ $REPLY =~ ^[Yy] ]]; then
         echo "[+] Adding PPA and installing mainline..."
         add-apt-repository ppa:cappelikan/ppa -y
         apt update
@@ -106,7 +106,7 @@ dpkg-query -W -f='${Package}\n' | grep -E '^linux-image-[0-9]' | grep -v 'unsign
 echo "--------------------------------------------------------"
 echo "[+] Installed Mainline Kernels:"
 # Use dpkg directly to perfectly capture installed unsigned (mainline) kernels
-MAINLINE_INSTALLED=`dpkg-query -W 2>/dev/null | cut -f1 | grep -E '^linux-image-unsigned-[0-9]' | sed 's/linux-image-unsigned-//'`
+MAINLINE_INSTALLED=$(dpkg-query -W 2>/dev/null | cut -f1 | grep -E '^linux-image-unsigned-[0-9]' | sed 's/linux-image-unsigned-//')
 if [ -n "$MAINLINE_INSTALLED" ]; then
     echo "$MAINLINE_INSTALLED" | sed 's/^/    /'
 else
@@ -130,7 +130,7 @@ CHANGES_MADE=false
 read -p "Install the latest kernel ($LATEST_AVAILABLE)? (Y/n) " -n 1 -r
 echo
 if [[ -z $REPLY ]] || [[ $REPLY =~ ^[Yy] ]]; then
-echo "[+] Installing the latest mainline kernel ($LATEST_AVAILABLE)..."
+    echo "[+] Installing the latest mainline kernel ($LATEST_AVAILABLE)..."
     mainline install-latest
     CHANGES_MADE=true
 else
@@ -138,24 +138,20 @@ else
     interactive_kernel_menu
 fi
 
-# 5. Cleanup unused kernels
-echo "[+] Cleaning up old unused mainline kernels (keeping active kernel safe)..."
-mainline uninstall-old
-
 echo "--------------------------------------------------------"
-echo "[+] Kernel update & cleanup complete."
+echo "[+] Kernel update task complete."
 echo "--------------------------------------------------------"
 
-# 6. Only prompt for reboot if a new kernel was actually installed
+# 5. Only prompt for reboot if changes were made
 bash <(curl -s https://raw.githubusercontent.com/tek-aevl/umupdate/refs/heads/main/kernel-check)
 if [ "$CHANGES_MADE" = true ]; then
-    read -p "If a new kernel was installed. Do you want to reboot now? (y/N) " -n 1 -r
+    read -p "Changes were made to the system kernels. Do you want to reboot now? (y/N) " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy] ]]; then
         echo "[+] Rebooting system..."
         reboot
     else
-        echo "[!] Remember to reboot later for the changes to take effect. If changes were made."
+        echo "[!] Remember to reboot later for the changes to take effect."
     fi
 else
     echo "[*] System is ready."
