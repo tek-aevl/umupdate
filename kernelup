@@ -48,6 +48,14 @@ interactive_kernel_menu() {
             echo "[+] Installing kernel version: $choice"
             mainline install "$choice"
             CHANGES_MADE=true
+            
+            # Optional cleanup prompt after manual kernel selection
+            read -p "Would you like to remove old unused kernels now? (y/N) " -n 1 -r
+            echo
+            if [[ $REPLY =~ ^[Yy] ]]; then
+                echo "[+] Cleaning up old unused mainline kernels..."
+                mainline uninstall-old
+            fi
             break
         else
             echo "[-] Invalid selection. Please pick a valid number."
@@ -133,6 +141,14 @@ if [[ -z $REPLY ]] || [[ $REPLY =~ ^[Yy] ]]; then
     echo "[+] Installing the latest mainline kernel ($LATEST_AVAILABLE)..."
     mainline install-latest
     CHANGES_MADE=true
+    
+    # Explicit cleanup prompt after quick install
+    read -p "Would you like to remove old unused kernels now? (y/N) " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy] ]]; then
+        echo "[+] Cleaning up old unused mainline kernels..."
+        mainline uninstall-old
+    fi
 else
     # User said No, launch the interactive menu
     interactive_kernel_menu
