@@ -2,7 +2,7 @@
 
 **umupdate** is a modular Bash maintenance framework built to automate system updates, package cleanups, and fleet management across single hosts and multi-node homelab clusters. 
 
-Whether running locally on Arch Linux workstation nodes or orchestrating updates across Debian, Ubuntu, Fedora, and FreeBSD virtual machines via SSH, `umupdate` turns routine server maintenance into a predictable, single-command workflow.
+Whether running on Arch Linux nodes or orchestrating updates across Debian, Ubuntu, Fedora, and FreeBSD virtual machines via SSH, `umupdate` turns routine server maintenance into a predictable, single-command workflow.
 
 ---
 
@@ -34,7 +34,7 @@ Whether running locally on Arch Linux workstation nodes or orchestrating updates
   Detects running vs. installed kernel versions (including custom kernel tracks such as `linux-zen`), flags required system reboots, and coordinates graceful node recycles.
 
 - **Automated Pruning & Maintenance**  
-  Cleans package caches, removes unneeded orphan dependencies, and safely trims log files to preserve disk space across virtualized storage backends.
+  Cleans package caches, removes unneeded orphan dependencies.
 
 - **Health Checks & Monitoring**  
   Performs pre-flight diagnostic checks (uptime, storage availability, active service states) before launching updates to prevent breaking live services.
@@ -46,7 +46,7 @@ Whether running locally on Arch Linux workstation nodes or orchestrating updates
 
 ## Design Philosophy
 
-- **Simple, Auditable Shell Code:** Built entirely in plain Bash—no heavy, opaque frameworks or proprietary agents required.
+- **Simple, Auditable Shell Code:** Built entirely in plain Bash, no heavy, opaque frameworks or proprietary agents required.
 - **Heterogeneous Fleet Management:** Designed to handle mixed environments featuring bare-metal hosts, Proxmox hypervisors, standard Linux/FreeBSD VMs, and LXC container hosts.
 - **Boring Operations:** Makes "update everything everywhere" a reliable, low-risk habit.
 
