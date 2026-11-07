@@ -11,7 +11,7 @@ Whether running on Arch Linux nodes or orchestrating updates across Debian, Ubun
 `umupdate` automatically detects and manages native package repositories as well as containerized desktop/application runtimes:
 
 ### Native System Package Managers
-- **Arch Linux** (`pacman` / AUR helpers)
+- **Arch Linux** (`pacman` / AUR helpers *Not included*)
 - **Debian / Ubuntu** (`apt` / `apt-get`)
 - **Fedora** (`dnf`)
 - **FreeBSD** (`pkg`)
